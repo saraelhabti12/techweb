@@ -1,20 +1,37 @@
 import MemberLayout
  from '@/Layouts/MemberLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { ClipboardDocumentListIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export default function ProgressUpdatesIndex({ auth, progressUpdates, status }) {
     return (
         <MemberLayout auth={auth}>
             <Head title="My Progress Updates" />
 
-            <div className="py-6 px-4 sm:px-6 lg:px-8">
+            <div className="py-6 px-4 bg-purple-10/90 border border-purple-200 sm:px-6 lg:px-8">
+                <div className="mb-6">
+                <button
+                    onClick={() => window.history.back()}
+                    className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
+                >
+                    <ArrowLeftIcon className="h-5 w-5 mr-2" />
+                    Retour
+                </button>
+                </div>
+                
                 <div className="max-w-7xl mx-auto">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Progress Updates</h1>
                         <Link
                             href={route('member.progress.create')}
-                            className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                            className="inline-flex items-center px-4 py-2 
+                                        bg-purple-600 border border-transparent rounded-md 
+                                        font-semibold text-xs text-white uppercase tracking-widest 
+                                        hover:bg-purple-700 active:bg-purple-900 
+                                        focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
+                                        disabled:opacity-25 transition 
+                                        dark:bg-purple-700 dark:hover:bg-purple-600"
                         >
                             <PlusIcon className="h-4 w-4 mr-2" />
                             Add Update

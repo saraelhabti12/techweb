@@ -28,6 +28,24 @@ export default function Sidebar() {
                             Categories
                         </Link>
 
+
+                        <Link
+                            href={route('blogs.create')} // Assure-toi que cette route existe dans ton web.php
+                            className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            active={route().current('blogs.create')}
+                        >
+                            <svg
+                                className="mr-3 h-5 w-5 text-pink-500"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Create Blog
+                        </Link>
+
+
                         <Link
                             href={route('projects.index')}
                             className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -49,6 +67,18 @@ export default function Sidebar() {
                             </svg>
                             Tasks
                         </Link>
+
+                        <Link
+                            href={route('admin.teamhub.index')} // Assure-toi que cette route existe
+                            className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            active={route().current('admin.teamhub.index')}
+                        >
+                            <svg className="mr-3 h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2v-9a2 2 0 012-2h2m3-4h4m-2-2v4" />
+                            </svg>
+                            Team Hub
+                        </Link>
+
 
                         <Link
                             href="#"

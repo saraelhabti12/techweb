@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('avatar')->nullable(); // s’il n’existe pas, ajoute-le
              // une colonne dans la table users qui garde “Est-ce que cet utilisateur a confirmé son adresse e-mail ?”
             // Après la vérification : Laravel met automatiquement la date et l’heure de la confirmation.
             // Quand l’utilisateur crée un compte (avec email + mot de passe), Laravel peut envoyer un e-mail de confirmation avec un lien.

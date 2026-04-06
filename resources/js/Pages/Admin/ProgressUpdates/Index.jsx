@@ -1,11 +1,21 @@
-// Pages/Admin/ProgressUpdates/Index.jsx
 import React from 'react';
+import { router ,Link } from '@inertiajs/react';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 export default function Index({ auth, progressUpdates }) {
     return (
         <AdminLayout auth={auth} title="Progress Updates">
             <div className="p-6 max-w-7xl mx-auto">
+                <div className="mb-6">
+                <button
+                    onClick={() => window.history.back()}
+                    className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
+                >
+                    <ArrowLeftIcon className="h-5 w-5 mr-2" />
+                    Retour
+                </button>
+                </div>
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Member Progress Updates</h1>
                 </div>

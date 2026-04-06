@@ -1,4 +1,6 @@
 import { Link } from '@inertiajs/react';
+import { PlusIcon } from '@heroicons/react/solid'; // Tu peux utiliser Heroicons ou ton propre SVG
+
 
 export default function DashboardStats({ stats }) {
     const statCards = [
@@ -22,7 +24,7 @@ export default function DashboardStats({ stats }) {
                 </svg>
             ),
             link: route('tasks.index'),
-            color: 'bg-green-100 dark:bg-green-900',
+            color: 'bg-white-10/90 dark:bg-purple-10/90',
         },
         {
             title: 'Categories',
@@ -46,6 +48,33 @@ export default function DashboardStats({ stats }) {
             link: '#',
             color: 'bg-yellow-100 dark:bg-yellow-900',
         },
+
+        {
+    title: 'Total Templates',
+    value: stats.templates, 
+    icon: (
+        <svg className="h-8 w-8 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h10" />
+        </svg>
+    ),
+    link: route('admin.templates'), // si tu as une route admin/templates
+    color: 'bg-pink-100 dark:bg-pink-900',
+},
+
+
+        // ← AJOUTE ICI ton Team Hub
+    {
+        title: 'Team Hub',
+        value: stats.team_hub || '-', 
+        icon: (
+            <svg className="h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2v-9a2 2 0 012-2h2m3-4h4m-2-2v4" />
+            </svg>
+        ),
+        link: route('admin.teamhub.index'),
+        color: 'bg-indigo-100 dark:bg-indigo-900',
+    },
+        
     ];
 
     return (

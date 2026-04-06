@@ -1,13 +1,24 @@
 import React from 'react';
 import MemberLayout from '@/Layouts/MemberLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export default function TasksIndex({ auth, tasks }) {
     return (
         <MemberLayout auth={auth}>
             <Head title="My Tasks" />
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+            <div className="bg-purple-10/90 dark:bg-gray-800 rounded-xl border border-purple-200 shadow-md overflow-hidden">
+        <div className="mb-6">
+          <button
+            onClick={() => window.history.back()}
+            className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
+          >
+            <ArrowLeftIcon className="h-5 w-5 mr-2" />
+            Retour
+          </button>
+        </div>
+                
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">My Tasks</h1>
                 </div>

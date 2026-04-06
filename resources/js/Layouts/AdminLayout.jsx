@@ -1,5 +1,6 @@
-import { Link } from '@inertiajs/react';
+import { Link , usePage} from '@inertiajs/react';
 import { useState } from 'react';
+import MessagesBell from '@/Pages/Admin/Customer/MessagesBell';
 import {
   HomeIcon,
   FolderIcon,
@@ -14,16 +15,21 @@ import {
   UserIcon,
   CogIcon,
   CalendarIcon,
-  UsersIcon
+  UsersIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
 
-export default function AdminLayout({ auth, children, title = '' }) {
+export default function AdminLayout({ auth, children, title = ''}) {
+    const { messages = [], unreadCount = 0 } = usePage().props;
+
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [openMenus, setOpenMenus] = useState({
         projects: false,
         tasks: false,
         members: false,
         categories: false,
+        blogs: false, 
+        contacts: false, 
     });
 
     const toggleMenu = (menu) => {
@@ -37,30 +43,21 @@ export default function AdminLayout({ auth, children, title = '' }) {
         setSidebarOpen(!sidebarOpen);
     };
 
+    console.log('USER AVATAR =>', auth?.user?.avatar);
+
     return (
-        <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+        <div className="flex h-screen bg-purple-100 dark:bg-gray-950">
             {/* Sidebar */}
             <div className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 flex flex-col`}>
                 {/* Sidebar Header */}
                 <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800">
                     <Link href="/admin/dashboard" className="flex items-center">
                         <img
-                            src="/images/logo.png"
+                            src="/images/logotechweb.png"
                             alt="Logo"
-                            className={`${sidebarOpen ? 'h-60' : 'h-40'} transition-all`}
+                            className={`${sidebarOpen ? 'h-16' : 'h-36'} transition-all`}
                         />
-
                     </Link>
-                    {sidebarOpen && (
-                        <button
-                            onClick={toggleSidebar}
-                            className="p-1 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-                    )}
                 </div>
 
                 {/* Navigation */}
@@ -127,6 +124,72 @@ export default function AdminLayout({ auth, children, title = '' }) {
                         icon={<TagIcon className="h-5 w-5" />}
                     />
 
+                    <CollapsibleSection
+                        title="Blogs"
+                        menuKey="blogs"
+                        links={[
+                            { name: 'All Blogs', href: '/admin/blogs', icon: <ListBulletIcon className="h-4 w-4" /> },
+                            { name: 'Create Blog', href:'/admin/blogs/create', icon: <PlusIcon className="h-4 w-4" /> },
+                        ]}
+                        sidebarOpen={sidebarOpen}
+                        openMenus={openMenus}
+                        toggleMenu={toggleMenu}
+                        icon={<DocumentTextIcon className="h-5 w-5" />}
+                    />
+
+                    <CollapsibleSection
+                        title="Templates"
+                        menuKey="templates"
+                        links={[
+                            { name: 'All Templates', href: '/admin/templates', icon: <ListBulletIcon className="h-4 w-4" /> },
+                            { name: 'Add Template', href: '/admin/templates/create', icon: <PlusIcon className="h-4 w-4" /> },
+                        ]}
+                        sidebarOpen={sidebarOpen}
+                        openMenus={openMenus}
+                        toggleMenu={toggleMenu}
+                        icon={<DocumentTextIcon className="h-5 w-5 text-purple-500" />}
+                    />
+
+                    <CollapsibleSection
+                        title="Schedule"
+                        menuKey="schedule"
+                        links={[
+                            { name: 'All Schedule', href: '/admin/schedule', icon: <ListBulletIcon className="h-4 w-4" /> },
+                            { name: 'Add Schedule', href: '/admin/schedule/create', icon: <PlusIcon className="h-4 w-4" /> },
+                            { name: 'Calendar', href: '/admin/schedule/calendar', icon: <CalendarIcon className="h-4 w-4" /> },
+                        ]}
+                        sidebarOpen={sidebarOpen}
+                        openMenus={openMenus}
+                        toggleMenu={toggleMenu}
+                        icon={<CalendarIcon className="h-5 w-5 text-indigo-500" />}
+                    />
+
+                    <CollapsibleSection
+                        title="Contacts"
+                        menuKey="contacts"
+                        links={[
+                            { name: 'All Customers', href: '/admin/customers', icon: <UsersIcon className="h-4 w-4" /> },
+                        ]}
+                        sidebarOpen={sidebarOpen}
+                        openMenus={openMenus}
+                        toggleMenu={toggleMenu}
+                        icon={<UserIcon className="h-5 w-5" />}
+                    />
+
+                    <CollapsibleSection
+                        title="Team Hub"
+                        menuKey="teamhub"
+                        links={[
+                            { name: 'All Activities', href: '/admin/teamhub', icon: <UsersIcon className="h-4 w-4" /> },
+                            { name: 'Add Activity', href: '/admin/teamhub/create', icon: <PlusIcon className="h-4 w-4" /> },
+                            { name: 'Chat', href: '/admin/teamhub/chat', icon: <ChatBubbleLeftRightIcon className="h-4 w-4" /> },
+                        ]}
+                        sidebarOpen={sidebarOpen}
+                        openMenus={openMenus}
+                        toggleMenu={toggleMenu}
+                        icon={<UsersIcon className="h-5 w-5 text-indigo-500" />}
+                    />
+
                     <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-800">
                         <SimpleLink
                             title="Profile"
@@ -150,8 +213,7 @@ export default function AdminLayout({ auth, children, title = '' }) {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Top Bar */}
-                <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+                <header className="bg-white  bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
                     <div className="flex justify-between items-center">
                         <div className="flex items-center">
                             {!sidebarOpen && (
@@ -164,40 +226,59 @@ export default function AdminLayout({ auth, children, title = '' }) {
                                     </svg>
                                 </button>
                             )}
-                            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                {title || 'Dashboard'}
-                            </h1>
+                            
                         </div>
 
                         <div className="flex items-center space-x-4">
-                            <Link
-                                href="/admin/profile"
-                                className="flex items-center space-x-2 group"
-                            >
-                                <div className="relative">
-                                    <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-                                        <UserIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
-                                    </div>
-                                    <span className="absolute bottom-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white dark:ring-gray-900 bg-green-400"></span>
+                            <MessagesBell unreadCount={unreadCount} messages={messages} />
+
+                        <Link
+                            href="/admin/profile"
+                            className="flex items-center space-x-3 group relative"
+                        >
+                            {/* Avatar */}
+                            {auth?.user?.avatar ? (
+                                <img
+                                    src={`/storage/${auth.user.avatar}`}
+                                    alt={auth.user.name}
+                                    className="h-8 w-8 rounded-full object-cover"
+                                />
+                            ) : (
+                                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                                    <UserIcon className="h-5 w-5 text-purple-600" />
                                 </div>
-                                {sidebarOpen && (
-                                    <div className="text-left">
-                                        <p className="text-sm font-medium text-gray-900 dark:text-white">{auth.user.name}</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">Admin</p>
-                                    </div>
-                                )}
-                            </Link>
+                            )}
+
+                            {/* Indicateur de connexion */}
+                            <span className="absolute bottom-0 left-6 block h-2 w-2 rounded-full ring-2 ring-white bg-green-400"></span>
+
+                            {/* Nom + rôle (toujours visibles) */}
+                            <div className="text-left">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {auth?.user?.name || 'Admin'}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {auth?.user?.role || 'Admin'}
+                                </p>
+                            </div>
+                    </Link>
+
                         </div>
                     </div>
                 </header>
 
-                {/* Page Content */}
                 <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-950">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                    {/* <div className="max-w-7xl mx-auto bg-purple-700"> */}
+                        {/* <div className="bg-purple-200 dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                            {children}
+                        </div> */}
+                       <div
+                            className="w-full min-h-screen p-6 rounded-xl border border-gray-100"                           
+                        >
                             {children}
                         </div>
-                    </div>
+
+                    {/* </div> */}
                 </main>
             </div>
         </div>
@@ -211,8 +292,8 @@ function SimpleLink({ title, href, sidebarOpen, icon, active = false }) {
             className={`flex items-center ${sidebarOpen ? 'px-4 py-3 justify-start space-x-3' : 'p-3 justify-center'}
             text-sm font-medium rounded-lg transition-colors ${
                 active
-                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-purple-100 dark:hover:bg-purple-800'
             }`}
         >
             {icon}
@@ -231,8 +312,8 @@ function CollapsibleSection({ title, links, sidebarOpen, menuKey, openMenus, tog
                 className={`w-full flex items-center ${sidebarOpen ? 'px-4 py-3 justify-between' : 'p-3 justify-center'}
                 text-sm font-medium rounded-lg transition-colors ${
                     isActive
-                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-purple-100 dark:hover:bg-purple-800'
                 }`}
             >
                 <div className="flex items-center space-x-3">
@@ -254,8 +335,8 @@ function CollapsibleSection({ title, links, sidebarOpen, menuKey, openMenus, tog
                             href={link.href}
                             className={`flex items-center px-4 py-2 text-sm rounded-lg transition-colors space-x-2 ${
                                 route().current(link.href.replace(/^\//, '').replace(/\//g, '.'))
-                                    ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
-                                    : 'text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                    ? 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-800'
                             }`}
                         >
                             {link.icon}
@@ -267,3 +348,4 @@ function CollapsibleSection({ title, links, sidebarOpen, menuKey, openMenus, tog
         </div>
     );
 }
+

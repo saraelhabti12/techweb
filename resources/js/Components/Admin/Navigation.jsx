@@ -16,6 +16,7 @@ export default function Navigation({ auth, darkMode, setDarkMode }) {
                     <div className="flex items-center space-x-4">
                         {/* <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} /> */}
 
+
                         <div className="ml-3 relative">
                             <div className="flex items-center">
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mr-3">

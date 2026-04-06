@@ -5,13 +5,55 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+
 
 class ProjectController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $projects = Project::with('category')->get();
-        return inertia('Admin/Projects/Index', compact('projects'));
+        // Get filter parameters
+        $year = $request->get('year');
+        $month = $request->get('month');
+        $day = $request->get('day');
+        $search = $request->get('search');
+        
+        // Build query
+        $query = Project::with('category');
+        
+        // Date filters
+        if ($year) {
+            $query->whereYear('created_at', $year);
+        }
+        if ($month) {
+            $query->whereMonth('created_at', $month);
+        }
+        if ($day) {
+            $query->whereDay('created_at', $day);
+        }
+        
+        // Search filter
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('category', function($categoryQuery) use ($search) {
+                      $categoryQuery->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        $projects = $query->get();
+        
+        return inertia('Admin/Projects/Index', [
+            'projects' => $projects,
+            'filters' => [
+                'year' => $year,
+                'month' => $month,
+                'day' => $day,
+                'search' => $search,
+            ]
+        ]);
     }
 
     public function create()
@@ -64,4 +106,43 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.index');
     }
+
+    // public function show(Project $project)
+    // {
+    //     // Charger les relations pour afficher tous les détails
+    //     // $project->load('category', 'tasks', 'members');
+
+    //     // return Inertia::render('Admin/Projects/Show', [
+    //     //     'project' => $project,
+    //     // ]);
+
+    // //     return inertia('Admin/Projects/Show', [
+    // //     'project' => $project->load([
+    // //         'category',     // catégorie du projet
+    // //         'tasks.members', // membres de chaque tâche
+    // //         'members'        // membres du projet
+    // //     ])
+    // // ]);
+    // $project->load([
+    //     'category',        // catégorie du projet
+    //     'members',         // membres du projet
+    //     'tasks.members',   // membres assignés à chaque tâche
+    // ]);
+
+    // return inertia('Admin/Projects/Show', compact('project'));
+    // }
+
+    public function show(Project $project)
+    {
+        $project->load([
+            'category',
+            'members',
+            'tasks.user',      
+            'tasks.members',
+            'tasks.files',  
+        ]);
+
+        return inertia('Admin/Projects/Show', compact('project'));
+    }
+
 }

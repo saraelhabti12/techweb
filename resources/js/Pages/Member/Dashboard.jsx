@@ -2,34 +2,63 @@ import React from 'react';
 import MemberLayout from '@/Layouts/MemberLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
+import { router } from "@inertiajs/react";
 
 export default function MemberDashboard({ auth, tasks, stats }) {
     const [qr, setQr] = useState(null);
     const [currentTime, setCurrentTime] = useState(new Date());
 
+const [filterYear, setFilterYear] = useState('all');
+const [filterMonth, setFilterMonth] = useState('all');
+const [filterDay, setFilterDay] = useState('all');
+
+const years = Array.from(new Set(tasks.map(task => new Date(task.due_date).getFullYear()))).sort();
+const months = Array.from(new Set(tasks.map(task => new Date(task.due_date).getMonth() + 1))).sort();
+const days = Array.from(new Set(tasks.map(task => new Date(task.due_date).getDate()))).sort();
+
+const filteredTasks = tasks.filter(task => {
+    const due = new Date(task.due_date);
+    const matchYear = filterYear === 'all' || due.getFullYear() === parseInt(filterYear);
+    const matchMonth = filterMonth === 'all' || due.getMonth() + 1 === parseInt(filterMonth);
+    const matchDay = filterDay === 'all' || due.getDate() === parseInt(filterDay);
+    return matchYear && matchMonth && matchDay;
+});
+
+
     useEffect(() => {
-        // Update current time every minute
         const timer = setInterval(() => {
             setCurrentTime(new Date());
         }, 60000);
 
-        // Fetch QR code
-        fetch('/attendance/qr')
-            .then((response) => response.json())
-            .then((data) => setQr(data.qr))
-            .catch(console.error);
+        fetch(route("attendance.qr"), {
+            headers: {
+                "Accept": "application/json", 
+            },
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then((data) => {
+                if (data.qr) {
+                    setQr(data.qr);
+                } else {
+                    console.error("No QR code in response:", data);
+                }
+            })
+            .catch((err) => console.error("Error fetching QR:", err));
 
         return () => clearInterval(timer);
     }, []);
 
-    // Format time as HH:MM AM/PM
     const formattedTime = currentTime.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
     });
 
-    // Format date as Weekday, Month Day
     const formattedDate = currentTime.toLocaleDateString('en-US', {
         weekday: 'long',
         month: 'long',
@@ -40,62 +69,70 @@ export default function MemberDashboard({ auth, tasks, stats }) {
         <MemberLayout auth={auth}>
             <Head title="Dashboard" />
 
-            <div className="space-y-8">
-                {/* Welcome Banner */}
-                <div className="bg-gradient-to-r from-teal-600 to-teal-500 rounded-xl shadow-md p-6 text-white">
+            <div className="rounded-xl p-6 mb-6 shadow-lg border border-purple-300/40 space-y-8">
+            
+                <div className="bg-purple-10/90  rounded-xl p-6 mb-6 shadow-lg border border-purple-300/40">
+                    
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        
                         <div>
-                            <h1 className="text-2xl font-bold">Welcome back, {auth.user.name}!</h1>
-                            <p className="opacity-90">Here's what's happening today</p>
+                            <h1 className="text-3xl font-bold text-black">Welcome back,<span className="text-purple-600">{auth.user.name}!</span></h1>
+                            <p className="mt-2 text-black text-sm">Here's what's happening today</p>
                         </div>
                         <div className="text-right">
-                            <div className="text-3xl font-bold">{formattedTime}</div>
+                            <div className="text-2xl font-bold text-black">{formattedTime}</div>
                             <div className="text-sm opacity-90">{formattedDate}</div>
                         </div>
                     </div>
                 </div>
 
-                {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <StatCard
-                        title="To Do"
-                        value={stats.todo}
-                        description="Tasks waiting to start"
-                        color="yellow"
-                        icon={
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                        }
-                    />
-                    <StatCard
-                        title="In Progress"
-                        value={stats.in_progress}
-                        description="Active tasks"
-                        color="blue"
-                        icon={
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                        }
-                    />
-                    <StatCard
-                        title="Completed"
-                        value={stats.done}
-                        description="Finished tasks"
-                        color="green"
-                        icon={
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        }
-                    />
+                <div className=" bg-purple-10/90 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className='bg-gray-200 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6 p-6 mb-6 border border-purple-200'>
+                        <StatCard
+                            title="To Do"
+                            value={stats.todo}
+                            description="Tasks waiting to start"
+                            color=""
+                            icon={
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                            }
+                        />
+                    </div>
+
+                    <div className='bg-gray-200 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6 p-6 mb-6 border border-purple-200'>
+                        <StatCard
+                            title="In Progress"
+                            value={stats.in_progress}
+                            description="Active tasks"
+                            color=""
+                            icon={
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            }
+                        />
+                    </div>
+
+                    <div className='bg-gray-200 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6 p-6 mb-6 border border-purple-200'>
+                        <StatCard
+                            title="Completed"
+                            value={stats.done}
+                            description="Finished tasks"
+                            color="text-purple-600"
+                            icon={
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            }
+                        />
+                    </div>
                 </div>
 
-                {/* Attendance Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+                <div className="bg-purple-10/90 dark:bg-gray-100 border border-purple-200 rounded-xl shadow-md overflow-hidden">
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                        <h2 className="text-xl font-bold text-gray-800 dark:text-white">Daily Attendance</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-200">Daily Attendance </h2>
                     </div>
                     <div className="p-6">
                         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
@@ -103,16 +140,15 @@ export default function MemberDashboard({ auth, tasks, stats }) {
                                 <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-2">Mark your attendance</h3>
                                 <p className="text-gray-600 dark:text-gray-300 mb-4">
                                     Scan this QR code with your mobile device to register your attendance for today.
-                                    Attendance can be marked between 8:00 AM and 10:00 AM.
                                 </p>
-                                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 border border-purple-200">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     Last scanned: {auth.user.last_attendance_at || 'Never'}
                                 </div>
                             </div>
-                            <div className="flex flex-col items-center">
+                            <div className="flex flex-col items-center border border-purple-200">
                                 {qr ? (
                                     <div className="bg-white p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                                         <img
@@ -126,20 +162,19 @@ export default function MemberDashboard({ auth, tasks, stats }) {
                                         <p>Loading QR...</p>
                                     </div>
                                 )}
-                                <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">Scan this QR code</p>
+                                <p className="mt-3 text-sm text-gray-700 dark:text-gray-400">Scan this QR code</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Tasks Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+                <div className="bg-purple-10/90 border border-purple-200 dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-gray-800 dark:text-white">Your Tasks</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white ">Your Tasks</h2>
                             <Link
                                 href={route('member.tasks.index')}
-                                className="text-teal-600 dark:text-teal-400 hover:underline flex items-center"
+                                className=" text-gray-900 dark:text-teal-400 hover:underline flex items-center"
                             >
                                 View All
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -162,7 +197,7 @@ export default function MemberDashboard({ auth, tasks, stats }) {
                                 <p className="text-gray-500 dark:text-gray-400">No tasks assigned yet</p>
                                 <Link
                                     href={route('member.tasks.index')}
-                                    className="inline-block mt-3 text-teal-600 dark:text-teal-400 hover:underline text-sm"
+                                    className="inline-block mt-3 text-purple-600 dark:text-teal-400 hover:underline text-sm"
                                 >
                                     Check for new tasks
                                 </Link>
@@ -171,10 +206,9 @@ export default function MemberDashboard({ auth, tasks, stats }) {
                     </div>
                 </div>
 
-                {/* Quick Links */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+                <div className="bg-purple-10/90 border border-purple-200 rounded-xl shadow-md overflow-hidden">
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                        <h2 className="text-xl font-bold text-gray-800 dark:text-white">Quick Actions</h2>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Quick Actions</h2>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6">
 
@@ -200,6 +234,7 @@ export default function MemberDashboard({ auth, tasks, stats }) {
                     </div>
                 </div>
             </div>
+
         </MemberLayout>
     );
 }

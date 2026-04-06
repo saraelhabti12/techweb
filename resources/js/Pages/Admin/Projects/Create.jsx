@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { router } from '@inertiajs/react';
 
@@ -17,22 +18,26 @@ export default function CreateProject({ categories, auth }) {
         post(route('projects.store'));
     };
 
-      const handleBack = () => {
-            router.visit(route('projects.index'));
-        };
+    const handleBack = () => {
+        router.visit(route('projects.index'));
+    };
 
     return (
         <AdminLayout auth={auth} header="Projects Management">
             <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <div className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
+                                    <div className="mb-6">
+                                    <button
+                                        onClick={() => window.history.back()}
+                                        className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
+                                    >
+                                        <ArrowLeftIcon className="h-5 w-5 mr-2" />
+                                        Retour
+                                    </button>
+                                    </div>
+
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Create New Project</h1>
-                    <button
-                        onClick={handleBack}
-                        className="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:outline-none focus:border-gray-700 focus:ring focus:ring-gray-300 transition"
-                    >
-                        Back
-                    </button>
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
@@ -44,7 +49,7 @@ export default function CreateProject({ categories, auth }) {
                                 type="text"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                                 autoFocus
                             />
                             {errors.name && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>}
@@ -58,7 +63,7 @@ export default function CreateProject({ categories, auth }) {
                                 id="description"
                                 value={data.description}
                                 onChange={(e) => setData('description', e.target.value)}
-                                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                                 rows={4}
                             />
                             {errors.description && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description}</p>}
@@ -73,7 +78,7 @@ export default function CreateProject({ categories, auth }) {
                                     id="category_id"
                                     value={data.category_id}
                                     onChange={(e) => setData('category_id', e.target.value)}
-                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                                 >
                                     <option value="">Select a category</option>
                                     {categories.map((category) => (
@@ -93,7 +98,7 @@ export default function CreateProject({ categories, auth }) {
                                     id="status"
                                     value={data.status}
                                     onChange={(e) => setData('status', e.target.value)}
-                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                                 >
                                     <option value="pending">Pending</option>
                                     <option value="in_progress">In Progress</option>
@@ -113,7 +118,7 @@ export default function CreateProject({ categories, auth }) {
                                     type="date"
                                     value={data.start_date}
                                     onChange={(e) => setData('start_date', e.target.value)}
-                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                                 />
                                 {errors.start_date && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.start_date}</p>}
                             </div>
@@ -133,14 +138,21 @@ export default function CreateProject({ categories, auth }) {
                             </div>
                         </div>
 
-                        <div className="flex justify-end">
+                        <div className="flex justify-center">
                             <button
-                                type="submit"
-                                disabled={processing}
-                                className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring focus:ring-indigo-300 disabled:opacity-25 transition dark:bg-indigo-700 dark:hover:bg-indigo-600"
+                            type="submit"
+                            disabled={processing}
+                            className="inline-flex items-center px-16 py-3 
+                                        bg-purple-600 border border-transparent rounded-md 
+                                        font-semibold text-xs text-white uppercase tracking-widest 
+                                        hover:bg-purple-700 active:bg-purple-900 
+                                        focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
+                                        disabled:opacity-25 transition 
+                                        dark:bg-purple-700 dark:hover:bg-purple-600"
                             >
-                                {processing ? 'Creating...' : 'Create Project'}
+                            {processing ? 'Creating...' : 'Create Project'}
                             </button>
+
                         </div>
                     </form>
                 </div>

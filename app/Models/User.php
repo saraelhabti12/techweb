@@ -15,7 +15,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'is_admin', // Add this
+        'role', 
+        'avatar', 
     ];
 
     protected $hidden = [
@@ -28,7 +29,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_admin' => 'boolean', // Add this
         ];
     }
 
@@ -40,6 +40,27 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
-        return $this->is_admin;
+        return $this->role === 'admin';
     }
+
+    public function tasks()
+    {
+        return $this->belongsToMany(Task::class, 'task_user');
+    }
+
+    // public function activities()
+    // {
+    //     return $this->belongsToMany(TeamHubActivity::class, 'activity_user', 'user_id', 'activity_id');
+    // }
+
+    public function teamHubActivities()
+    {
+        return $this->belongsToMany(
+            TeamHubActivity::class,
+            'activity_user',
+            'user_id',
+            'activity_id'
+        );
+    }
+
 }

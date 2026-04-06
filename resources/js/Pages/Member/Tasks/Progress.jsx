@@ -1,6 +1,8 @@
 import React from 'react';
 import MemberLayout from '@/Layouts/MemberLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+
 
 export default function TaskProgress({ auth, task }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -24,7 +26,15 @@ export default function TaskProgress({ auth, task }) {
             <Head title={`Task: ${task.title}`} />
 
             <div className="space-y-6">
-                {/* Task Header */}
+        <div className="mb-6">
+          <button
+            onClick={() => window.history.back()}
+            className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
+          >
+            <ArrowLeftIcon className="h-5 w-5 mr-2" />
+            Retour
+          </button>
+        </div>
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
                     <div className="flex justify-between items-start">
                         <div>
@@ -46,7 +56,6 @@ export default function TaskProgress({ auth, task }) {
                     </p>
                 </div>
 
-                {/* Progress Updates */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                         <h2 className="text-xl font-bold text-gray-800 dark:text-white">Progress Updates</h2>
@@ -65,7 +74,6 @@ export default function TaskProgress({ auth, task }) {
                     )}
                 </div>
 
-                {/* Add Update Form */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
                     <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Add Update</h2>
                     <form onSubmit={submit}>

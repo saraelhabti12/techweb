@@ -12,3 +12,17 @@
     display: inline-flex;
     animation: marquee 55s linear infinite;
 }
+
+.swiper-pagination span {
+  color: #9CA3AF; /* gris clair */
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.swiper-pagination .swiper-pagination-bullet-active {
+  color: #7C3AED; /* violet */
+  transform: scale(1.2);
+}
+
+

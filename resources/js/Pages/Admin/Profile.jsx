@@ -11,7 +11,6 @@ export default function Edit({ auth, mustVerifyEmail, status }) {
 
             <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 <div className="space-y-6">
-                    {/* Profile Information Section */}
                     <div className="bg-white dark:bg-gray-900 shadow-sm rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
                         <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
                             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
@@ -29,7 +28,6 @@ export default function Edit({ auth, mustVerifyEmail, status }) {
                         </div>
                     </div>
 
-                    {/* Password Update Section */}
                     <div className="bg-white dark:bg-gray-900 shadow-sm rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
                         <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
                             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
@@ -44,7 +42,6 @@ export default function Edit({ auth, mustVerifyEmail, status }) {
                         </div>
                     </div>
 
-                    {/* Account Deletion Section */}
                     <div className="bg-white dark:bg-gray-900 shadow-sm rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
                         <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800 bg-red-50 dark:bg-red-900/10">
                             <h3 className="text-lg font-medium text-red-800 dark:text-red-200">

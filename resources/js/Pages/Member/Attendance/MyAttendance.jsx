@@ -1,13 +1,24 @@
 import React from 'react';
 import MemberLayout from '@/Layouts/MemberLayout';
 import moment from 'moment';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+
 export default function MyAttendance({ auth, attendance }) {
   return (
     <MemberLayout auth={auth}>
             <Head title="Dashboard" />
+        <div className="mb-6">
+          <button
+            onClick={() => window.history.back()}
+            className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
+          >
+            <ArrowLeftIcon className="h-5 w-5 mr-2" />
+            Retour
+          </button>
+        </div>
 
-      <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg">
+      <div className="overflow-x-auto bg-purple-10/90 border border-purple-200 dark:bg-gray-800 shadow rounded-lg">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-700">
@@ -38,6 +49,5 @@ export default function MyAttendance({ auth, attendance }) {
         </table>
       </div>
        </MemberLayout>
-
   );
 }

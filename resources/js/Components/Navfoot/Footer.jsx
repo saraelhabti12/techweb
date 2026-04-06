@@ -3,44 +3,43 @@ import { Link } from '@inertiajs/react';
 
 export default function Footer() {
     return (
-        <footer className="bg-gray-900 text-white py-12">
+        <footer className="bg-gray-900 text-white py-24">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid md:grid-cols-4 gap-8">
+                    <div className="grid md:grid-cols-4 gap-24">
                         <div>
                             <img
-                                src="/images/logo.png"
+                                src="/images/logo3.png"
                                 alt="TechWeb"
-                                className="h-10 mb-4"
+                                className="h-16 mb-6"
                             />
-                            <p className="text-gray-400">Innovative digital solutions for modern businesses.</p>
+                            <p className="text-White">Innovative digital solutions for modern businesses.</p>
                         </div>
                         <div>
-                            <h3 className="text-lg font-medium mb-4">Quick Links</h3>
-                            <ul className="space-y-2">
-                                <li><Link href="/" className="text-gray-400 hover:text-white">Home</Link></li>
-                                <li><Link href="/" className="text-gray-400 hover:text-white">Services</Link></li>
-                                <li><Link href="/" className="text-gray-400 hover:text-white">Portfolio</Link></li>
-                                <li><Link href="/" className="text-gray-400 hover:text-white">About Us</Link></li>
-                                <li><Link href="/" className="text-gray-400 hover:text-white">Contact</Link></li>
+                            <h3 className="text-lg font-medium mb-8">Quick Links</h3>
+                            <ul className="space-y-4">
+                                <li><Link href="/" className="text-gray-300 hover:text-white">Home</Link></li>
+                                <li><Link href="/Projects" className="text-gray-300 hover:text-white">Projects</Link></li>
+                                <li><Link href="/AboutUs" className="text-gray-300 hover:text-white">About Us</Link></li>
+                                <li><Link href="/ContactUs" className="text-gray-300 hover:text-white">Contact Us</Link></li>
                             </ul>
                         </div>
                         <div>
-                            <h3 className="text-lg font-medium mb-4">Services</h3>
-                            <ul className="space-y-2">
-                                <li><Link href="/" className="text-gray-400 hover:text-white">Web Development</Link></li>
-                                <li><Link href="/" className="text-gray-400 hover:text-white">Mobile Apps</Link></li>
-                                <li><Link href="/" className="text-gray-400 hover:text-white">UI/UX Design</Link></li>
-                                <li><Link href="/" className="text-gray-400 hover:text-white">Digital Marketing</Link></li>
-                                <li><Link href="/" className="text-gray-400 hover:text-white">SEO Services</Link></li>
+                            <h3 className="text-lg font-medium mb-8">Services</h3>
+                            <ul className="space-y-4">
+                                <li><Link href="/" className="text-gray-300 hover:text-white">Web Development</Link></li>
+                                <li><Link href="/" className="text-gray-300 hover:text-white">Mobile Apps</Link></li>
+                                <li><Link href="/" className="text-gray-300 hover:text-white">UI/UX Design</Link></li>
+                                <li><Link href="/" className="text-gray-300 hover:text-white">Digital Marketing</Link></li>
+                                <li><Link href="/" className="text-gray-300 hover:text-white">SEO Services</Link></li>
                             </ul>
                         </div>
                         <div>
-                            <h3 className="text-lg font-medium mb-4">Contact Us</h3>
-                            <address className="text-gray-400 not-italic">
-                                <p className="mb-2">123 Business Ave, Suite 100</p>
-                                <p className="mb-2">Casablanca, Morocco</p>
-                                <p className="mb-2">Email: info@techweb.ma</p>
-                                <p className="mb-2">Phone: +212 6 12 34 56 78</p>
+                            <h3 className="text-lg font-medium mb-8">Contact Us</h3>
+                            <address className="text-gray-300 not-italic space-y-4">
+                                <p className="mb-2 text-gray-300 hover:text-white">123 Business Ave, Suite 100</p>
+                                <p className="mb-2 text-gray-300 hover:text-white">Tanger, Morocco </p>
+                                <p className="mb-2 text-gray-300 hover:text-white">Email: info@techweb.ma</p>
+                                <p className="mb-2 text-gray-300 hover:text-white">Phone: +212 6 12 34 56 78</p>
                             </address>
                         </div>
                     </div>

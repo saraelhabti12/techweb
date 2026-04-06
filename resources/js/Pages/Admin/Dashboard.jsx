@@ -8,27 +8,221 @@ import {
   UsersIcon,
   ChartBarIcon,
   CalendarIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  FunnelIcon
 } from '@heroicons/react/24/outline';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState } from 'react';
+import { router } from '@inertiajs/react';
 
-export default function AdminDashboard({ auth, stats, recentProjects, recentTasks, taskTrendData, upcomingDeadlines, teamActivity }) {
-    // Status distribution for bar chart
+export default function AdminDashboard({ auth, stats, recentProjects, recentTasks, taskTrendData, upcomingDeadlines, teamActivity, filters = {} }) {
+    const [dateFilters, setDateFilters] = useState({
+        year: filters.year || '',
+        month: filters.month || '',
+        day: filters.day || ''
+    });
+
     const statusDistributionData = [
         { name: 'To Do', value: stats.todo },
         { name: 'In Progress', value: stats.in_progress },
         { name: 'Completed', value: stats.done },
     ];
 
+    const handleFilterChange = (filterType, value) => {
+        const newFilters = { ...dateFilters, [filterType]: value };
+        setDateFilters(newFilters);
+        
+        const params = {};
+        if (newFilters.year) params.year = newFilters.year;
+        if (newFilters.month) params.month = newFilters.month;
+        if (newFilters.day) params.day = newFilters.day;
+        
+        router.get(route('admin.dashboard'), params, {
+            preserveState: true,
+            preserveScroll: true
+        });
+    };
+
+    const clearFilters = () => {
+        setDateFilters({ year: '', month: '', day: '' });
+        router.get(route('admin.dashboard'), {}, {
+            preserveState: true,
+            preserveScroll: true
+        });
+    };
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; 
+    const currentDay = now.getDate();
+
+    const yearOptions = Array.from({ length: 11 }, (_, i) => {
+        const year = currentYear - 5 + i;
+        return {
+            value: year.toString(),
+            label: year.toString(),
+            isCurrent: year === currentYear
+        };
+    });
+
+    const monthOptions = [
+        { value: '1', label: 'January', isCurrent: 1 === currentMonth },
+        { value: '2', label: 'February', isCurrent: 2 === currentMonth },
+        { value: '3', label: 'March', isCurrent: 3 === currentMonth },
+        { value: '4', label: 'April', isCurrent: 4 === currentMonth },
+        { value: '5', label: 'May', isCurrent: 5 === currentMonth },
+        { value: '6', label: 'June', isCurrent: 6 === currentMonth },
+        { value: '7', label: 'July', isCurrent: 7 === currentMonth },
+        { value: '8', label: 'August', isCurrent: 8 === currentMonth },
+        { value: '9', label: 'September', isCurrent: 9 === currentMonth },
+        { value: '10', label: 'October', isCurrent: 10 === currentMonth },
+        { value: '11', label: 'November', isCurrent: 11 === currentMonth },
+        { value: '12', label: 'December', isCurrent: 12 === currentMonth }
+    ];
+
+    const generateDayOptions = () => {
+        const year = parseInt(dateFilters.year) || currentYear;
+        const month = parseInt(dateFilters.month) || currentMonth;
+        
+        const lastDay = new Date(year, month, 0);
+        const daysInMonth = lastDay.getDate();
+        
+        const dayOptions = [];
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateForDay = new Date(year, month - 1, day);
+            const dayName = dateForDay.toLocaleDateString('en-US', { weekday: 'long' });
+            const isCurrentDay = year === currentYear && month === currentMonth && day === currentDay;
+            
+            dayOptions.push({
+                value: day.toString(),
+                label: `${dayName} ${day}`,
+                isCurrent: isCurrentDay
+            });
+        }
+        
+        return dayOptions;
+    };
+
+    const dayOptions = generateDayOptions();
+
     return (
-        <AdminLayout auth={auth}>
-            {/* Welcome Banner */}
-            <div className="bg-gradient-to-r from-emerald-500 to-indigo-600 rounded-lg p-6 mb-6 text-white">
-                <h1 className="text-2xl font-bold">Welcome back, {auth.user.name}!</h1>
-                <p className="opacity-90">Here's what's happening with your projects today.</p>
+        <AdminLayout auth={auth} >
+            <div className=" w-full h-screen rounded-xl p-6 mb-6 shadow-lg border border-purple-300/40">
+            
+                <div className="bg-purple-10/90  rounded-xl p-6 mb-6 shadow-lg border border-purple-300/40">
+                    <h1 className="text-3xl font-bold text-black">
+                        Welcome back, <span className="text-purple-600">{auth.user.name}!</span>
+                    </h1>
+                        <p className="mt-2 text-black text-sm ">
+                            Here's what's happening with your projects today.
+                        </p>
+                </div>
+
+
+    <div className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
+            <div className="bg-gray-100 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6 p-6 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                        <FunnelIcon className="h-5 w-5 text-gray-400 mr-2" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Filter Tasks by Date</h3>
+                    </div>
+                    <button
+                        onClick={clearFilters}
+                        className="text-sm text-gray-900 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                        Clear Filters
+                    </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Year
+                        </label>
+                        <select
+                            value={dateFilters.year}
+                            onChange={(e) => handleFilterChange('year', e.target.value)}
+                            className="w-full rounded-md border-gray-300 
+                                        dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
+                                        shadow-sm 
+                                        focus:border-purple-500 focus:ring-purple-500"
+                        >
+                            <option value="">All Years</option>
+                            {yearOptions.map(year => (
+                                <option 
+                                    key={year.value} 
+                                    value={year.value}
+                                    className={year.isCurrent ? 'text-purple-600 font-semibold' : ''}
+                                >
+                                    {year.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Month
+                        </label>
+                        <select
+                            value={dateFilters.month}
+                            onChange={(e) => handleFilterChange('month', e.target.value)}
+                            className="w-full rounded-md border-gray-300 
+                                        dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
+                                        shadow-sm 
+                                        focus:border-purple-500 focus:ring-purple-500"
+                        >
+                            <option value="">All Months</option>
+                            {monthOptions.map(month => (
+                                <option 
+                                    key={month.value} 
+                                    value={month.value}
+                                    className={month.isCurrent ? 'text-purple-600 font-semibold' : ''}
+                                >
+                                    {month.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Day
+                        </label>
+                        <select
+                            value={dateFilters.day}
+                            onChange={(e) => handleFilterChange('day', e.target.value)}
+                            className="w-full rounded-md border-gray-300 
+                                        dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
+                                        shadow-sm 
+                                        focus:border-purple-500 focus:ring-purple-500"
+                        >
+                            <option value="">All Days</option>
+                            {dayOptions.map(day => (
+                                <option 
+                                    key={day.value} 
+                                    value={day.value}
+                                    className={day.isCurrent ? 'text-purple-600 font-semibold' : ''}
+                                >
+                                    {day.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                {(dateFilters.year || dateFilters.month || dateFilters.day) && (
+                    <div className="mt-4 p-3 bg-purple-500 dark:bg-purple-500 rounded-md">
+                        <p className="text-sm text-white dark:text-white">
+                            <strong>Active Filters:</strong> 
+                            {dateFilters.year && ` Year: ${dateFilters.year}`}
+                            {dateFilters.month && ` Month: ${monthOptions.find(m => m.value === dateFilters.month)?.label}`}
+                            {dateFilters.day && ` Day: ${dateFilters.day}`}
+                        </p>
+                    </div>
+                )}
             </div>
 
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <StatCard
                     title="Total Tasks"
@@ -56,7 +250,6 @@ export default function AdminDashboard({ auth, stats, recentProjects, recentTask
                 />
             </div>
 
-            {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <ChartCard
                     title="Task Trend (Last 6 Months)"
@@ -100,7 +293,6 @@ export default function AdminDashboard({ auth, stats, recentProjects, recentTask
                 </ChartCard>
             </div>
 
-            {/* Recent Activity and Upcoming Deadlines */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 <RecentItems
                     title="Recent Projects"
@@ -189,7 +381,6 @@ export default function AdminDashboard({ auth, stats, recentProjects, recentTask
                 </div>
             </div>
 
-            {/* Team Activity */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xs overflow-hidden mb-8">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                     <div className="flex items-center">
@@ -225,11 +416,11 @@ export default function AdminDashboard({ auth, stats, recentProjects, recentTask
                     </div>
                 </div>
             </div>
+        </div>
+        </div>
         </AdminLayout>
     );
 }
-
-// ... (Keep your existing StatCard, RecentItems, ChartCard, and ActivityItem components)
 
 function StatCard({ title, value, icon, className = '', trend, trendValue }) {
     const trendColor = trend === 'up' ? 'text-emerald-500' : 'text-rose-500';

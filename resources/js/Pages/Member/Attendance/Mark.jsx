@@ -44,7 +44,6 @@ export default function MarkAttendance({ auth, userName, token, hasArrival, hasD
   const handleMark = async (type) => {
     setIsLoading(true);
     try {
-      // Use existing location or get new one
       const currentLocation = location || await getLocation();
 
       if (!currentLocation) {

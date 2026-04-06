@@ -9,7 +9,12 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'due_date', 'status', 'project_id', 'assigned_to'];
+    protected $fillable = ['title', 'description', 'due_date', 'deadline', 'status', 'project_id', 'assigned_to'];
+
+    // Laravel transformera automatiquement JSON <-> tableau
+    // protected $casts = [
+    //     'members' => 'array',
+    // ];
 
     public function project()
     {
@@ -24,6 +29,18 @@ class Task extends Model
     public function progressUpdates()
     {
         return $this->hasMany(ProgressUpdate::class);
+    }
+
+    public function files()
+    {
+        return $this->hasMany(TaskFile::class);
+    }
+
+    public function members()
+    {
+        // return $this->belongsToMany(User::class);
+         // Assure-toi que c'est bien une table pivot task_user
+        return $this->belongsToMany(User::class, 'task_user', 'task_id', 'user_id');
     }
 }
 
