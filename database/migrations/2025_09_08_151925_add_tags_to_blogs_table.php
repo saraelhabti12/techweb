@@ -6,19 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('blogs', function (Blueprint $table) {
-            $table->json('tags')->nullable()->after('category');
-        });
+        if (!Schema::hasColumn('blogs', 'tags')) {
+            Schema::table('blogs', function (Blueprint $table) {
+                $table->json('tags')->nullable()->after('category');
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('blogs', function (Blueprint $table) {

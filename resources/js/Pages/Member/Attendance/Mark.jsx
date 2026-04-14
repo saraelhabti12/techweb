@@ -51,7 +51,7 @@ export default function MarkAttendance({ auth, userName, token, hasArrival, hasD
         return;
       }
 
-      await router.post(`/attendance/mark/${token}`, {
+      await router.post(route('member.attendance.mark', { token }), {
         type,
         latitude: currentLocation.latitude,
         longitude: currentLocation.longitude

@@ -9,15 +9,15 @@ class TeamHubItem extends Model
 {
     use HasFactory;
 
-    // Your database uses dashed table names
-    protected $table = 'teamhub-items';
+    // Your database uses underscore table names
+    protected $table = 'teamhub_items';
 
     protected $fillable = ['title', 'content', 'file_path', 'admin_id'];
 
     public function users()
     {
-        // Custom pivot table name with dashes
-        return $this->belongsToMany(User::class, 'teamhub-item-user', 'teamhub_item_id', 'user_id');
+        // Custom pivot table name with underscores
+        return $this->belongsToMany(User::class, 'teamhub_item_user', 'teamhub_item_id', 'user_id');
     }
 
     public function messages()

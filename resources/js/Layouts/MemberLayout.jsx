@@ -1,183 +1,241 @@
-import { Link, usePage  } from '@inertiajs/react';
-import { useState } from 'react';
+import { Link, usePage } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import NotificationDropdown from '@/Components/NotificationDropdown';
+import { 
+    LayoutDashboard, 
+    Users, 
+    CalendarCheck, 
+    CheckSquare, 
+    TrendingUp, 
+    Clock, 
+    MessageSquare,
+    LogOut,
+    ChevronDown,
+    QrCode,
+    X,
+    CheckCircle2,
+    AlertCircle,
+    Menu
+} from 'lucide-react';
 
 export default function MemberLayout({ auth, children }) {
     const [teamHubOpen, setTeamHubOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const { flash } = usePage().props;
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState({ type: '', text: '' });
+
+    useEffect(() => {
+        if (flash?.success) {
+            setToastMessage({ type: 'success', text: flash.success });
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 5000);
+        } else if (flash?.error) {
+            setToastMessage({ type: 'error', text: flash.error });
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 5000);
+        }
+    }, [flash]);
     
     return (
-        <div className="bg-white">
+        <div className="min-h-screen bg-[#F8FAFC] dark:bg-black flex flex-col font-sans transition-colors duration-500">
+            {/* Toast Notification */}
+            <AnimatePresence>
+                {showToast && (
+                    <motion.div 
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 100 }}
+                        className={`fixed top-6 right-6 z-[60] flex items-center p-4 rounded-2xl shadow-2xl backdrop-blur-md border ${
+                        toastMessage.type === 'success' 
+                            ? 'bg-green-50/90 dark:bg-green-900/20 text-green-800 dark:text-green-300 border-green-100 dark:border-green-800' 
+                            : 'bg-red-50/90 dark:bg-red-900/20 text-red-800 dark:text-red-300 border-red-100 dark:border-red-800'
+                    }`}>
+                        {toastMessage.type === 'success' ? <CheckCircle2 className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3" />}
+                        <span className="font-bold mr-8">{toastMessage.text}</span>
+                        <button onClick={() => setShowToast(false)} className="ml-auto p-1.5 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                            <X className="w-4 h-4" />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Top Navigation Bar */}
-            <header className="bg-purple-10/90 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16 items-center">
-                        <div className="flex items-center">
-                            <div className="absolute top-2 left-4">
-                                <img
-                                    className="h-12 w-auto"
-                                    src="/images/logotechweb.png"
-                                    alt="TechWeb"
-                                />
+            <header className="h-20 bg-white/80 dark:bg-black/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 dark:border-gray-800 px-6 lg:px-8">
+                <div className="h-full flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <Link href="/member/dashboard" className="flex items-center gap-3 group">
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                                <img className="h-6 brightness-0 invert" src="/images/logotechweb.png" alt="TechWeb" />
                             </div>
-                        </div>
-                        <div className="flex items-center space-x-4">
+                            <span className="font-black text-xl bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] bg-clip-text text-transparent hidden sm:block">TECHWEB</span>
+                        </Link>
+                    </div>
+
+                    <div className="flex items-center gap-3 lg:gap-6">
+                        <div className="flex items-center gap-2 pr-4 border-r border-gray-100 dark:border-gray-800">
                             <Link
-                                href={route('attendance.qr')}
-                                className="p-2 rounded-full text-gray-900 hover:bg-purple-500 transition-colors"
+                                href={route('chat.index')}
+                                className="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-[#1F2BF3] transition-all relative group"
+                                title="Chat"
+                            >
+                                <MessageSquare className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                                {usePage().props.unreadChatCount > 0 && (
+                                    <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center text-[10px] font-bold text-white bg-red-500 rounded-full border-2 border-white dark:border-gray-950">
+                                        {usePage().props.unreadChatCount}
+                                    </span>
+                                )}
+                            </Link>
+
+                            <NotificationDropdown />
+
+                            <Link
+                                href="/member/attendance/qr"
+                                className="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-[#1F2BF3] transition-all group"
                                 title="Attendance QR"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                </svg>
+                                <QrCode className="h-5 w-5 group-hover:scale-110 transition-transform" />
                             </Link>
-                            {/* <div className="flex items-center space-x-2">
-                                <div className="h-8 w-8 rounded-full bg-purple-500  flex items-center justify-center text-gray-900 font-medium">
-                                    {auth.user.name.charAt(0).toUpperCase()}
-                                </div>
-                                <span className="text-sm font-medium text-gray-900">
-                                    {auth.user.name}
-                                </span>
-                            </div> */}
+                        </div>
 
-                            <div className="h-8 w-8 rounded-full overflow-hidden">
-                                {auth.user.avatar ? (
-                                    <img
-                                        src={`/storage/${auth.user.avatar}`}
-                                        alt={auth.user.name}
-                                        className="h-full w-full object-cover"
-                                    />
+                        <Link href={route('admin.profile')} className="flex items-center gap-3 p-1.5 pr-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all border border-transparent hover:border-gray-100 dark:hover:border-gray-800 group">
+                            <div className="relative">
+                                {auth?.user?.avatar ? (
+                                    <img src={`/storage/${auth.user.avatar}`} alt={auth.user.name} className="h-10 w-10 rounded-xl object-cover shadow-sm border border-gray-100 dark:border-gray-800" />
                                 ) : (
-                                    <div className="h-8 w-8 bg-purple-500 flex items-center justify-center text-gray-900 font-medium">
-                                        {auth.user.name.charAt(0).toUpperCase()}
+                                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] flex items-center justify-center text-white font-bold">
+                                        {auth?.user?.name?.charAt(0)}
                                     </div>
                                 )}
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-950 rounded-full"></div>
                             </div>
-
-{/* Nom de l'utilisateur */}
-    <span className="text-sm font-medium text-gray-900">
-        {auth.user.name}
-    </span>
-                        </div>
+                            <div className="text-left hidden lg:block">
+                                <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors">{auth?.user?.name}</p>
+                                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{auth?.user?.role}</p>
+                            </div>
+                        </Link>
                     </div>
                 </div>
             </header>
 
-            <div className="flex h-full">
+            <div className="flex flex-1 overflow-hidden">
                 {/* Sidebar */}
-                <aside className="w-64 bg-purple-10/90 border shadow-md hidden md:block">
-                    <nav className="mt-6">
-                        <NavLink href={route('member.dashboard')}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                            </svg>
+                <aside className="w-72 bg-white dark:bg-[#0A0A0A] border-r border-gray-100 dark:border-gray-800 hidden md:flex flex-col z-30 shadow-xl transition-all">
+                    <nav className="mt-8 flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+                        <NavLink href="/member/dashboard" icon={<LayoutDashboard className="w-5 h-5" />}>
                             Dashboard
                         </NavLink>
-                        <NavLink href={route('member.tasks.index')}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
-                            </svg>
+                        <NavLink href="/member/clients" icon={<Users className="w-5 h-5" />}>
+                            My Clients (CRM)
+                        </NavLink>
+                        <NavLink href="/member/appointments" icon={<CalendarCheck className="w-5 h-5" />}>
+                            Appointments
+                        </NavLink>
+                        <NavLink href="/member/tasks" icon={<CheckSquare className="w-5 h-5" />}>
                             My Tasks
                         </NavLink>
-                        <NavLink href={route('member.progress.index')}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
-                            </svg>
+                        <NavLink href="/member/progress" icon={<TrendingUp className="w-5 h-5" />}>
                             Progress Updates
                         </NavLink>
-                        <NavLink href={route('member.myAttendance')}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                            </svg>
+                        <NavLink href="/member/my-attendance" icon={<Clock className="w-5 h-5" />}>
                             My Attendance
                         </NavLink>
 
                         {/* TeamHub Dropdown */}
-                        <div className="relative">
+                        <div className="pt-2">
                             <button
                                 onClick={() => setTeamHubOpen(!teamHubOpen)}
-                                className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-900 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-700 rounded-md transition-colors"
+                                className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
+                                    teamHubOpen ? 'bg-blue-50/50 dark:bg-blue-900/10 text-[#1F2BF3]' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'
+                                }`}
                             >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2h-8zM9 6h10v2H9V6zm0 4h10v2H9v-2zm0 4h10v2H9v-2z" />
-                            </svg>
-                                TeamHub Member
-                                <svg className={`ml-auto h-4 w-4 transition-transform ${teamHubOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
+                                <div className="flex items-center gap-3">
+                                    <MessageSquare className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${teamHubOpen ? 'text-[#1F2BF3]' : ''}`} />
+                                    <span className="text-sm font-bold tracking-tight">TeamHub</span>
+                                </div>
+                                <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${teamHubOpen ? 'rotate-180' : ''}`} />
                             </button>
                             
-                            {teamHubOpen && (
-                                <div className="ml-6 mt-1 space-y-1">
-                                    <NavLink href={route('member.teamhub.index')}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                        </svg>
-                                        View Activity
-                                    </NavLink>
-                                    <NavLink href={route('member.teamhub.chat')}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-                                        </svg>
-                                        Chat
-                        </NavLink>
-                                </div>
-                            )}
-                        </div>
-
-
-                        <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700 mx-4">
-                            <NavLink
-                                href={route('logout')}
-                                method="post"
-                                as="button"
-                                className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
-                                </svg>
-                                Logout
-                            </NavLink>
+                            <AnimatePresence>
+                                {teamHubOpen && (
+                                    <motion.div 
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="overflow-hidden pl-11 mt-1 space-y-1"
+                                    >
+                                        <Link href="/member/teamhub" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-[#1F2BF3] dark:hover:text-white transition-all hover:translate-x-1">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-700" />
+                                            View Activity
+                                        </Link>
+                                        <Link href={route('chat.index')} className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-[#1F2BF3] dark:hover:text-white transition-all hover:translate-x-1">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-700" />
+                                            Chat
+                                        </Link>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </nav>
+
+                    <div className="p-4 border-t border-gray-50 dark:border-gray-800">
+                        <Link
+                            href="/logout"
+                            method="post"
+                            as="button"
+                            className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-2xl transition-all group"
+                        >
+                            <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            <span>Logout</span>
+                        </Link>
+                    </div>
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 p-4 sm:p-6 bg-gradient-to-br from-teal-50 to-white dark:from-gray-800 dark:to-gray-900">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                        {children}
-                    </div>
+                <main className="flex-1 overflow-y-auto scroll-smooth bg-gray-50/50 dark:bg-black">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={usePage().url}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.3 }}
+                            className="p-6 sm:p-8"
+                        >
+                            {children}
+                        </motion.div>
+                    </AnimatePresence>
                 </main>
             </div>
         </div>
     );
 }
 
-// const NavLink = ({ href, children, ...props }) => {
-//     return (
-//         <Link
-//             href={href}
-//             className="flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
-//             activeClassName="bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 font-medium border-r-4 border-teal-500"
-//             {...props}
-//         >
-//             {children}
-//         </Link>
-//     );
-// };
-
-const NavLink = ({ href, children, ...props }) => {
-    const { url } = usePage(); // récupère l'URL actuelle
-    const isActive = url === href; // simple comparaison, ou plus complexe si nécessaire
+const NavLink = ({ href = "#", icon, children, className = "", ...props }) => {
+    const { url } = usePage();
+    const currentPath = url.split('?')[0];
+    const isActive = currentPath === href || (href !== '/member/dashboard' && currentPath.startsWith(href));
 
     return (
         <Link
             href={href}
-            className={`flex items-center px-6 py-3 transition-colors
-                ${isActive ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 font-medium border-r-4 border-purple-500'
-                            : 'text-gray-900 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900/20'}`}
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${
+                isActive 
+                    ? 'bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] text-white shadow-lg shadow-blue-500/25' 
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'
+            } ${className}`}
             {...props}
         >
-            {children}
+            <div className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
+                {icon}
+            </div>
+            <span className={`text-sm font-bold tracking-tight ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}>
+                {children}
+            </span>
+            {isActive && (
+                <motion.div layoutId="activePillMember" className="absolute left-0 w-1 h-6 bg-white rounded-r-full" />
+            )}
         </Link>
     );
 };

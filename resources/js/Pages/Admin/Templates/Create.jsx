@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { useForm, router ,Link } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function Create({ categories }) {
+export default function Create({ categories, auth }) {
   const { data, setData, post, processing, errors } = useForm({
     title: '',
     category: categories.length > 0 ? categories[0] : '', 
@@ -34,125 +38,139 @@ export default function Create({ categories }) {
   };
 
   return (
-    <AdminLayout header="Ajouter un Template">
-        <div className="mb-6">
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-          >
-            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Retour
-          </button>
-        </div>
+    <AdminLayout auth={auth}>
+        <DashboardPage 
+            title="Create New Template"
+            description="Add a new premium design asset to your studio's library."
+            actions={
+                <DashboardButton variant="secondary" onClick={() => window.history.back()} className="text-sm">
+                    Go Back
+                </DashboardButton>
+            }
+        >
+            <DashboardCard className="max-w-3xl mx-auto border-transparent shadow-xl">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                    Template Title 
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.title}
+                                    onChange={(e) => setData('title', e.target.value)}
+                                    placeholder="e.g. Modern Portfolio UI"
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                />
+                                {errors.title && (
+                                    <div className="text-red-500 text-xs font-bold mt-1 uppercase">{errors.title}</div>
+                                )}
+                            </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-gray-500 bg-opacity-30 dark:bg-gray-800 shadow-lg rounded-2xl p-10 max-w-2xl mx-auto space-y-8"
-      >
-        <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-4">
-          New Template
-        </h2>
-        <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
-            Titre 
-          </label>
-          <input
-            type="text"
-            value={data.title}
-            onChange={(e) => setData('title', e.target.value)}
-            placeholder="Ex: Template Portfolio"
-            className="w-full rounded-md border bg-white/60
-                        dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
-                        shadow-sm 
-                        focus:border-purple-500 focus:ring-purple-500"
-          />
-          {errors.title && (
-            <div className="text-red-500 text-sm mt-1">{errors.title}</div>
-          )}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
-            Catégorie
-          </label>
-          <select
-            value={data.category}
-            onChange={(e) => setData('category', e.target.value)}
-            className="w-full rounded-md border bg-white/60
-                        dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
-                        shadow-sm 
-                        focus:border-purple-500 focus:ring-purple-500"
-          >
-            {Array.isArray(categories) && categories.length > 0 ? (
-              categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))
-            ) : (
-              <option value="">Aucune catégorie </option>
-            )}
-          </select>
-          {errors.category && (
-            <div className="text-red-500 text-sm mt-1">{errors.category}</div>
-          )}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
-            Description
-          </label>
-          <textarea
-            value={data.description}
-            onChange={(e) => setData('description', e.target.value)}
-            placeholder="Description courte du template..."
-            rows={5}
-            className="w-full rounded-md border bg-white/60
-                        dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
-                        shadow-sm 
-                        focus:border-purple-500 focus:ring-purple-500"
-          ></textarea>
-          {errors.description && (
-            <div className="text-red-500 text-sm mt-1">{errors.description}</div>
-          )}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
-            Image
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="mt-1 w-full text-gray-700 dark:text-gray-200"
-          />
-          {preview && (
-            <img
-              src={preview}
-              alt="Aperçu"
-              className="mt-3 w-full h-48 object-cover rounded-xl border border-gray-300"
-            />
-          )}
-          {errors.image && (
-            <div className="text-red-500 text-sm mt-1">{errors.image}</div>
-          )}
-        </div>
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                    Asset Category
+                                </label>
+                                <select
+                                    value={data.category}
+                                    onChange={(e) => setData('category', e.target.value)}
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                >
+                                    {Array.isArray(categories) && categories.length > 0 ? (
+                                    categories.map((cat) => (
+                                        <option key={cat} value={cat}>
+                                        {cat}
+                                        </option>
+                                    ))
+                                    ) : (
+                                    <option value="">No categories defined</option>
+                                    )}
+                                </select>
+                                {errors.category && (
+                                    <div className="text-red-500 text-xs font-bold mt-1 uppercase">{errors.category}</div>
+                                )}
+                            </div>
+                        </div>
 
-        <div className="flex justify-center">
-          <button
-            type="submit"
-            disabled={processing}
-            className="inline-flex items-center px-4 py-2 
-                    bg-purple-600 border border-transparent rounded-md 
-                    font-semibold text-xs text-white uppercase tracking-widest 
-                    hover:bg-purple-700 active:bg-purple-900 
-                    focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
-                    disabled:opacity-25 transition 
-                    dark:bg-purple-700 dark:hover:bg-purple-600"
-          >
-            {processing ? 'Envoi...' : 'Ajouter Template'}
-          </button>
-        </div>
-      </form>
+                        <div>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                Cover Preview Image
+                            </label>
+                            <div className="relative group h-[164px]">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                    className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer"
+                                />
+                                <div className={`w-full h-full rounded-2xl border-2 border-dashed flex flex-col items-center justify-center transition-all ${
+                                    preview 
+                                        ? 'border-transparent bg-gray-100 dark:bg-gray-800' 
+                                        : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 group-hover:border-[#1F2BF3]/50'
+                                }`}>
+                                    <AnimatePresence mode="wait">
+                                        {preview ? (
+                                            <motion.div 
+                                                initial={{ opacity: 0 }} 
+                                                animate={{ opacity: 1 }} 
+                                                className="relative w-full h-full"
+                                            >
+                                                <img
+                                                    src={preview}
+                                                    alt="Aperçu"
+                                                    className="w-full h-full object-cover rounded-2xl"
+                                                />
+                                                <button 
+                                                    onClick={(e) => { e.preventDefault(); setPreview(null); setData('image', null); }}
+                                                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg shadow-lg hover:scale-110 transition-transform z-20"
+                                                >
+                                                    <XMarkIcon className="w-4 h-4" />
+                                                </button>
+                                            </motion.div>
+                                        ) : (
+                                            <>
+                                                <PhotoIcon className="w-10 h-10 text-gray-300 dark:text-gray-600 mb-2 group-hover:text-[#1F2BF3] transition-colors" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Click to upload</span>
+                                            </>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            </div>
+                            {errors.image && (
+                                <div className="text-red-500 text-xs font-bold mt-1 uppercase">{errors.image}</div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                            Template Description
+                        </label>
+                        <textarea
+                            value={data.description}
+                            onChange={(e) => setData('description', e.target.value)}
+                            placeholder="Briefly describe the features and usage of this template..."
+                            rows={5}
+                            className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                        ></textarea>
+                        {errors.description && (
+                            <div className="text-red-500 text-xs font-bold mt-1 uppercase">{errors.description}</div>
+                        )}
+                    </div>
+
+                    <div className="pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+                        <DashboardButton 
+                            type="submit" 
+                            disabled={processing} 
+                            className="w-full md:w-auto !px-12"
+                        >
+                            {processing ? 'Saving Template...' : 'Publish Template'}
+                        </DashboardButton>
+                    </div>
+                </form>
+            </DashboardCard>
+        </DashboardPage>
     </AdminLayout>
   );
 }
-

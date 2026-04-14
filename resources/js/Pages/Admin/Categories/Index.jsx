@@ -1,86 +1,78 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Link, router } from '@inertiajs/react';
+import { PlusIcon, PencilIcon, TrashIcon, TagIcon } from '@heroicons/react/24/outline';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import { motion } from 'framer-motion';
 
 export default function Index({ categories, auth }) {
     const handleDelete = (id) => {
         if (confirm("Are you sure you want to delete this category?")) {
-            router.delete(route('categories.destroy', id));
+            router.delete(route('admin.categories.destroy', id));
         }
     };
 
     return (
-        <AdminLayout auth={auth} header="Categories Management">
-            <div className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
-                <div className="flex justify-between items-center mb-6">
-                    <div className="mb-6">
-                    <button
-                        onClick={() => window.history.back()}
-                        className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-                    >
-                        <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                        Retour
-                    </button>
-                    </div>
-                    
-                    <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-200">All Categories</h1>
-                    <Link
-                        href={route('categories.create')}
-                        className="inline-flex items-center px-4 py-2 
-                                   bg-purple-600 border border-transparent rounded-md 
-                                   font-semibold text-xs text-white uppercase tracking-widest 
-                                   hover:bg-purple-700 active:bg-purple-900 
-                                   focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
-                                   disabled:opacity-25 transition 
-                                   dark:bg-purple-700 dark:hover:bg-purple-600"
-                    >
-                        + Add Category
+        <AdminLayout auth={auth}>
+            <DashboardPage 
+                title="Content Categories"
+                description="Organize your blog posts, projects and resources into structured categories."
+                actions={
+                    <Link href={route('admin.categories.create')}>
+                        <DashboardButton className="flex items-center gap-2">
+                            <PlusIcon className="w-5 h-5" />
+                            Add Category
+                        </DashboardButton>
                     </Link>
-                </div>
+                }
+            >
                 {categories.length === 0 ? (
-                    <div className="text-center py-10 text-gray-500 dark:text-gray-400 bg-gray-200/30 dark:bg-gray-800/30 rounded-lg">
-                        No categories found.
+                    <div className="py-20 text-center bg-gray-50 dark:bg-gray-800/20 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800">
+                        <TagIcon className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                        <p className="text-gray-400 font-medium italic">No categories created yet.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {categories.map((category) => (
-                            <div
-                                key={category.id}
-                                className="bg-gray-200 bg-opacity-30 dark:bg-gray-800 dark:bg-opacity-30 
-                                           rounded-lg p-6 border border-purple-200/50 dark:border-purple-500/20 
-                                           shadow-sm hover:shadow-md transition-shadow duration-300"
+                            <DashboardCard 
+                                key={category.id} 
+                                className="group flex flex-col justify-between h-full border-transparent hover:border-[#1F2BF3]/20 transition-all"
                             >
-                                <div className="flex flex-col justify-between h-full">
-                                    <div>
-                                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                                            {category.name}
-                                        </h2>
-                                        <p className="text-sm text-gray-900 dark:text-gray-400">
-                                            Category ID: {category.id}
-                                        </p>
+                                <div className="space-y-4">
+                                    <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[#1F2BF3] group-hover:scale-110 transition-transform">
+                                        <TagIcon className="w-6 h-6" />
                                     </div>
-
-                                    <div className="mt-4 flex items-center gap-4">
-                                        <Link
-                                            href={route('categories.edit', category.id)}
-                                            className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium text-sm"
-                                        >
-                                            Edit
-                                        </Link>
-
-                                        <button
-                                            onClick={() => handleDelete(category.id)}
-                                            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium text-sm"
-                                        >
-                                            Delete
-                                        </button>
+                                    <div>
+                                        <h3 className="text-lg font-black text-gray-900 dark:text-white tracking-tight uppercase group-hover:text-[#1F2BF3] transition-colors line-clamp-1">
+                                            {category.name}
+                                        </h3>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">ID: #{category.id}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+
+                                <div className="mt-8 pt-4 border-t border-gray-50 dark:border-gray-800 flex items-center justify-between">
+                                    <Link
+                                        href={route('admin.categories.edit', category.id)}
+                                        className="text-[10px] font-black uppercase tracking-widest text-[#1F2BF3] hover:underline"
+                                    >
+                                        Edit Details
+                                    </Link>
+
+                                    <button
+                                        onClick={() => handleDelete(category.id)}
+                                        className="p-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                    >
+                                        <TrashIcon className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </DashboardCard>
                         ))}
                     </div>
                 )}
-            </div>
+            </DashboardPage>
         </AdminLayout>
     );
 }

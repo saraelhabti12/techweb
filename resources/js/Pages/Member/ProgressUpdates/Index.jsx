@@ -1,115 +1,109 @@
-import MemberLayout
- from '@/Layouts/MemberLayout';
+import MemberLayout from '@/Layouts/MemberLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { ClipboardDocumentListIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ClipboardDocumentListIcon, PlusIcon, TrashIcon, LinkIcon, DocumentIcon } from '@heroicons/react/24/outline';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import { motion } from 'framer-motion';
 
 export default function ProgressUpdatesIndex({ auth, progressUpdates, status }) {
     return (
         <MemberLayout auth={auth}>
             <Head title="My Progress Updates" />
 
-            <div className="py-6 px-4 bg-purple-10/90 border border-purple-200 sm:px-6 lg:px-8">
-                <div className="mb-6">
-                <button
-                    onClick={() => window.history.back()}
-                    className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-                >
-                    <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                    Retour
-                </button>
-                </div>
-                
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Progress Updates</h1>
-                        <Link
-                            href={route('member.progress.create')}
-                            className="inline-flex items-center px-4 py-2 
-                                        bg-purple-600 border border-transparent rounded-md 
-                                        font-semibold text-xs text-white uppercase tracking-widest 
-                                        hover:bg-purple-700 active:bg-purple-900 
-                                        focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
-                                        disabled:opacity-25 transition 
-                                        dark:bg-purple-700 dark:hover:bg-purple-600"
-                        >
-                            <PlusIcon className="h-4 w-4 mr-2" />
-                            Add Update
-                        </Link>
-                    </div>
-
-                    {status && (
-                        <div className="mb-4 p-4 bg-green-100 text-green-700 rounded">
-                            {status}
+            <DashboardPage 
+                title="Work Logs & Updates"
+                description="Keep track of your submissions, resource links and task progress."
+                actions={
+                    <Link href={route('member.progress.create')}>
+                        <DashboardButton className="flex items-center gap-2">
+                            <PlusIcon className="w-5 h-5" />
+                            Submit Update
+                        </DashboardButton>
+                    </Link>
+                }
+            >
+                <div className="grid grid-cols-1 gap-6">
+                    {progressUpdates.length === 0 ? (
+                        <div className="py-20 text-center bg-gray-50 dark:bg-gray-800/20 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800">
+                            <ClipboardDocumentListIcon className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                            <p className="text-gray-400 font-medium italic">You haven't submitted any progress updates yet.</p>
                         </div>
-                    )}
-
-                    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
-                        {progressUpdates.length === 0 ? (
-                            <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-                                No progress updates found. Start by adding one!
-                            </div>
-                        ) : (
-                            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {progressUpdates.map((update) => (
-                                    <li key={update.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                        <div className="flex items-start">
-                                            <div className="flex-shrink-0 p-2 bg-indigo-100 dark:bg-indigo-900 rounded-md">
-                                                <ClipboardDocumentListIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                    ) : (
+                        progressUpdates.map((update, index) => (
+                            <motion.div
+                                key={update.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                            >
+                                <DashboardCard className="!p-0 overflow-hidden border-transparent hover:border-[#1F2BF3]/20 transition-all">
+                                    <div className="p-6 flex flex-col md:flex-row gap-6">
+                                        <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[#1F2BF3] shrink-0">
+                                            {update.type === 'link' ? <LinkIcon className="w-6 h-6" /> : 
+                                             update.type === 'file' ? <DocumentIcon className="w-6 h-6" /> : 
+                                             <ClipboardDocumentListIcon className="w-6 h-6" />}
+                                        </div>
+                                        
+                                        <div className="flex-1 space-y-3">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                                                <h3 className="text-lg font-black text-gray-900 dark:text-white tracking-tight">
+                                                    {update.task?.title || 'General Activity'}
+                                                </h3>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded">
+                                                    {new Date(update.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </span>
                                             </div>
-                                            <div className="ml-4 flex-1">
-                                                <div className="flex items-center justify-between">
-                                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                                                        {update.task?.title || 'Task not found'}
-                                                    </h3>
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {new Date(update.created_at).toLocaleDateString()}
-                                                    </span>
-                                                </div>
-                                                <div className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                                                    {update.type === 'text' && (
-                                                        <p>{update.content}</p>
-                                                    )}
-                                                    {update.type === 'file' && (
-                                                        <a
-                                                            href={`/storage/${update.file_path}`}
-                                                            target="_blank"
-                                                            className="text-indigo-600 dark:text-indigo-400 hover:underline"
-                                                        >
-                                                            View attached file
-                                                        </a>
-                                                    )}
-                                                    {update.type === 'link' && (
-                                                        <a
-                                                            href={update.url}
-                                                            target="_blank"
-                                                            className="text-indigo-600 dark:text-indigo-400 hover:underline"
-                                                        >
-                                                            {update.url}
-                                                        </a>
-                                                    )}
-                                                </div>
-                                                <div className="mt-2 flex justify-end">
-                                                    <button
-                                                        onClick={() => {
-                                                            if (confirm('Are you sure you want to delete this update?')) {
-                                                                router.delete(route('member.progress-updates.destroy', update.id));
-                                                            }
-                                                        }}
-                                                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 text-sm font-medium"
+
+                                            <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                                {update.type === 'text' && (
+                                                    <p className="whitespace-pre-line bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl italic border border-gray-100 dark:border-gray-800">
+                                                        "{update.content}"
+                                                    </p>
+                                                )}
+                                                {update.type === 'file' && (
+                                                    <a
+                                                        href={`/storage/${update.file_path}`}
+                                                        target="_blank"
+                                                        className="inline-flex items-center gap-2 text-[#1F2BF3] font-bold hover:underline"
                                                     >
-                                                        Delete
-                                                    </button>
-                                                </div>
+                                                        <DocumentIcon className="w-4 h-4" />
+                                                        View attached resource
+                                                    </a>
+                                                )}
+                                                {update.type === 'link' && (
+                                                    <a
+                                                        href={update.url}
+                                                        target="_blank"
+                                                        className="inline-flex items-center gap-2 text-[#1F2BF3] font-bold hover:underline truncate max-w-md"
+                                                    >
+                                                        <LinkIcon className="w-4 h-4" />
+                                                        {update.url}
+                                                    </a>
+                                                )}
                                             </div>
                                         </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
+
+                                        <div className="md:border-l border-gray-100 dark:border-gray-800 md:pl-6 flex items-center justify-end">
+                                            <button
+                                                onClick={() => {
+                                                    if (confirm('Permanently remove this update?')) {
+                                                        router.delete(route('member.progress.destroy', update.id));
+                                                    }
+                                                }}
+                                                className="p-3 rounded-xl bg-red-50 dark:bg-red-900/10 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                                title="Delete Update"
+                                            >
+                                                <TrashIcon className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </DashboardCard>
+                            </motion.div>
+                        ))
+                    )}
                 </div>
-            </div>
+            </DashboardPage>
         </MemberLayout>
     );
 }

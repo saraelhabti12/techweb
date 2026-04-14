@@ -1,0 +1,26 @@
+#!/Users/techweb/Desktop/techweb/gemini_env/bin/python3
+import sys
+import os
+from google import genai
+
+# T-akked beli l-API KEY m'exportiya
+api_key = os.environ.get("API_KEY")
+if not api_key:
+    print("Error: API_KEY makaynach. Dir: export API_KEY='your_key'")
+    sys.exit(1)
+
+client = genai.Client(api_key=api_key)
+prompt = " ".join(sys.argv[1:])
+
+if not prompt:
+    print("Usage: gemini 'your question here'")
+    sys.exit(0)
+
+try:
+    response = client.models.generate_content(
+        model='gemini-3.1-flash-lite-preview',
+        contents=prompt
+    )
+    print(f"\nGemini: {response.text}")
+except Exception as e:
+    print(f"Error: {e}")

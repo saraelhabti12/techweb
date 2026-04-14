@@ -1,74 +1,72 @@
 import React from 'react';
 import MemberLayout from '@/Layouts/MemberLayout';
-import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { Head, Link } from '@inertiajs/react';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import StatusBadge from '@/Components/Shared/StatusBadge';
+import { motion } from 'framer-motion';
+import { ClipboardList } from 'lucide-react';
 
 export default function TasksIndex({ auth, tasks }) {
     return (
         <MemberLayout auth={auth}>
             <Head title="My Tasks" />
 
-            <div className="bg-purple-10/90 dark:bg-gray-800 rounded-xl border border-purple-200 shadow-md overflow-hidden">
-        <div className="mb-6">
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-          >
-            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Retour
-          </button>
-        </div>
-                
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">My Tasks</h1>
-                </div>
-
-                <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {tasks.map(task => (
-                        <TaskItem key={task.id} task={task} />
-                    ))}
-                    {tasks.length === 0 && (
-                        <div className="p-6 text-center text-gray-500">
-                            No tasks assigned yet
+            <DashboardPage 
+                title="My Tasks"
+                description="View and update the progress of tasks assigned to you."
+            >
+                <div className="grid grid-cols-1 gap-4">
+                    {tasks.length === 0 ? (
+                        <div className="p-12 text-center bg-gray-50 dark:bg-gray-800/20 rounded-2xl border-2 border-dashed border-gray-100 dark:border-gray-800">
+                            <ClipboardList className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                            <p className="text-gray-400 font-medium italic">No tasks assigned yet. Enjoy your day!</p>
                         </div>
+                    ) : (
+                        tasks.map((task) => (
+                            <TaskItem key={task.id} task={task} />
+                        ))
                     )}
                 </div>
-            </div>
+            </DashboardPage>
         </MemberLayout>
     );
 }
 
 const TaskItem = ({ task }) => {
-    const statusColors = {
-        todo: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
-        in_progress: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
-        done: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
-    };
-
     return (
-        <Link
-            href={route('member.tasks.progress', task.id)}
-            className="block p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-        >
-            <div className="flex justify-between items-start">
-                <div>
-                    <h3 className="text-lg font-medium text-gray-800 dark:text-white">{task.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
-                        {task.project?.name} • Due: {task.due_date || 'No deadline'}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                        {task.description || 'No description'}
-                    </p>
+        <Link href={route('member.tasks.progress', task.id)} className="block group">
+            <DashboardCard className="!p-0 overflow-hidden transition-all duration-300 border border-gray-100 dark:border-gray-800 group-hover:border-[#1F2BF3] group-hover:shadow-md group-hover:shadow-blue-500/10">
+                <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors">
+                                {task.title}
+                            </h3>
+                            {task.status && <StatusBadge status={task.status} />}
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed mb-4">
+                            {task.description || 'No description provided.'}
+                        </p>
+                        <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                            <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md text-gray-600 dark:text-gray-300">
+                                Project: {task.project?.name || 'N/A'}
+                            </span>
+                            <span>Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No deadline'}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 md:flex-col md:items-end border-t md:border-t-0 md:border-l border-gray-100 dark:border-gray-800 pt-4 md:pt-0 md:pl-6 shrink-0">
+                        <div className="flex flex-col items-start md:items-end">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Updates</span>
+                            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[#1F2BF3] font-black text-lg shadow-inner">
+                                {task.progress_updates_count || 0}
+                            </div>
+                        </div>
+                        <span className="text-xs font-bold text-[#1F2BF3] group-hover:underline">Update Progress →</span>
+                    </div>
                 </div>
-                <div className="flex flex-col items-end space-y-2">
-                    <span className={`${statusColors[task.status]} text-xs px-3 py-1 rounded-full`}>
-                        {task.status.replace('_', ' ')}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                        {task.progress_updates_count || 0} updates
-                    </span>
-                </div>
-            </div>
+            </DashboardCard>
         </Link>
     );
 };

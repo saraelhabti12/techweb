@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Message;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -29,14 +30,6 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        // return [
-        //     ...parent::share($request),
-        //     'auth' => [
-        //         'user' => $request->user(),
-        //     ],
-        // ];
-        \Log::info('USER INFO', [$request->user()]);
-
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user() ? [
@@ -44,9 +37,15 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'role' => $request->user()->role,
-                    // 👇 ICI on envoie bien l'avatar
                     'avatar' => $request->user()->avatar,
                 ] : null,
+            ],
+            'unreadChatCount' => $request->user() 
+                ? Message::where('receiver_id', $request->user()->id)->where('is_read', false)->count() 
+                : 0,
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
             ],
         ]);
     }

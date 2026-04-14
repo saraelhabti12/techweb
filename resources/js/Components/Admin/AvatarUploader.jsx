@@ -23,12 +23,12 @@
 //     e.preventDefault();
 //     // const formData = new FormData();
 //     // formData.append('avatar', data.avatar);
-//     // post(route('members.avatar', user.id), {
+//     // post(route('admin.members.avatar', user.id), {
 //     //   forceFormData: true,
 //     //   onSuccess: () => alert('Avatar updated successfully!')
 //     // });
 
-//         post(route('members.avatar', user.id), {
+//         post(route('admin.members.avatar', user.id), {
 //         forceFormData: true,
 //         // onSuccess: () => {
 //         //     alert('Avatar updated successfully!');
@@ -37,7 +37,7 @@
 //         //     setPreview(`/storage/${user.avatar}`);
 //         //     }
 //         // },
-//         onSuccess: () => Inertia.reload(),
+//         onSuccess: () => router.reload(),
 //         });
 //   };
 
@@ -84,7 +84,7 @@
 
 import React, { useRef, useState } from 'react';
 import { useForm } from '@inertiajs/react';
-import { Inertia } from '@inertiajs/inertia';
+import { router } from '@inertiajs/react';
 
 export default function AvatarUploader({ user }) {
   const { data, setData, post } = useForm({ avatar: null });
@@ -102,9 +102,9 @@ export default function AvatarUploader({ user }) {
 
   const handleUpload = () => {
     if (!data.avatar) return;
-    post(route('members.avatar', user.id), {
+    post(route('admin.members.avatar', user.id), {
       forceFormData: true,
-      onSuccess: () => Inertia.reload(), // recharge la page Inertia pour afficher l'image
+      onSuccess: () => router.reload(), // recharge la page Inertia pour afficher l'image
     });
   };
 

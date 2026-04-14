@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link } from '@inertiajs/react';
-import { Inertia } from '@inertiajs/inertia';
 import ReplyModal from './ReplyModal';
 
 export default function MessagesBell({ unreadCount = 0, messages = [] }) {
@@ -12,6 +11,8 @@ export default function MessagesBell({ unreadCount = 0, messages = [] }) {
     setReplyTo(email);
     setModalOpen(true);
   };
+
+  const safeMessages = Array.isArray(messages) ? messages : [];
 
   return (
     <div className="relative">
@@ -31,25 +32,28 @@ export default function MessagesBell({ unreadCount = 0, messages = [] }) {
 
       {open && (
         <div className="absolute right-0 mt-2 w-96 bg-white shadow-lg rounded-lg overflow-hidden z-50 max-h-96 overflow-y-auto">
-          {messages.length === 0 ? (
+          {safeMessages.length === 0 ? (
             <div className="p-4 text-gray-500">No messages</div>
           ) : (
-            messages.map(msg => (
+            safeMessages.map(msg => (
               <Link
-                key={msg.id}
-                href={route('admin.customers.show', msg.id)}
-                className={`block px-4 py-3 border-b hover:bg-gray-100 ${msg.is_read ? 'bg-gray-50 text-gray-500' : 'bg-white font-bold'}`}
+                key={msg?.id || Math.random()}
+                href={(msg && msg.id && typeof route === 'function' && route().has('admin.customers.show')) ? route('admin.customers.show', msg.id) : '#'}
+                className={`block px-4 py-3 border-b hover:bg-gray-100 ${msg?.is_read ? 'bg-gray-50 text-gray-500' : 'bg-white font-bold'}`}
               >
                 <div className="flex justify-between items-center">
-                  <span>{msg.full_name} - {msg.subject}</span>
-                  <span className="text-xs text-gray-400">{new Date(msg.created_at).toLocaleDateString()}</span>
+                  <span>{(msg?.full_name || 'Anonymous')} - {(msg?.subject || 'No Subject')}</span>
+                  <span className="text-xs text-gray-400">
+                    {msg?.created_at ? new Date(msg.created_at).toLocaleDateString() : 'N/A'}
+                  </span>
                 </div>
-                <p className="truncate mt-1">{msg.message}</p>
+                <p className="truncate mt-1">{msg?.message || ''}</p>
                 <div className="mt-1">
                   <button
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation(); 
-                      window.location.href = `mailto:${msg.email}`;
+                      if (msg?.email) window.location.href = `mailto:${msg.email}`;
                     }}
                     className="text-[#8000FF] text-xs underline "
                   >

@@ -15,7 +15,7 @@ export default function TaskProgress({ auth, task }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('member.progress-updates.store'), {
+        post(route('member.progress.store'), {
             preserveScroll: true,
             onSuccess: () => setData({ type: 'text', content: '', file: null, url: '' })
         });

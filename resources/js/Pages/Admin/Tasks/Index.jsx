@@ -1,15 +1,26 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Link, router } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { 
+    MagnifyingGlassIcon,
+    PlusIcon,
+    PencilIcon,
+    TrashIcon,
+    EyeIcon
+} from '@heroicons/react/24/outline';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardInput from '@/Components/UI/DashboardInput';
+import StatusBadge from '@/Components/Shared/StatusBadge';
+import { motion } from 'framer-motion';
 
 export default function Index({ tasks, auth, filters = {} }) {
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
 
     const handleSearch = (e) => {
         e.preventDefault();
-        router.get(route('tasks.index'), { search: searchTerm }, {
+        router.get(route('admin.tasks.index'), { search: searchTerm }, {
             preserveState: true,
             preserveScroll: true
         });
@@ -17,139 +28,127 @@ export default function Index({ tasks, auth, filters = {} }) {
 
     const clearSearch = () => {
         setSearchTerm('');
-        router.get(route('tasks.index'), {}, {
+        router.get(route('admin.tasks.index'), {}, {
             preserveState: true,
             preserveScroll: true
         });
     };
 
     return (
-        <AdminLayout auth={auth} header="Tasks Management">
-            <div className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
-                
-                <div className="mb-6">
-                <button
-                    onClick={() => window.history.back()}
-                    className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-                >
-                    <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                    Retour
-                </button>
-                </div>
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-purple-700">Tasks Overview</h1>
-                    <Link
-                        href="tasks/create"
-                        className="inline-flex items-center px-4 py-2 
-                                    bg-purple-600 border border-transparent rounded-md 
-                                    font-semibold text-xs text-white uppercase tracking-widest 
-                                    hover:bg-purple-700 active:bg-purple-900 
-                                    focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
-                                    disabled:opacity-25 transition 
-                                    dark:bg-purple-700 dark:hover:bg-purple-600"
-                    >
-                        + New Task
+        <AdminLayout auth={auth}>
+            <DashboardPage 
+                title="Tasks Management"
+                description="Manage, assign, and track all tasks across your projects."
+                actions={
+                    <Link href={route('admin.tasks.create')}>
+                        <DashboardButton className="flex items-center gap-2">
+                            <PlusIcon className="w-5 h-5" />
+                            New Task
+                        </DashboardButton>
                     </Link>
-                </div>
-
-                <div className="bg-gray-100 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6 p-6 mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center">
-                            <MagnifyingGlassIcon className="h-5 w-5 text-purple-500 mr-2" />
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Search Tasks</h3>
-                        </div>
-                        {searchTerm && (
-                            <button
-                                onClick={clearSearch}
-                                className="text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
-                            >
-                                Clear Search
-                            </button>
-                        )}
+                }
+            >
+                {/* Search & Filters */}
+                <DashboardCard className="!p-0 overflow-hidden">
+                    <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
+                        <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1">
+                                <DashboardInput
+                                    icon={MagnifyingGlassIcon}
+                                    placeholder="Search tasks by title, description, project, or user..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <DashboardButton type="submit" variant="primary" className="!px-6">
+                                    Search
+                                </DashboardButton>
+                                {searchTerm && (
+                                    <DashboardButton type="button" variant="secondary" onClick={clearSearch} className="!px-6">
+                                        Reset
+                                    </DashboardButton>
+                                )}
+                            </div>
+                        </form>
                     </div>
+                </DashboardCard>
 
-                    <form onSubmit={handleSearch} className="flex space-x-4">
-                        <div className="flex-1 relative">
-                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search tasks by title, description, project, or assigned user..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center space-x-2 transition duration-200"
-                        >
-                            <MagnifyingGlassIcon className="h-4 w-4" />
-                            <span>Search</span>
-                        </button>
-                    </form>
-
-                    {searchTerm && (
-                        <div className="mt-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-md">
-                            <p className="text-sm text-purple-800 dark:text-purple-200">
-                                <strong>Search Results for:</strong> "{searchTerm}"
-                            </p>
-                        </div>
-                    )}
-                </div>
-
-                <div className="overflow-x-auto rounded-lg shadow-sm bg-gray-200 bg-opacity-30 dark:bg-gray-800 dark:bg-opacity-30 rounded-lg p-6">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead  className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
-                            <tr >
-                                <th className="px-4 py-2 border-b border-purple-200">Title</th>
-                                <th className="px-4 py-2 border-b border-purple-200">Project</th>
-                                <th className="px-4 py-2 border-b border-purple-200">Assigned To</th>
-                                <th className="px-4 py-2 border-b border-purple-200">Status</th>
-                                <th className="px-4 py-2 border-b border-purple-200">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-gray-100 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
-                            {tasks.map((task) => (
-                                <tr key={task.id} >
-                                    <td className="px-6 py-4 border-b border-purple-200 font-medium text-purple-700">{task.title}</td>
-                                    <td className="px-4 py-2 border-b border-purple-200">{task.project?.name}</td>
-                                    <td className="px-4 py-2 border-b border-purple-200">{task.user?.name}</td>
-                                    <td className="px-4 py-2 border-b border-purple-200 capitalize">
-                                        <span className="px-2 py-1 bg-gray-100 text-purple-700 rounded-full text-xs font-semibold">
-                                            {task.status.replace('_', ' ')}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-2 border-b border-purple-200 flex space-x-2">
-                                        <Link
-                                            href={route('tasks.show', task.id)}
-                                            className="text-purple-600 hover:text-purple-700 font-medium text-sm transition"
-                                        >
-                                            Details
-                                        </Link>
-                                        <Link
-                                            href={route('tasks.edit', task.id)}
-                                            className="text-purple-600 hover:text-purple-800 font-medium text-sm transition"
-                                        >
-                                            Edit
-                                        </Link>
-                                        <button
-                                            onClick={() => {
-                                                if (confirm("Are you sure you want to delete this task?")) {
-                                                    router.delete(route('tasks.destroy', task.id));
-                                                }
-                                            }}
-                                            className="text-red-600 hover:text-red-800 font-medium text-sm transition"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
+                {/* Tasks Table */}
+                <DashboardCard className="!p-0 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50 dark:bg-gray-900/50">
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Task Title</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Project</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Assigned To</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                {tasks.map((task) => (
+                                    <motion.tr 
+                                        key={task.id}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
+                                    >
+                                        <td className="px-6 py-5">
+                                            <span className="font-bold text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors">
+                                                {task.title}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                                                {task.project?.name || 'No Project'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
+                                                    {task.user?.name?.charAt(0) || '?'}
+                                                </div>
+                                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                                    {task.user?.name || 'Unassigned'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            {task.status ? <StatusBadge status={task.status} /> : (
+                                                 <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-400">
+                                                    Unknown
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Link href={route('admin.tasks.show', task.id)}>
+                                                    <button className="p-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3] hover:bg-[#1F2BF3] hover:text-white transition-all shadow-sm">
+                                                        <EyeIcon className="w-4 h-4" />
+                                                    </button>
+                                                </Link>
+                                                <Link href={route('admin.tasks.edit', task.id)}>
+                                                    <button className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                                                        <PencilIcon className="w-4 h-4" />
+                                                    </button>
+                                                </Link>
+                                                <button 
+                                                    onClick={() => confirm("Delete this task?") && router.delete(route('admin.tasks.destroy', task.id))}
+                                                    className="p-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                                >
+                                                    <TrashIcon className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </motion.tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </DashboardCard>
+            </DashboardPage>
         </AdminLayout>
     );
 }
-

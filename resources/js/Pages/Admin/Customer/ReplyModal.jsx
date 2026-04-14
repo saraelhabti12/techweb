@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Inertia } from "@inertiajs/inertia";
+import { router } from "@inertiajs/react";
 
 export default function ReplyModal({ open, onClose, customerEmail }) {
   const [message, setMessage] = useState("");
@@ -7,7 +7,7 @@ export default function ReplyModal({ open, onClose, customerEmail }) {
   const handleSend = (e) => {
     e.preventDefault();
 
-    Inertia.post(route("admin.customers.sendReply"), {
+    router.post(route("admin.customers.sendReply"), {
       to: customerEmail,
       from: "Directeur@Techweb.Ma",
       body: message,

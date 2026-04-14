@@ -1,53 +1,89 @@
 import React from 'react';
 import MemberLayout from '@/Layouts/MemberLayout';
 import moment from 'moment';
-import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { Head, Link } from '@inertiajs/react';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import { motion } from 'framer-motion';
+import { Clock, CalendarCheck } from 'lucide-react';
 
 export default function MyAttendance({ auth, attendance }) {
   return (
     <MemberLayout auth={auth}>
-            <Head title="Dashboard" />
-        <div className="mb-6">
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-          >
-            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Retour
-          </button>
-        </div>
-
-      <div className="overflow-x-auto bg-purple-10/90 border border-purple-200 dark:bg-gray-800 shadow rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead>
-            <tr className="bg-gray-50 dark:bg-gray-700">
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Marked At</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {attendance.map((entry, index) => (
-              <tr key={index}>
-                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">{entry.type}</td>
-                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">
-                  {moment(entry.marked_at).format('YYYY-MM-DD HH:mm')}
-                </td>
-                <td className="px-6 py-4 text-sm">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    entry.status === 'present' ? 'bg-green-100 text-green-800' :
-                    entry.status === 'absent' ? 'bg-red-100 text-red-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {entry.type}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-       </MemberLayout>
+        <Head title="Attendance History" />
+        
+        <DashboardPage 
+            title="Attendance History"
+            description="Track your daily check-ins and check-outs at the studio."
+            actions={
+                <Link href="/member/attendance/qr">
+                    <DashboardButton className="flex items-center gap-2">
+                        <CalendarCheck className="w-5 h-5" />
+                        Scan QR Code
+                    </DashboardButton>
+                </Link>
+            }
+        >
+            <DashboardCard className="!p-0 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Activity Type</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Timestamp</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                            {attendance.length === 0 ? (
+                                <tr>
+                                    <td colSpan="3" className="px-6 py-12 text-center text-gray-400 italic">
+                                        No attendance logs found for your account.
+                                    </td>
+                                </tr>
+                            ) : (
+                                attendance.map((entry, index) => (
+                                    <motion.tr 
+                                        key={index}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
+                                    >
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                                    entry.type.toLowerCase() === 'check-in' 
+                                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' 
+                                                        : 'bg-amber-50 dark:bg-amber-900/20 text-amber-600'
+                                                }`}>
+                                                    <Clock className="w-4 h-4" />
+                                                </div>
+                                                <span className="font-bold text-gray-900 dark:text-white uppercase tracking-tight">
+                                                    {entry.type}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5 text-sm font-medium text-gray-600 dark:text-gray-400">
+                                            {moment(entry.marked_at).format('MMMM Do YYYY, h:mm a')}
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
+                                                entry.type.toLowerCase() === 'check-in' 
+                                                    ? 'bg-emerald-100 text-emerald-700' 
+                                                    : 'bg-amber-100 text-amber-700'
+                                            }`}>
+                                                Success
+                                            </span>
+                                        </td>
+                                    </motion.tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </DashboardCard>
+        </DashboardPage>
+    </MemberLayout>
   );
 }

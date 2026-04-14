@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeftIcon, MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusIcon, EyeIcon, PencilIcon, TrashIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import dayjs from 'dayjs';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import DashboardInput from '@/Components/UI/DashboardInput';
+import { motion } from 'framer-motion';
 
 export default function Index({ schedules: initialSchedules, auth }) {
     const [schedules, setSchedules] = useState(initialSchedules);
@@ -10,7 +15,7 @@ export default function Index({ schedules: initialSchedules, auth }) {
 
     const handleDelete = (id) => {
         if (confirm("Are you sure you want to delete this schedule?")) {
-            router.delete(`/admin/schedule/${id}`, {
+            router.delete(route('admin.schedule.destroy', id), {
                 onSuccess: () => {
                     setSchedules((prev) => prev.filter((item) => item.id !== id));
                 },
@@ -20,150 +25,152 @@ export default function Index({ schedules: initialSchedules, auth }) {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        router.get('/admin/schedule', { search: searchTerm }, { preserveScroll: true });
+        router.get(route('admin.schedule.index'), { search: searchTerm }, { preserveScroll: true });
     };
 
     const clearSearch = () => {
         setSearchTerm('');
-        router.get('/admin/schedule', {}, { preserveScroll: true });
+        router.get(route('admin.schedule.index'), {}, { preserveScroll: true });
     };
 
-    // 🔥 Date du jour
     const today = dayjs().format('YYYY-MM-DD');
 
     return (
-        <AdminLayout auth={auth} title="All Schedule">
-            <Head title="All Schedule" />
-            <div className="mb-6">
-                <button
-                    onClick={() => window.history.back()}
-                    className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-                >
-                    <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                    Retour
-                </button>
-            </div>
-
-            <div className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6 mb-6">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">All Schedules</h2>
-                    <Link
-                        href="/admin/schedule/create"
-                        className="inline-flex items-center px-4 py-2 
-                            bg-purple-600 border border-transparent rounded-md 
-                            font-semibold text-xs text-white uppercase tracking-widest 
-                            hover:bg-purple-700 active:bg-purple-900 
-                            focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
-                            disabled:opacity-25 transition 
-                            dark:bg-purple-700 dark:hover:bg-purple-600"
-                    >
-                        Add Schedule
-                    </Link>
-                </div>
-
-                {/* Search Section */}
-                <div className="bg-gray-100 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6 mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center">
-                            <FunnelIcon className="h-5 w-5 text-gray-400 mr-2" />
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Search Schedule</h3>
-                        </div>
-                        <button
-                            onClick={clearSearch}
-                            className="text-sm text-gray-900 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                        >
-                            Clear Search
-                        </button>
+        <AdminLayout auth={auth}>
+            <Head title="Schedules" />
+            
+            <DashboardPage 
+                title="Planning & Schedules"
+                description="Coordinate your team's timeline and manage important studio events."
+                actions={
+                    <div className="flex gap-3">
+                        <Link href={route('admin.appointments.calendar')}>
+                            <DashboardButton variant="secondary" className="flex items-center gap-2">
+                                <CalendarIcon className="w-5 h-5" />
+                                View Calendar
+                            </DashboardButton>
+                        </Link>
+                        <Link href={route('admin.schedule.create')}>
+                            <DashboardButton className="flex items-center gap-2">
+                                <PlusIcon className="w-5 h-5" />
+                                Add Schedule
+                            </DashboardButton>
+                        </Link>
                     </div>
-                    <form onSubmit={handleSearch} className="flex space-x-4">
-                        <div className="flex-1 relative">
-                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search schedules by title, person or content..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full rounded-md border-gray-300 
-                                        dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
-                                        shadow-sm pl-9
-                                        focus:border-purple-500 focus:ring-purple-500"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            className="inline-flex items-center px-4 py-2 
-                                    bg-purple-600 border border-transparent rounded-md 
-                                    font-semibold text-xs text-white uppercase tracking-widest 
-                                    hover:bg-purple-700 active:bg-purple-900 
-                                    focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
-                                    disabled:opacity-25 transition 
-                                    dark:bg-purple-700 dark:hover:bg-purple-600"
-                        >
-                            <MagnifyingGlassIcon className="h-4 w-4 mr-1" />
-                            Search
-                        </button>
-                    </form>
-                </div>
+                }
+            >
+                {/* Search Header */}
+                <DashboardCard className="!p-0 overflow-hidden">
+                    <div className="p-6 bg-gray-50/50 dark:bg-gray-900/20">
+                        <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1">
+                                <DashboardInput 
+                                    icon={MagnifyingGlassIcon}
+                                    placeholder="Search schedules by title, person or description..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <DashboardButton type="submit">Search</DashboardButton>
+                                {searchTerm && (
+                                    <DashboardButton variant="secondary" onClick={clearSearch}>Reset</DashboardButton>
+                                )}
+                            </div>
+                        </form>
+                    </div>
+                </DashboardCard>
 
-                {/* Table */}
-                <div className="bg-gray-200 bg-opacity-30 dark:bg-gray-800 dark:bg-opacity-30 rounded-lg p-6">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-300 uppercase tracking-wider">Title</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-300 uppercase tracking-wider">Time</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-300 uppercase tracking-wider">Person</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-300 uppercase tracking-wider">Content</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-gray-100 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
-                            {schedules.length > 0 ? (
-                                schedules.map((item) => {
-                                    const isToday = item.date && dayjs(item.date).format('YYYY-MM-DD') === today;
-                                    const textClass = isToday
-                                        ? 'text-purple-600 dark:text-purple-400 font-semibold'
-                                        : 'text-gray-900 dark:text-gray-100';
-
-                                    return (
-                                        <tr key={item.id}>
-                                            <td className={`px-6 py-4 whitespace-nowrap text-sm ${textClass}`}>{item.title}</td>
-                                            <td className={`px-6 py-4 whitespace-nowrap text-sm ${textClass}`}>
-                                                {item.date ? new Date(item.date).toLocaleDateString() : '-'}
-                                            </td>
-                                            <td className={`px-6 py-4 whitespace-nowrap text-sm ${textClass}`}>
-                                                {item.time ? item.time.slice(0, 5) : '-'}
-                                            </td>
-                                            <td className={`px-6 py-4 whitespace-nowrap text-sm ${textClass}`}>
-                                                {item.person || '-'}
-                                            </td>
-                                            <td className={`px-6 py-4 whitespace-nowrap text-sm ${textClass}`}>
-                                                {item.content || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                                <Link href={`/admin/schedule/${item.id}`} className="text-blue-500 hover:underline">Details</Link>
-                                                <Link href={`/admin/schedule/${item.id}/edit`} className="text-yellow-500 hover:underline">Edit</Link>
-                                                <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:underline">Delete</button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            ) : (
-                                <tr>
-                                    <td colSpan="6" className="text-center p-4 text-gray-500 dark:text-gray-400">No schedules available</td>
+                {/* Table Card */}
+                <DashboardCard className="!p-0 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Scheduled Event</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Date & Time</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Person In Charge</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                {schedules.length > 0 ? (
+                                    schedules.map((item) => {
+                                        const isToday = item.date && dayjs(item.date).format('YYYY-MM-DD') === today;
+                                        return (
+                                            <motion.tr 
+                                                key={item.id}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                className={`group transition-colors ${isToday ? 'bg-blue-50/30 dark:bg-blue-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+                                            >
+                                                <td className="px-6 py-5">
+                                                    <div className="flex flex-col">
+                                                        <span className={`font-bold text-base ${isToday ? 'text-[#1F2BF3]' : 'text-gray-900 dark:text-white'}`}>
+                                                            {item.title}
+                                                        </span>
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 max-w-xs">{item.content || 'No details provided'}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                                                            {item.date ? new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
+                                                        </span>
+                                                        <span className="text-[10px] font-black text-[#1F2BF3] uppercase tracking-tighter">
+                                                            {item.time ? item.time.slice(0, 5) : 'All Day'}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase">
+                                                            {item.person?.charAt(0) || '?'}
+                                                        </div>
+                                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{item.person || 'Unassigned'}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    {isToday ? (
+                                                        <span className="px-2.5 py-1 bg-[#1F2BF3] text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20">Today</span>
+                                                    ) : (
+                                                        <span className="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-lg text-[10px] font-black uppercase tracking-widest">Upcoming</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    <div className="flex justify-end gap-2">
+                                                        <Link href={route('admin.schedule.show', item.id)}>
+                                                            <button className="p-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3] hover:bg-[#1F2BF3] hover:text-white transition-all shadow-sm">
+                                                                <EyeIcon className="w-4 h-4" />
+                                                            </button>
+                                                        </Link>
+                                                        <Link href={route('admin.schedule.edit', item.id)}>
+                                                            <button className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                                                                <PencilIcon className="w-4 h-4" />
+                                                            </button>
+                                                        </Link>
+                                                        <button 
+                                                            onClick={() => handleDelete(item.id)}
+                                                            className="p-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                                        >
+                                                            <TrashIcon className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        );
+                                    })
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="px-6 py-20 text-center text-gray-400 italic">No schedules found matching your criteria.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </DashboardCard>
+            </DashboardPage>
         </AdminLayout>
     );
 }
-
-
-
-
-
-

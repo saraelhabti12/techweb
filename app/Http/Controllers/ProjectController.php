@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Category;
+use App\Models\Client;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -59,52 +60,92 @@ class ProjectController extends Controller
     public function create()
     {
         $categories = Category::all();
-        return inertia('Admin/Projects/Create', compact('categories'));
+        $clients = Client::all(); // Fetch all clients
+        return inertia('Admin/Projects/Create', compact('categories', 'clients')); // Pass clients to the view
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
+            'project_type' => 'required|in:Internal (Techweb),Client Project',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
             'status' => 'required|in:pending,in_progress,completed',
+            'client_id' => 'required_if:project_type,Client Project|nullable|exists:clients,id',
         ]);
 
-        Project::create($request->all());
+        if ($validatedData['project_type'] === 'Client Project' && $request->filled('client_id')) {
+            $client = Client::find($request->client_id);
+            if ($client) {
+                $validatedData['client_name'] = $client->name;
+                $validatedData['client_phone'] = $client->phone;
+                $validatedData['client_email'] = $client->email;
+                $validatedData['client_address'] = $client->address;
+                $validatedData['client_city'] = $client->city;
+                $validatedData['client_logo'] = $client->logo;
+            }
+        } else {
+            $validatedData['client_id'] = null;
+        }
 
-        return redirect()->route('projects.index');
+        Project::create($validatedData);
+
+        return redirect()->route('admin.projects.index');
     }
 
     public function edit(Project $project)
     {
         $categories = Category::all();
-        return inertia('Admin/Projects/Edit', compact('project', 'categories'));
+        $clients = Client::all();
+        return inertia('Admin/Projects/Edit', compact('project', 'categories', 'clients'));
     }
 
     public function update(Request $request, Project $project)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
+            'project_type' => 'required|in:Internal (Techweb),Client Project',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
             'status' => 'required|in:pending,in_progress,completed',
+            'client_id' => 'required_if:project_type,Client Project|nullable|exists:clients,id',
         ]);
 
-        $project->update($request->all());
+        if ($validatedData['project_type'] === 'Client Project' && $request->filled('client_id')) {
+            $client = Client::find($request->client_id);
+            if ($client) {
+                $validatedData['client_name'] = $client->name;
+                $validatedData['client_phone'] = $client->phone;
+                $validatedData['client_email'] = $client->email;
+                $validatedData['client_address'] = $client->address;
+                $validatedData['client_city'] = $client->city;
+                $validatedData['client_logo'] = $client->logo;
+            }
+        } else {
+            $validatedData['client_id'] = null;
+            $validatedData['client_name'] = null;
+            $validatedData['client_phone'] = null;
+            $validatedData['client_email'] = null;
+            $validatedData['client_address'] = null;
+            $validatedData['client_city'] = null;
+            $validatedData['client_logo'] = null;
+        }
 
-        return redirect()->route('projects.index');
+        $project->update($validatedData);
+
+        return redirect()->route('admin.projects.index');
     }
 
     public function destroy(Project $project)
     {
         $project->delete();
 
-        return redirect()->route('projects.index');
+        return redirect()->route('admin.projects.index');
     }
 
     // public function show(Project $project)

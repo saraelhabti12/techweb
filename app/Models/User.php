@@ -63,4 +63,28 @@ class User extends Authenticatable
         );
     }
 
+    public function clients()
+    {
+        return $this->hasMany(Client::class);
+    }
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
+    }
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_user')->withTimestamps();
+    }
 }

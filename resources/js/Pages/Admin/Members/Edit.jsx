@@ -10,11 +10,12 @@ const Edit = ({ member, auth }) => {
     email: member.email || '',
     password: '',
     password_confirmation: '',
+    role: member.role || 'member',
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    put(route('members.update', member.id), {
+    put(route('admin.members.update', member.id), {
       preserveScroll: true,
     });
   };
@@ -93,6 +94,26 @@ const Edit = ({ member, auth }) => {
                 required
               />
               {errors.email && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Role
+              </label>
+              <select
+                name="role"
+                value={data.role}
+                onChange={(e) => setData('role', e.target.value)}
+                className="w-full rounded-md border-gray-300 dark:border-gray-600 
+                           dark:bg-gray-700 dark:text-gray-300 shadow-sm 
+                           focus:border-purple-500 focus:ring-purple-500"
+                required
+              >
+                <option value="member">Member</option>
+                <option value="project_manager">Project Manager</option>
+                <option value="admin">Admin</option>
+              </select>
+              {errors.role && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.role}</p>}
             </div>
 
             <div>

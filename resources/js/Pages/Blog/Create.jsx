@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Inertia } from '@inertiajs/inertia';
+import { router } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 
 export default function Create({ categories , allTags}) {
@@ -51,7 +51,7 @@ export default function Create({ categories , allTags}) {
     form.images.forEach((img) => data.append('images[]', img));
 
     // Utiliser directement l'URL de la route POST
-    Inertia.post(route('blogs.store'), data, {
+    router.post(route('admin.blogs.store'), data, {
       forceFormData: true, // ⚠️ Important pour envoyer correctement les fichiers
       onSuccess: () => {
         setForm({

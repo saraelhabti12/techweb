@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Models\Project;
 use App\Models\User;
+use App\Mail\TaskAssignedMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 
@@ -109,7 +111,7 @@ class TaskController extends Controller
     //     }
     // }
 
-    // return redirect()->route('tasks.index')->with('success', 'Task created successfully!');
+    // return redirect()->route('admin.tasks.index')->with('success', 'Task created successfully!');
     // }
 
 
@@ -140,16 +142,6 @@ class TaskController extends Controller
         ]);
 
         // 2. Gérer les fichiers uploadés
-        // if ($request->hasFile('files')) {
-        //     foreach ($request->file('files') as $file) {
-        //         $path = $file->store('tasks'); // storage/app/tasks
-        //         $task->files()->create([
-        //             'file_path' => $path,
-        //             'original_name' => $file->getClientOriginalName(),
-        //         ]);
-        //     }
-        // }
-
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
                 // stocke le fichier dans storage/app/public/tasks
@@ -161,23 +153,28 @@ class TaskController extends Controller
             }
         }
 
-        // Attacher les membres dans la table pivot
-        // if ($request->has('members') && is_array($request->members)) {
-        //     $task->members()->sync($request->members);
-        // }
-        // if ($request->has('members')) {
-        //     // S'assurer que c'est bien un tableau
-        //     $members = is_array($request->members) ? $request->members : explode(',', $request->members);
-        //     $task->members()->sync($members);
-        // }
-
-         // 2️⃣ Attacher les membres à la table pivot
+        // Attacher les membres à la table pivot
         if ($request->filled('members')) {
             $task->members()->sync($request->members);
+            
+            // Notify members attached to the task
+            $members = User::whereIn('id', $request->members)->get();
+            \Illuminate\Support\Facades\Notification::send($members, new \App\Notifications\TaskAssigned($task));
         }
         
+        // Notify the primary assigned user
+        if ($task->user) {
+            $task->user->notify(new \App\Notifications\TaskAssigned($task));
+        }
 
-        return redirect()->route('tasks.index')->with('success', 'Task created successfully!');
+        // Send Email to Admin (Requirement)
+        try {
+            Mail::to('techweb.ma@gmail.com')->send(new TaskAssignedMail($task));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send task assigned mail to admin: ' . $e->getMessage());
+        }
+
+        return redirect()->route('admin.tasks.index')->with('success', 'Task created successfully!');
     }
 
 
@@ -280,7 +277,7 @@ class TaskController extends Controller
             }
         }
 
-        return redirect()->route('tasks.index')->with('success', 'Task updated successfully!');
+        return redirect()->route('admin.tasks.index')->with('success', 'Task updated successfully!');
     }
 
 
@@ -321,7 +318,7 @@ public function showTaskProgress(Task $task)
     {
         $task->delete();
 
-        return redirect()->route('tasks.index')->with('success', 'Task deleted successfully.');
+        return redirect()->route('admin.tasks.index')->with('success', 'Task deleted successfully.');
     }
 
     public function showAdmin(Task $task)

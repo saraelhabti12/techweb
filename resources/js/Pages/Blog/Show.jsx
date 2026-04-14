@@ -4,7 +4,7 @@ import MainLayout from '@/Layouts/MainLayout';
 
 export default function Show({ blog, categories, tags ,blogs = [] , filters = {}}) {
   
-  const [search, setSearch] = useState(filters.search || "");
+  const [search, setSearch] = useState(filters?.search || "");
 
   const handleSearch = (e) => {
     e.preventDefault();

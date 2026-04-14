@@ -18,8 +18,8 @@ export default function MainLayout({ children, navbarTransparent = false }) {
 
   return (
     <div className={`relative min-h-screen ${isDark ? "bg-black" : "bg-white"}`}>
-      {/* Fond animé */}
-      <ParticleBackground isDark={isDark} />
+      {/* Fond animé désactivé temporairement pour test */}
+      {/* <ParticleBackground isDark={isDark} /> */}
       {/* Structure de page */}
       <div className="flex flex-col min-h-screen">
         <Navbar />

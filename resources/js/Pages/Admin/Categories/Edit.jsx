@@ -9,7 +9,7 @@ export default function Edit({ category, auth }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        put(route('categories.update', category.id));
+        put(route('admin.categories.update', category.id));
     };
 
     return (

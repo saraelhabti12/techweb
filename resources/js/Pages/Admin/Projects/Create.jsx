@@ -1,13 +1,17 @@
 import { useForm } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { router } from '@inertiajs/react';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
 
-export default function CreateProject({ categories, auth }) {
+export default function CreateProject({ categories, clients, auth }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         description: '',
         category_id: '',
+        project_type: 'Internal (Techweb)',
+        client_id: '',
         start_date: '',
         end_date: '',
         status: 'pending',
@@ -15,70 +19,101 @@ export default function CreateProject({ categories, auth }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route('projects.store'));
-    };
-
-    const handleBack = () => {
-        router.visit(route('projects.index'));
+        post(route('admin.projects.store'));
     };
 
     return (
-        <AdminLayout auth={auth} header="Projects Management">
-            <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
-                                    <div className="mb-6">
-                                    <button
-                                        onClick={() => window.history.back()}
-                                        className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-                                    >
-                                        <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                                        Retour
-                                    </button>
-                                    </div>
-
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Create New Project</h1>
-                    </div>
+        <AdminLayout auth={auth}>
+            <DashboardPage 
+                title="Create New Project"
+                description="Fill in the details below to start a new project."
+                actions={
+                    <DashboardButton variant="secondary" onClick={() => window.history.back()} className="text-sm">
+                        Go Back
+                    </DashboardButton>
+                }
+            >
+                <DashboardCard className="max-w-4xl mx-auto">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Project Name
-                            </label>
-                            <input
-                                id="name"
-                                type="text"
-                                value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
-                                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-                                autoFocus
-                            />
-                            {errors.name && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label htmlFor="name" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                    Project Name
+                                </label>
+                                <input
+                                    id="name"
+                                    type="text"
+                                    value={data.name}
+                                    onChange={(e) => setData('name', e.target.value)}
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                    autoFocus
+                                />
+                                {errors.name && <p className="mt-1 text-sm text-red-500 font-bold">{errors.name}</p>}
+                            </div>
+
+                            <div>
+                                <label htmlFor="project_type" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                    Project Type
+                                </label>
+                                <select
+                                    id="project_type"
+                                    value={data.project_type}
+                                    onChange={(e) => setData('project_type', e.target.value)}
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                >
+                                    <option value="Internal (Techweb)">Internal (Techweb)</option>
+                                    <option value="Client Project">Client Project</option>
+                                </select>
+                                {errors.project_type && <p className="mt-1 text-sm text-red-500 font-bold">{errors.project_type}</p>}
+                            </div>
                         </div>
 
+                        {data.project_type === 'Client Project' && (
+                            <div>
+                                <label htmlFor="client_id" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                    Select Client
+                                </label>
+                                <select
+                                    id="client_id"
+                                    value={data.client_id}
+                                    onChange={(e) => setData('client_id', e.target.value)}
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                >
+                                    <option value="">Choose a client</option>
+                                    {clients.map((client) => (
+                                        <option key={client.id} value={client.id}>
+                                            {client.name} - {client.phone}
+                                        </option>
+                                    ))}
+                                </select>
+                                {errors.client_id && <p className="mt-1 text-sm text-red-500 font-bold">{errors.client_id}</p>}
+                            </div>
+                        )}
+
                         <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label htmlFor="description" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
                                 Description
                             </label>
                             <textarea
                                 id="description"
                                 value={data.description}
                                 onChange={(e) => setData('description', e.target.value)}
-                                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
                                 rows={4}
                             />
-                            {errors.description && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description}</p>}
+                            {errors.description && <p className="mt-1 text-sm text-red-500 font-bold">{errors.description}</p>}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label htmlFor="category_id" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
                                     Category
                                 </label>
                                 <select
                                     id="category_id"
                                     value={data.category_id}
                                     onChange={(e) => setData('category_id', e.target.value)}
-                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
                                 >
                                     <option value="">Select a category</option>
                                     {categories.map((category) => (
@@ -87,30 +122,30 @@ export default function CreateProject({ categories, auth }) {
                                         </option>
                                     ))}
                                 </select>
-                                {errors.category_id && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.category_id}</p>}
+                                {errors.category_id && <p className="mt-1 text-sm text-red-500 font-bold">{errors.category_id}</p>}
                             </div>
 
                             <div>
-                                <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label htmlFor="status" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
                                     Status
                                 </label>
                                 <select
                                     id="status"
                                     value={data.status}
                                     onChange={(e) => setData('status', e.target.value)}
-                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
                                 >
                                     <option value="pending">Pending</option>
                                     <option value="in_progress">In Progress</option>
                                     <option value="completed">Completed</option>
                                 </select>
-                                {errors.status && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.status}</p>}
+                                {errors.status && <p className="mt-1 text-sm text-red-500 font-bold">{errors.status}</p>}
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label htmlFor="start_date" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
                                     Start Date
                                 </label>
                                 <input
@@ -118,13 +153,13 @@ export default function CreateProject({ categories, auth }) {
                                     type="date"
                                     value={data.start_date}
                                     onChange={(e) => setData('start_date', e.target.value)}
-                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
                                 />
-                                {errors.start_date && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.start_date}</p>}
+                                {errors.start_date && <p className="mt-1 text-sm text-red-500 font-bold">{errors.start_date}</p>}
                             </div>
 
                             <div>
-                                <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label htmlFor="end_date" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
                                     End Date
                                 </label>
                                 <input
@@ -132,31 +167,24 @@ export default function CreateProject({ categories, auth }) {
                                     type="date"
                                     value={data.end_date}
                                     onChange={(e) => setData('end_date', e.target.value)}
-                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
                                 />
-                                {errors.end_date && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.end_date}</p>}
+                                {errors.end_date && <p className="mt-1 text-sm text-red-500 font-bold">{errors.end_date}</p>}
                             </div>
                         </div>
 
-                        <div className="flex justify-center">
-                            <button
-                            type="submit"
-                            disabled={processing}
-                            className="inline-flex items-center px-16 py-3 
-                                        bg-purple-600 border border-transparent rounded-md 
-                                        font-semibold text-xs text-white uppercase tracking-widest 
-                                        hover:bg-purple-700 active:bg-purple-900 
-                                        focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
-                                        disabled:opacity-25 transition 
-                                        dark:bg-purple-700 dark:hover:bg-purple-600"
+                        <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
+                            <DashboardButton 
+                                type="submit" 
+                                disabled={processing} 
+                                className="w-full md:w-auto"
                             >
-                            {processing ? 'Creating...' : 'Create Project'}
-                            </button>
-
+                                {processing ? 'Creating...' : 'Create Project'}
+                            </DashboardButton>
                         </div>
                     </form>
-                </div>
-            </div>
+                </DashboardCard>
+            </DashboardPage>
         </AdminLayout>
     );
 }

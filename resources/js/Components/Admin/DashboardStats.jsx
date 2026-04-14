@@ -12,7 +12,7 @@ export default function DashboardStats({ stats }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
             ),
-            link: route('projects.index'),
+            link: route('admin.projects.index'),
             color: 'bg-blue-100 dark:bg-blue-900',
         },
         {
@@ -23,8 +23,8 @@ export default function DashboardStats({ stats }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
             ),
-            link: route('tasks.index'),
-            color: 'bg-white-10/90 dark:bg-purple-10/90',
+            link: route('admin.tasks.index'),
+            color: 'bg-white dark:bg-purple-50',
         },
         {
             title: 'Categories',
@@ -34,7 +34,7 @@ export default function DashboardStats({ stats }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
             ),
-            link: route('categories.index'),
+            link: route('admin.categories.index'),
             color: 'bg-purple-100 dark:bg-purple-900',
         },
         {
@@ -57,7 +57,7 @@ export default function DashboardStats({ stats }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h10" />
         </svg>
     ),
-    link: route('admin.templates'), // si tu as une route admin/templates
+    link: route('admin.templates.index'), 
     color: 'bg-pink-100 dark:bg-pink-900',
 },
 
@@ -82,7 +82,7 @@ export default function DashboardStats({ stats }) {
             {statCards.map((stat, index) => (
                 <Link
                     key={index}
-                    href={stat.link}
+                    href={stat.link || '#'}
                     className={`${stat.color} rounded-lg shadow p-6 flex items-center justify-between transition-transform hover:scale-105`}
                 >
                     <div>

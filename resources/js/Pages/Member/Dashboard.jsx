@@ -1,315 +1,233 @@
 import React from 'react';
 import MemberLayout from '@/Layouts/MemberLayout';
 import { Head, Link } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
-import { router } from "@inertiajs/react";
+import { useState, useEffect, useMemo } from 'react';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    LayoutDashboard, 
+    Users, 
+    CalendarCheck, 
+    CheckSquare, 
+    TrendingUp, 
+    Clock, 
+    MessageSquare,
+    QrCode,
+    ChevronRight,
+    ArrowUpRight,
+    Zap
+} from 'lucide-react';
 
-export default function MemberDashboard({ auth, tasks, stats }) {
+export default function MemberDashboard({ auth, tasks = [], stats = { todo: 0, in_progress: 0, done: 0 } }) {
     const [qr, setQr] = useState(null);
     const [currentTime, setCurrentTime] = useState(new Date());
 
-const [filterYear, setFilterYear] = useState('all');
-const [filterMonth, setFilterMonth] = useState('all');
-const [filterDay, setFilterDay] = useState('all');
-
-const years = Array.from(new Set(tasks.map(task => new Date(task.due_date).getFullYear()))).sort();
-const months = Array.from(new Set(tasks.map(task => new Date(task.due_date).getMonth() + 1))).sort();
-const days = Array.from(new Set(tasks.map(task => new Date(task.due_date).getDate()))).sort();
-
-const filteredTasks = tasks.filter(task => {
-    const due = new Date(task.due_date);
-    const matchYear = filterYear === 'all' || due.getFullYear() === parseInt(filterYear);
-    const matchMonth = filterMonth === 'all' || due.getMonth() + 1 === parseInt(filterMonth);
-    const matchDay = filterDay === 'all' || due.getDate() === parseInt(filterDay);
-    return matchYear && matchMonth && matchDay;
-});
-
-
     useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 60000);
-
-        fetch(route("attendance.qr"), {
-            headers: {
-                "Accept": "application/json", 
-            },
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then((data) => {
-                if (data.qr) {
-                    setQr(data.qr);
-                } else {
-                    console.error("No QR code in response:", data);
-                }
-            })
-            .catch((err) => console.error("Error fetching QR:", err));
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+        
+        fetch('/member/attendance/qr', { headers: { "Accept": "application/json" } })
+            .then(res => res.json())
+            .then(data => data.qr && setQr(data.qr))
+            .catch(err => console.error("Error fetching QR:", err));
 
         return () => clearInterval(timer);
     }, []);
 
-    const formattedTime = currentTime.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-    });
-
-    const formattedDate = currentTime.toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric'
-    });
+    const formattedTime = currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const formattedDate = currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' });
 
     return (
         <MemberLayout auth={auth}>
-            <Head title="Dashboard" />
+            <Head title="Member Dashboard" />
 
-            <div className="rounded-xl p-6 mb-6 shadow-lg border border-purple-300/40 space-y-8">
-            
-                <div className="bg-purple-10/90  rounded-xl p-6 mb-6 shadow-lg border border-purple-300/40">
-                    
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        
-                        <div>
-                            <h1 className="text-3xl font-bold text-black">Welcome back,<span className="text-purple-600">{auth.user.name}!</span></h1>
-                            <p className="mt-2 text-black text-sm">Here's what's happening today</p>
+            <DashboardPage 
+                title={`Good ${currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 18 ? 'Afternoon' : 'Evening'}, ${auth.user.name.split(' ')[0]}!`}
+                description="Ready to tackle your goals for today?"
+                actions={
+                    <div className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-md px-4 py-2 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center gap-4 shadow-sm">
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] font-bold text-[#1F2BF3] uppercase tracking-widest">{formattedDate}</span>
+                            <span className="text-lg font-black text-gray-900 dark:text-white leading-none">{formattedTime}</span>
                         </div>
-                        <div className="text-right">
-                            <div className="text-2xl font-bold text-black">{formattedTime}</div>
-                            <div className="text-sm opacity-90">{formattedDate}</div>
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                            <Clock className="w-5 h-5" />
                         </div>
                     </div>
+                }
+            >
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <StatCard 
+                        title="To Do" 
+                        value={stats.todo} 
+                        icon={<CheckSquare className="w-6 h-6" />} 
+                        gradient="from-amber-400 to-orange-500"
+                        label="Tasks Pending"
+                    />
+                    <StatCard 
+                        title="In Progress" 
+                        value={stats.in_progress} 
+                        icon={<TrendingUp className="w-6 h-6" />} 
+                        gradient="from-blue-500 to-indigo-600"
+                        label="Active Now"
+                    />
+                    <StatCard 
+                        title="Completed" 
+                        value={stats.done} 
+                        icon={<Zap className="w-6 h-6" />} 
+                        gradient="from-emerald-400 to-teal-500"
+                        label="Finished Tasks"
+                    />
                 </div>
 
-                <div className=" bg-purple-10/90 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className='bg-gray-200 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6 p-6 mb-6 border border-purple-200'>
-                        <StatCard
-                            title="To Do"
-                            value={stats.todo}
-                            description="Tasks waiting to start"
-                            color=""
-                            icon={
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                </svg>
-                            }
-                        />
-                    </div>
-
-                    <div className='bg-gray-200 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6 p-6 mb-6 border border-purple-200'>
-                        <StatCard
-                            title="In Progress"
-                            value={stats.in_progress}
-                            description="Active tasks"
-                            color=""
-                            icon={
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            }
-                        />
-                    </div>
-
-                    <div className='bg-gray-200 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6 p-6 mb-6 border border-purple-200'>
-                        <StatCard
-                            title="Completed"
-                            value={stats.done}
-                            description="Finished tasks"
-                            color="text-purple-600"
-                            icon={
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            }
-                        />
-                    </div>
-                </div>
-
-                <div className="bg-purple-10/90 dark:bg-gray-100 border border-purple-200 rounded-xl shadow-md overflow-hidden">
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-200">Daily Attendance </h2>
-                    </div>
-                    <div className="p-6">
-                        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-                            <div className="flex-1">
-                                <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-2">Mark your attendance</h3>
-                                <p className="text-gray-600 dark:text-gray-300 mb-4">
-                                    Scan this QR code with your mobile device to register your attendance for today.
-                                </p>
-                                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 border border-purple-200">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Last scanned: {auth.user.last_attendance_at || 'Never'}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Attendance Card */}
+                    <DashboardCard className="relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <QrCode size={160} />
+                        </div>
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-2xl text-[#1F2BF3]">
+                                    <QrCode className="w-6 h-6" />
                                 </div>
+                                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Smart Attendance</h3>
                             </div>
-                            <div className="flex flex-col items-center border border-purple-200">
-                                {qr ? (
-                                    <div className="bg-white p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                                        <img
-                                            src={`data:image/png;base64,${qr}`}
-                                            alt="QR Code"
-                                            className="w-40 h-40"
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="w-40 h-40 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg">
-                                        <p>Loading QR...</p>
-                                    </div>
-                                )}
-                                <p className="mt-3 text-sm text-gray-700 dark:text-gray-400">Scan this QR code</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div className="bg-purple-10/90 border border-purple-200 dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white ">Your Tasks</h2>
-                            <Link
-                                href={route('member.tasks.index')}
-                                className=" text-gray-900 dark:text-teal-400 hover:underline flex items-center"
-                            >
-                                View All
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {tasks.slice(0, 5).map(task => (
-                            <TaskItem key={task.id} task={task} />
-                        ))}
-                        {tasks.length === 0 && (
-                            <div className="p-6 text-center">
-                                <div className="text-gray-400 dark:text-gray-500 mb-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                    </svg>
+                            <div className="flex flex-col md:flex-row items-center gap-8 flex-1">
+                                <div className="flex-1 space-y-4">
+                                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                        Mark your presence by scanning the secure dynamic QR code. 
+                                    </p>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center gap-2 text-sm font-bold text-gray-500 uppercase tracking-wider">
+                                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                            Status: Available
+                                        </div>
+                                        <div className="text-xs font-medium text-gray-400">
+                                            Last Activity: <span className="text-[#1F2BF3]">{auth?.user?.last_attendance_at || 'No logs today'}</span>
+                                        </div>
+                                    </div>
+                                    <DashboardButton variant="primary" className="mt-4 w-full md:w-auto text-sm">
+                                        View History
+                                    </DashboardButton>
                                 </div>
-                                <p className="text-gray-500 dark:text-gray-400">No tasks assigned yet</p>
-                                <Link
-                                    href={route('member.tasks.index')}
-                                    className="inline-block mt-3 text-purple-600 dark:text-teal-400 hover:underline text-sm"
+                                
+                                <motion.div 
+                                    whileHover={{ scale: 1.05 }}
+                                    className="p-5 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl shadow-blue-500/10 border border-gray-100 dark:border-gray-700 relative"
                                 >
-                                    Check for new tasks
-                                </Link>
+                                    {qr ? (
+                                        <img src={`data:image/png;base64,${qr}`} alt="QR" className="w-32 h-32 dark:invert" />
+                                    ) : (
+                                        <div className="w-32 h-32 flex items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1F2BF3]"></div>
+                                        </div>
+                                    )}
+                                    <div className="absolute -top-2 -right-2 bg-[#1F2BF3] text-white p-2 rounded-xl shadow-lg">
+                                        <ArrowUpRight className="w-4 h-4" />
+                                    </div>
+                                </motion.div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    </DashboardCard>
+
+                    {/* Recent Tasks Card */}
+                    <DashboardCard>
+                        <div className="flex items-center justify-between mb-8">
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
+                                <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-500">
+                                    <CheckSquare className="w-5 h-5" />
+                                </div>
+                                Priority Tasks
+                            </h3>
+                            <Link href="/member/tasks" className="text-xs font-black text-[#1F2BF3] hover:underline uppercase tracking-widest">See all</Link>
+                        </div>
+
+                        <div className="space-y-4">
+                            {tasks.length > 0 ? tasks.slice(0, 4).map(task => (
+                                <Link key={task.id} href={`/member/tasks/${task.id}/progress`}>
+                                    <motion.div 
+                                        whileHover={{ x: 8 }}
+                                        className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/50 hover:bg-[#1F2BF3]/5 transition-all border border-transparent hover:border-[#1F2BF3]/10 group"
+                                    >
+                                        <div className="flex items-center gap-4 truncate">
+                                            <div className={`w-3 h-3 rounded-full shrink-0 ${
+                                                task.priority === 'high' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 
+                                                task.priority === 'medium' ? 'bg-amber-500' : 'bg-blue-500'
+                                            }`} />
+                                            <div className="truncate">
+                                                <p className="font-bold text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors truncate">{task.title}</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{task.project?.name || 'Personal'}</p>
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-[#1F2BF3] transition-all shrink-0" />
+                                    </motion.div>
+                                </Link>
+                            )) : (
+                                <div className="text-center py-12">
+                                    <p className="text-gray-400 font-medium italic">Your slate is clear for now!</p>
+                                </div>
+                            )}
+                        </div>
+                    </DashboardCard>
                 </div>
 
-                <div className="bg-purple-10/90 border border-purple-200 rounded-xl shadow-md overflow-hidden">
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Quick Actions</h2>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6">
-
-                        <QuickAction
-                            icon={
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            }
-                            title="My Attendance"
-                            link={route('member.myAttendance')}
-                        />
-                        <QuickAction
-                            icon={
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            }
-                            title="Settings"
-                            link={route('profile.edit')}
-                        />
-                    </div>
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <QuickAction icon={<Clock />} title="Attendance" link="/member/my-attendance" color="bg-blue-500" />
+                    <QuickAction icon={<Users />} title="My Profile" link="/admin/profile" color="bg-purple-500" />
+                    <QuickAction icon={<MessageSquare />} title="Chat Hub" link="/chat.index" color="bg-[#00D8C0]" />
+                    <QuickAction icon={<TrendingUp />} title="My Progress" link="/member/progress" color="bg-indigo-500" />
                 </div>
-            </div>
-
+            </DashboardPage>
         </MemberLayout>
     );
 }
 
-const StatCard = ({ title, value, description, color, icon }) => {
-    const colors = {
-        yellow: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200',
-        blue: 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200',
-        green: 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200',
-    };
-
+function StatCard({ title, value, icon, gradient, label }) {
     return (
-        <div className={`${colors[color]} rounded-xl p-6 flex items-start gap-4 h-full`}>
-            <div className="p-2 bg-white dark:bg-gray-800 rounded-lg">
-                {icon}
-            </div>
-            <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{title}</p>
-                <p className="text-2xl font-bold mt-1">{value}</p>
-                {description && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{description}</p>
-                )}
-            </div>
-        </div>
-    );
-};
-
-const TaskItem = ({ task }) => {
-    const statusColors = {
-        todo: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
-        in_progress: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
-        done: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
-    };
-
-    const priorityColors = {
-        high: 'text-red-500',
-        medium: 'text-yellow-500',
-        low: 'text-gray-500'
-    };
-
-    return (
-        <Link
-            href={route('member.tasks.progress', task.id)}
-            className="block p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-        >
-            <div className="flex justify-between items-start">
-                <div className="flex items-start gap-3">
-                    <div className={`mt-1 w-3 h-3 rounded-full ${priorityColors[task.priority] || 'bg-gray-300'}`}></div>
-                    <div>
-                        <h3 className="font-medium text-gray-800 dark:text-white">{task.title}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            {task.project?.name} • Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No deadline'}
-                        </p>
+        <DashboardCard className="relative overflow-hidden border-none !p-0 shadow-lg">
+            <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-[0.03] dark:opacity-[0.07]`} />
+            <div className="p-6 relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                    <div className={`p-3 rounded-2xl bg-gradient-to-br ${gradient} text-white shadow-xl shadow-blue-500/20`}>
+                        {icon}
+                    </div>
+                    <div className="text-right">
+                        <span className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter">{value}</span>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{title}</p>
                     </div>
                 </div>
-                <span className={`${statusColors[task.status]} text-xs px-3 py-1 rounded-full`}>
-                    {task.status.replace('_', ' ')}
-                </span>
+                <div className="mt-4 flex items-center gap-2">
+                    <div className="h-1.5 flex-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                        <motion.div 
+                            initial={{ width: 0 }} 
+                            animate={{ width: '65%' }} 
+                            className={`h-full bg-gradient-to-r ${gradient}`}
+                        />
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-500">{label}</span>
+                </div>
             </div>
-        </Link>
+        </DashboardCard>
     );
-};
+}
 
-const QuickAction = ({ icon, title, link }) => {
+function QuickAction({ icon, title, link, color }) {
     return (
-        <Link
-            href={link}
-            className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors group"
-        >
-            <div className="p-3 bg-teal-100 dark:bg-teal-900/30 rounded-full text-teal-600 dark:text-teal-400 group-hover:bg-teal-600 group-hover:text-white dark:group-hover:bg-teal-700 transition-colors">
-                {icon}
-            </div>
-            <span className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                {title}
-            </span>
+        <Link href={link}>
+            <motion.div 
+                whileHover={{ y: -5, scale: 1.02 }}
+                className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl transition-all flex flex-col items-center gap-4 group"
+            >
+                <div className={`p-4 rounded-2xl ${color} text-white shadow-lg group-hover:rotate-12 transition-transform`}>
+                    {React.cloneElement(icon, { className: "w-6 h-6" })}
+                </div>
+                <span className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight text-center">{title}</span>
+            </motion.div>
         </Link>
     );
-};
+}

@@ -11,11 +11,10 @@ class RoleMiddleware
     /**
      * Handle an incoming request.
      */
-    public function handle(Request $request, Closure $next, string $role): mixed
-
+    public function handle(Request $request, Closure $next, string ...$roles): mixed
     {
-        if (!Auth::check() || Auth::user()->role !== $role) {
-            abort(403, 'Unauthorized');
+        if (!Auth::check() || !in_array(Auth::user()->role, $roles)) {
+            abort(403, 'Unauthorized. Role required: ' . implode(', ', $roles));
         }
 
         return $next($request);

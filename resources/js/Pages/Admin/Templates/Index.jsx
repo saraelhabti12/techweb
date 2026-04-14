@@ -2,10 +2,13 @@ import React, { useState } from "react";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { usePage, Link, router } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
 
 export default function Index() {
-  const { templates } = usePage().props;
+  const { templates, auth } = usePage().props;
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const categories = ["All", ...new Set(templates.map((t) => t.category))];
@@ -16,113 +19,109 @@ export default function Index() {
       : templates.filter((t) => t.category === selectedCategory);
 
   const handleDelete = (id) => {
-    if (confirm("Êtes-vous sûr de vouloir supprimer ce template ?")) {
-      router.delete(route("admin.templates.destroy", id));
+    if (confirm("Are you sure you want to delete this template?")) {
+      router.delete(route('admin.templates.destroy', id));
     }
   };
 
   return (
-    <AdminLayout header="Liste des Templates">
-    <div className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
-
-              <div className="mb-6">
-                <button
-                  onClick={() => window.history.back()}
-                  className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-                >
-                  <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                  Retour
-                </button>
-              </div>
-      <div className="flex justify-end mb-6">
-        <Link
-          href={route("admin.templates.create")}
-          className="inline-flex items-center px-4 py-2 
-                      bg-purple-600 border border-transparent rounded-md 
-                      font-semibold text-xs text-white uppercase tracking-widest 
-                      hover:bg-purple-700 active:bg-purple-900 
-                      focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
-                      disabled:opacity-25 transition 
-                      dark:bg-purple-700 dark:hover:bg-purple-600"
+    <AdminLayout auth={auth}>
+        <DashboardPage 
+            title="Design Templates"
+            description="Manage and organize your reusable project templates and assets."
+            actions={
+                <Link href={route("admin.templates.create")}>
+                    <DashboardButton className="flex items-center gap-2">
+                        <PlusIcon className="w-5 h-5" />
+                        Add Template
+                    </DashboardButton>
+                </Link>
+            }
         >
-          + Add Template
-        </Link>
-      </div>
+            {/* Category Filters */}
+            <div className="flex flex-wrap justify-center gap-3 mb-10">
+                {categories.map((cat) => (
+                    <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-6 py-2 rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-sm ${
+                            selectedCategory === cat
+                                ? "bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] text-white shadow-blue-500/20"
+                                : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:text-[#1F2BF3] border border-gray-100 dark:border-gray-800"
+                        }`}
+                    >
+                        {cat}
+                    </button>
+                ))}
+            </div>
 
-      <div className="flex justify-center gap-4 mb-12 flex-wrap">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-5 py-2 rounded-full font-medium transition ${
-              selectedCategory === cat
-                ? "bg-[#8000FF] text-white"
-                : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
-        <AnimatePresence>
-          {filteredTemplates.map((template) => (
-            <motion.div
-              key={template.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.5 }}
-              className="relative bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden w-[350px] h-[500px] mx-auto group"
-            >
-              <div className="absolute inset-0 flex flex-col">
-                <div className="relative flex-1 overflow-hidden group">
-                  <motion.img
-                    src={template.image}
-                    alt={template.title}
-                    className="w-full h-2/3 object-cover"
-                    whileHover={{ y: -20 }}
-                    transition={{ duration: 0.5 }}
-                  />
-
-                  <div className="p-4 flex flex-col flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                      {template.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-2">{template.category}</p>
-
-                    <div className="text-gray-600 dark:text-gray-300 flex-1 overflow-y-auto">
-                      {template.description}
-                    </div>
-
-                    <div className="mt-3 flex justify-center gap-3">
-                      <Link
-                        href={route("admin.templates.edit", template.id)}
-                        className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
-                      >
-                        Update
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(template.id)}
-                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-      </div>
+            {/* Templates Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <AnimatePresence mode='popLayout'>
+                    {filteredTemplates.length === 0 ? (
+                        <div className="col-span-full py-20 text-center">
+                            <Squares2X2Icon className="w-16 h-16 mx-auto text-gray-200 mb-4" />
+                            <p className="text-gray-400 font-medium italic">No templates found in this category.</p>
+                        </div>
+                    ) : (
+                        filteredTemplates.map((template) => (
+                            <motion.div
+                                layout
+                                key={template.id}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <DashboardCard className="group !p-0 overflow-hidden h-full flex flex-col border-transparent hover:border-[#1F2BF3]/20">
+                                    <div className="aspect-[4/5] relative overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                        <motion.img
+                                            src={template.image}
+                                            alt={template.title}
+                                            className="w-full h-full object-cover"
+                                            whileHover={{ scale: 1.1 }}
+                                            transition={{ duration: 0.6 }}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                                            <div className="flex gap-3">
+                                                <Link 
+                                                    href={route('admin.templates.edit', template.id)}
+                                                    className="flex-1"
+                                                >
+                                                    <DashboardButton className="w-full !py-2 !text-xs">
+                                                        <PencilIcon className="w-4 h-4 mr-2" />
+                                                        Edit
+                                                    </DashboardButton>
+                                                </Link>
+                                                <button
+                                                    onClick={() => handleDelete(template.id)}
+                                                    className="p-2 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg"
+                                                >
+                                                    <TrashIcon className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="absolute top-4 left-4">
+                                            <span className="px-3 py-1 bg-[#1F2BF3] text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg">
+                                                {template.category}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="p-6 flex-1 flex flex-col">
+                                        <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight mb-2 group-hover:text-[#1F2BF3] transition-colors">
+                                            {template.title}
+                                        </h3>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed">
+                                            {template.description}
+                                        </p>
+                                    </div>
+                                </DashboardCard>
+                            </motion.div>
+                        ))
+                    )}
+                </AnimatePresence>
+            </div>
+        </DashboardPage>
     </AdminLayout>
   );
 }
-
-
-
-
-

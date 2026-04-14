@@ -7,7 +7,7 @@ import { useForm } from '@inertiajs/react';
 import { usePage } from "@inertiajs/react";
 import Navbar from '@/Components/Navfoot/Navbar';
 
-export default function HomePage({ blogs, templat}) {
+export default function HomePage({ blogs, templates }) {
 
             const slides = [
             {
@@ -92,15 +92,15 @@ export default function HomePage({ blogs, templat}) {
             return () => window.removeEventListener("scroll", handleScrollApproach);
             }, []);
 
-            const { templates } = usePage().props;
+            // const { templates } = usePage().props;
             const [selectedCategory, setSelectedCategory] = useState("All");
 
-            const categories = ["All",...new Set(templates.map((t) => t.category))];
+            const categories = ["All",...new Set((templates || []).map((t) => t.category))];
 
             const filteredProjects =
                 selectedCategory === "All"
-                ? templates
-                : templates.filter((p) => p.category === selectedCategory);
+                ? (templates || [])
+                : (templates || []).filter((p) => p.category === selectedCategory);
 
             const [contactOffset, setContactOffset] = useState(0);
             const contactRef = useRef(null);
@@ -224,11 +224,11 @@ export default function HomePage({ blogs, templat}) {
             
         <section className="relative h-screen w-full flex items-center overflow-hidden pt-20 transition-colors duration-500">
 
-                    {/* Fumée bleue */}
+                    {/* Fumée bleue supprimée car manquante */}
                     <div
                         className="absolute inset-0"
                         style={{
-                        background: 'url(/images/blue-smoke.png) center/cover no-repeat',
+                        background: 'radial-gradient(circle at 50% 50%, rgba(31, 43, 243, 0.1), transparent 70%)',
                         opacity: 0.2,
                         mixBlendMode: 'screen',
                         zIndex: 1,
@@ -1236,15 +1236,6 @@ export default function HomePage({ blogs, templat}) {
 
     </section>
 
-
-    {/* <div className="mb-6">
-      <Link
-        href={route('blogs.create')} // route vers le formulaire Create
-        className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-      >
-        Créer un Blog
-      </Link>
-    </div> */}
             </div>
             </div>
 

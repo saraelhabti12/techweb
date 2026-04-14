@@ -1,9 +1,11 @@
-import AuthenticatedLayout from '@/Layouts/MemberLayout';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import MemberLayout from '@/Layouts/MemberLayout';
+import { Head, Link, useForm } from '@inertiajs/react';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
 
 export default function ProgressUpdatesCreate({ auth, tasks }) {
-    const { data, setData, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         task_id: '',
         type: 'text',
         content: '',
@@ -13,162 +15,126 @@ export default function ProgressUpdatesCreate({ auth, tasks }) {
 
     const submit = (e) => {
         e.preventDefault();
-
-        const formData = new FormData();
-            formData.append('task_id', taskId);
-            formData.append('type', type);
-            formData.append('content', content);
-            if (file) {
-            formData.append('file', file);
-            }
-            if (url) {
-            formData.append('url', url);
-            }
-            post(route('member.progress.store'), {
-                data: formData,
-                forceFormData: true,
-            });
-
-        };
+        post(route('member.progress.store'), {
+            forceFormData: true,
+        });
+    };
 
     return (
-        <AuthenticatedLayout auth={auth}>
+        <MemberLayout auth={auth}>
             <Head title="Add Progress Update" />
 
-            <div className="py-6 px-4 bg-purple-10/90 border border-purple-200 sm:px-6 lg:px-8">
-                <div className="max-w-3xl mx-auto">
-                    
-                        <div className="mb-6">
-                        <button
-                            onClick={() => window.history.back()}
-                            className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-                        >
-                            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                            Retour
-                        </button>
+            <DashboardPage 
+                title="Submit Work Update"
+                description="Share your latest progress, files or links related to your assigned tasks."
+                actions={
+                    <DashboardButton variant="secondary" onClick={() => window.history.back()} className="text-sm">
+                        Go Back
+                    </DashboardButton>
+                }
+            >
+                <DashboardCard className="max-w-2xl mx-auto border-transparent shadow-xl">
+                    <form onSubmit={submit} encType="multipart/form-data" className="space-y-6">
+                        <div>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5" htmlFor="task_id">
+                                Target Task
+                            </label>
+                            <select
+                                id="task_id"
+                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                value={data.task_id}
+                                onChange={(e) => setData('task_id', e.target.value)}
+                                required
+                            >
+                                <option value="">Select the task you worked on</option>
+                                {tasks.map((task) => (
+                                    <option key={task.id} value={task.id}>
+                                        {task.title}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.task_id && <p className="text-red-500 text-sm font-bold mt-1">{errors.task_id}</p>}
                         </div>
 
-                    <div className="bg-purple-10/90 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
-                        <h2 className="text-2xl font-bold text-gray-900 text-center dark:text-white mb-6">Add Progress Update</h2>
+                        <div>
+                            <label htmlFor="type" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                Update Category
+                            </label>
+                            <select
+                                id="type"
+                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                value={data.type}
+                                onChange={(e) => setData('type', e.target.value)}
+                            >
+                                <option value="text">Written Report / Note</option>
+                                <option value="file">File Attachment</option>
+                                <option value="link">External Resource Link</option>
+                            </select>
+                        </div>
 
-                        <form onSubmit={submit} encType="multipart/form-data">
-                            <div className="mb-4">
-                                <label className="block text-gray-900 dark:text-gray-300 font-medium mb-2" htmlFor="task_id">
-                                    Task
+                        {data.type === 'text' && (
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                                <label htmlFor="content" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                    Update Details
                                 </label>
-                                <select
-                                    id="task_id"
-                                    className="w-full rounded-md border-gray-300 
-                                                dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
-                                                shadow-sm 
-                                                focus:border-purple-500 focus:ring-purple-500"
-                                    value={data.task_id}
-                                    onChange={(e) => setData('task_id', e.target.value)}
-                                    required
-                                >
-                                    <option value="">Select a task</option>
-                                    {tasks.map((task) => (
-                                        <option key={task.id} value={task.id}>
-                                            {task.title}
-                                        </option>
-                                    ))}
-                                </select>
-                                {errors.task_id && <p className="text-red-500 text-sm mt-1">{errors.task_id}</p>}
-                            </div>
+                                <textarea
+                                    id="content"
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                    rows="5"
+                                    placeholder="Describe what you have accomplished..."
+                                    value={data.content}
+                                    onChange={(e) => setData('content', e.target.value)}
+                                />
+                                {errors.content && <p className="text-red-500 text-sm font-bold mt-1">{errors.content}</p>}
+                            </motion.div>
+                        )}
 
-                            <div className="mb-4">
-                                <label htmlFor="type" className="block text-gray-900 dark:text-gray-300 font-medium mb-2">
-                                    Update Type
+                        {data.type === 'file' && (
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                                <label htmlFor="file" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                    Upload Document / Asset
                                 </label>
-                                <select
-                                    id="type"
-                                    className="w-full rounded-md border-gray-300 
-                                                dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
-                                                shadow-sm 
-                                                focus:border-purple-500 focus:ring-purple-500"
-                                    value={data.type}
-                                    onChange={(e) => setData('type', e.target.value)}
-                                >
-                                    <option value="text">Text Update</option>
-                                    <option value="file">File Upload</option>
-                                    <option value="link">URL Link</option>
-                                </select>
-                            </div>
+                                <input
+                                    type="file"
+                                    id="file"
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-2.5 shadow-sm transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#1F2BF3]/10 file:text-[#1F2BF3] hover:file:bg-[#1F2BF3]/20"
+                                    onChange={(e) => setData('file', e.target.files[0])}
+                                />
+                                <p className="text-[10px] font-bold text-gray-400 uppercase mt-2">Maximum file size: 10MB (JPG, PNG, PDF, ZIP)</p>
+                                {errors.file && <p className="text-red-500 text-sm font-bold mt-1">{errors.file}</p>}
+                            </motion.div>
+                        )}
 
-                            {data.type === 'text' && (
-                                <div className="mb-4">
-                                    <label htmlFor="content" className="block text-gray-900 dark:text-gray-300 font-medium mb-2">
-                                        Update Details
-                                    </label>
-                                    <textarea
-                                        id="content"
-                                        className="w-full rounded-md border-gray-300 
-                                                    dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
-                                                    shadow-sm 
-                                                    focus:border-purple-500 focus:ring-purple-500"
-                                        rows="4"
-                                        value={data.content}
-                                        onChange={(e) => setData('content', e.target.value)}
-                                    />
-                                    {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content}</p>}
-                                </div>
-                            )}
+                        {data.type === 'link' && (
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                                <label htmlFor="url" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                    Resource URL
+                                </label>
+                                <input
+                                    type="url"
+                                    id="url"
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                    value={data.url}
+                                    onChange={(e) => setData('url', e.target.value)}
+                                    placeholder="https://drive.google.com/..."
+                                />
+                                {errors.url && <p className="text-red-500 text-sm font-bold mt-1">{errors.url}</p>}
+                            </motion.div>
+                        )}
 
-                            {data.type === 'file' && (
-                                <div className="mb-4">
-                                    <label htmlFor="file" className="block text-gray-900 dark:text-gray-300 font-medium mb-2">
-                                        Upload File
-                                    </label>
-                                    <input
-                                        type="file"
-                                        id="file"
-                                        className="w-full"
-                                        onChange={(e) => setData('file', e.target.files[0])}
-                                    />
-                                    <p className="text-sm text-gray-500 mt-1">Accepted types: JPG, PNG, PDF, DOCX</p>
-                                    {errors.file && <p className="text-red-500 text-sm mt-1">{errors.file}</p>}
-                                </div>
-                            )}
-
-                            {data.type === 'link' && (
-                                <div className="mb-4">
-                                    <label htmlFor="url" className="block text-gray-900 dark:text-gray-300 font-medium mb-2">
-                                        URL Link
-                                    </label>
-                                    <input
-                                        type="url"
-                                        id="url"
-                                        className="w-full rounded-md border-gray-300 bg-white/60
-                                                    dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
-                                                    shadow-sm 
-                                                    focus:border-purple-500 focus:ring-purple-500"
-                                        value={data.url}
-                                        onChange={(e) => setData('url', e.target.value)}
-                                        placeholder="https://example.com"
-                                    />
-                                    {errors.url && <p className="text-red-500 text-sm mt-1">{errors.url}</p>}
-                                </div>
-                            )}
-
-                            <div className="flex justify-center">
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="inline-flex items-center px-4 py-2 
-                                                bg-purple-600 border border-transparent rounded-md 
-                                                font-semibold text-xs text-white uppercase tracking-widest 
-                                                hover:bg-purple-700 active:bg-purple-900 
-                                                focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
-                                                disabled:opacity-25 transition 
-                                                dark:bg-purple-700 dark:hover:bg-purple-600"
-                                >
-                                    {processing ? 'Submitting...' : 'Submit Update'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </AuthenticatedLayout>
+                        <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
+                            <DashboardButton 
+                                type="submit" 
+                                disabled={processing} 
+                                className="w-full !py-4"
+                            >
+                                {processing ? 'Uploading Submission...' : 'Complete Progress Update'}
+                            </DashboardButton>
+                        </div>
+                    </form>
+                </DashboardCard>
+            </DashboardPage>
+        </MemberLayout>
     );
 }
+import { motion } from 'framer-motion';

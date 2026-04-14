@@ -26,7 +26,7 @@ class CategoryController extends Controller
 
         Category::create($request->only('name'));
 
-        return redirect()->route('categories.index');
+        return redirect()->route('admin.categories.index');
     }
 
     public function edit(Category $category)
@@ -42,13 +42,13 @@ class CategoryController extends Controller
 
         $category->update($request->only('name'));
 
-        return redirect()->route('categories.index');
+        return redirect()->route('admin.categories.index');
     }
 
     public function destroy(Category $category)
     {
         $category->delete();
 
-        return redirect()->route('categories.index');
+        return redirect()->route('admin.categories.index');
     }
 }

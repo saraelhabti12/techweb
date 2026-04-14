@@ -1,54 +1,92 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Link, router } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, EyeIcon, PencilIcon, TrashIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import { motion } from 'framer-motion';
 
 export default function Index({ blogs, auth }) {
     return (
-        <AdminLayout auth={auth} header="Blogs Management">
-            <div className="max-w-4xl mx-auto p-6 bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg shadow-md space-y-4">
-                <div className="mb-6">
-                <button
-                    onClick={() => window.history.back()}
-                    className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-                >
-                    <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                    Retour
-                </button>
-                </div>
-                <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 text-center">
-                    All Blogs
-                </h1>
-
-                {blogs.length === 0 ? (
-                    <div className="text-center text-gray-400 py-6">
-                        No blogs found.
-                    </div>
-                ) : (
-                    blogs.map(blog => (
-                        <div 
-                            key={blog.id} 
-                            className="p-6 bg-gray-100 dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition"
-                        >
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-                                {blog.title}
-                            </h2>
-                            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-                                {blog.excerpt}
-                            </p>
-
-                            <Link 
-                                href={`/admin/blogs/${blog.id}`} 
-                                className="inline-block text-purple-600 hover:text-purple-800 font-medium transition"
-                            >
-                                View →
-                            </Link>
+        <AdminLayout auth={auth}>
+            <DashboardPage 
+                title="Blog Management"
+                description="Create, edit, and manage your platform's articles and news."
+                actions={
+                    <Link href={route('admin.blogs.create')}>
+                        <DashboardButton className="flex items-center gap-2">
+                            <PlusIcon className="w-5 h-5" />
+                            Create Article
+                        </DashboardButton>
+                    </Link>
+                }
+            >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {blogs.length === 0 ? (
+                        <div className="col-span-full py-20 text-center bg-gray-50 dark:bg-gray-800/20 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800">
+                            <DocumentTextIcon className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                            <p className="text-gray-400 font-medium italic">No articles found. Start by creating your first blog post!</p>
                         </div>
-                    ))
-                )}
-            </div>
+                    ) : (
+                        blogs.map((blog) => (
+                            <DashboardCard key={blog.id} className="group !p-0 overflow-hidden flex flex-col h-full border-transparent hover:border-gray-100 dark:hover:border-gray-800 transition-all">
+                                {/* Blog Image Placeholder/Preview */}
+                                <div className="aspect-video w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
+                                    {blog.image ? (
+                                        <img 
+                                            src={`/storage/${blog.image}`} 
+                                            alt={blog.title} 
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-600">
+                                            <DocumentTextIcon className="w-12 h-12" />
+                                        </div>
+                                    )}
+                                    <div className="absolute top-4 left-4">
+                                        <span className="px-3 py-1 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-lg text-[10px] font-black uppercase tracking-widest text-[#1F2BF3] shadow-sm">
+                                            {blog.category?.name || 'Article'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 flex-1 flex flex-col">
+                                    <div className="flex justify-between items-start gap-4 mb-3">
+                                        <h3 className="font-black text-xl text-gray-900 dark:text-white leading-tight group-hover:text-[#1F2BF3] transition-colors line-clamp-2">
+                                            {blog.title}
+                                        </h3>
+                                    </div>
+                                    
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 mb-6 leading-relaxed">
+                                        {blog.excerpt || 'No description provided for this article.'}
+                                    </p>
+
+                                    <div className="mt-auto pt-6 border-t border-gray-50 dark:border-gray-800 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Link href={route('admin.blogs.show', blog.id)}>
+                                                <button className="p-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3] hover:bg-[#1F2BF3] hover:text-white transition-all">
+                                                    <EyeIcon className="w-4 h-4" />
+                                                </button>
+                                            </Link>
+                                            <Link href={route('admin.blogs.edit', blog.id)}>
+                                                <button className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all">
+                                                    <PencilIcon className="w-4 h-4" />
+                                                </button>
+                                            </Link>
+                                        </div>
+                                        <button 
+                                            onClick={() => confirm("Delete this article?") && router.delete(route('admin.blogs.destroy', blog.id))}
+                                            className="p-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-600 hover:text-white transition-all"
+                                        >
+                                            <TrashIcon className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </DashboardCard>
+                        ))
+                    )}
+                </div>
+            </DashboardPage>
         </AdminLayout>
     );
 }
-
-
-

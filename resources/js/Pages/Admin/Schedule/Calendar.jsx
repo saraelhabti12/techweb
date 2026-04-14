@@ -8,12 +8,16 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export default function Calendar({ events, auth }) {
     const handleDateClick = (info) => {
-        router.visit(`/admin/schedule/day?date=${info.dateStr}`);
+        if (info && info.dateStr) {
+            router.visit(`/admin/schedule/day?date=${info.dateStr}`);
+        }
     };
 
     const handleEventClick = (info) => {
-        info.jsEvent.preventDefault();
-        router.visit(info.event.url);
+        if (info && info.jsEvent) info.jsEvent.preventDefault();
+        if (info && info.event && info.event.url) {
+            router.visit(info.event.url);
+        }
     };
 
     return (

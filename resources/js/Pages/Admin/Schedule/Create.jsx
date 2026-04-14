@@ -14,7 +14,7 @@ export default function Create({ auth }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post('/admin/schedule');
+        post(route('admin.schedule.store'));
     };
 
     return (

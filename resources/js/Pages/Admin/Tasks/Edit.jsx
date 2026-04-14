@@ -36,7 +36,7 @@ export default function Edit({ task, projects, users, auth }) {
         }
     }
 
-    router.post(route('tasks.update', task.id), formData, {
+    router.post(route('admin.tasks.update', task.id), formData, {
     forceFormData: true,
     preserveScroll: true,
     onSuccess: () => {

@@ -51,13 +51,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                     </Dropdown.Trigger>
 
                                     <Dropdown.Content>
+                                        {route().has('profile.edit') && (
+                                            <Dropdown.Link href={route('profile.edit')}>
+                                                Profile
+                                            </Dropdown.Link>
+                                        )}
                                         <Dropdown.Link
-                                            href={route('profile.edit')}
-                                        >
-                                            Profile
-                                        </Dropdown.Link>
-                                        <Dropdown.Link
-                                            href={route('logout')}
+                                            href={route().has('logout') ? route('logout') : '#'}
                                             method="post"
                                             as="button"
                                         >
@@ -130,9 +130,11 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
-                            </ResponsiveNavLink>
+                            {route().has('profile.edit') && (
+                                <ResponsiveNavLink href={route('profile.edit')}>
+                                    Profile
+                                </ResponsiveNavLink>
+                            )}
                             <ResponsiveNavLink
                                 method="post"
                                 href={route('logout')}

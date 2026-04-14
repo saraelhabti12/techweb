@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Models\TeamHubFile;
 use Illuminate\Support\Facades\Storage;
 use App\Models\TeamHubMessage;
+use App\Mail\ImportantNotificationMail;
+use Illuminate\Support\Facades\Mail;
 
 
 class TeamHubController extends Controller
@@ -49,6 +51,23 @@ class TeamHubController extends Controller
        
         if ($request->members) {
             $activity->members()->attach($request->members);
+            
+            // Notify members about new activity
+            $members = User::whereIn('id', $request->members)->get();
+            $notificationData = [
+                'title' => 'New Activity: ' . $activity->title,
+                'message' => 'A new activity has been created in Team Hub.',
+                'type' => 'teamhub',
+                'id' => $activity->id
+            ];
+            \Illuminate\Support\Facades\Notification::send($members, new \App\Notifications\GenericNotification($notificationData));
+
+            // Send Email to Admin (Requirement)
+            try {
+                Mail::to('techweb.ma@gmail.com')->send(new ImportantNotificationMail($notificationData));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send important notification mail to admin: ' . $e->getMessage());
+            }
         }
 
         // Gère les fichiers
@@ -71,7 +90,7 @@ class TeamHubController extends Controller
 
     public function storeMessage(Request $request, TeamHubActivity $activity)
     {
-        $activity->messages()->create([
+        $message = $activity->messages()->create([
             'user_id' => Auth::id(),       // ✅ correction
             'message' => $request->message, // ✅ correction
         ]);
@@ -179,6 +198,9 @@ class TeamHubController extends Controller
             'message'     => $request->message,
             'activity_id' => null, // toujours null en privé
         ]);
+
+        // Send notification
+        $user->notify(new \App\Notifications\MessageReceived($message));
 
     if ($request->wantsJson()) {
         return response()->json([

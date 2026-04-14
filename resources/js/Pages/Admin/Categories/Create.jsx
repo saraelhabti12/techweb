@@ -7,7 +7,7 @@ export default function Create({ auth }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route('categories.store'));
+        post(route('admin.categories.store'));
     };
 
     return (

@@ -1,26 +1,28 @@
 import React from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import TeamHubAllActivities from './TeamHubAllActivities';
-import { router ,Link } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { router, Link } from '@inertiajs/react';
+import { PlusIcon } from '@heroicons/react/24/outline';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardButton from '@/Components/UI/DashboardButton';
 
-export default function Index({ activities, auth  }) {
+export default function Index({ activities, auth }) {
   return (
     <AdminLayout auth={auth}>
-      <div className="p-6">
-        <div className="mb-6">
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-          >
-            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Retour
-          </button>
-        </div>
-        <h1 className="text-6xl font-extrabold mb-6">TeamHub Activities</h1>
+      <DashboardPage 
+        title="TeamHub Activities"
+        description="Monitor and manage all activities happening within your team workspace."
+        actions={
+          <Link href={route('admin.teamhub.create')}>
+            <DashboardButton className="flex items-center gap-2">
+              <PlusIcon className="w-5 h-5" />
+              New Activity
+            </DashboardButton>
+          </Link>
+        }
+      >
         <TeamHubAllActivities activities={activities} />
-      </div>
+      </DashboardPage>
     </AdminLayout>
   );
 }
-

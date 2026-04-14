@@ -236,6 +236,9 @@ class TeamHubController extends Controller
             'is_read'     => false,
         ]);
 
+        // Notify admin
+        $admin->notify(new \App\Notifications\MessageReceived($message));
+
         return response()->json($message->load('user'));
     }
 
