@@ -33,6 +33,8 @@ class ClientController extends Controller
 
     public function store(Request $request)
     {
+        \Log::info('Client Store Request received', $request->except(['logo', 'files']));
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -55,19 +57,24 @@ class ClientController extends Controller
 
         if ($request->hasFile('logo')) {
             $data['logo'] = $request->file('logo')->store('clients/logos', 'public');
+            \Log::info('Logo stored at: ' . $data['logo']);
         }
 
         $client = Auth::user()->clients()->create($data);
+        \Log::info('Client created with ID: ' . $client->id);
 
         // Handle multiple file uploads
         if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $file) {
+            $uploadedFiles = $request->file('files');
+            \Log::info('Files found in request: ' . count($uploadedFiles));
+            foreach ($uploadedFiles as $file) {
                 $path = $file->store('clients/files', 'public');
                 $client->files()->create([
                     'file_path' => $path,
                     'original_name' => $file->getClientOriginalName(),
                     'type' => $file->getClientMimeType(),
                 ]);
+                \Log::info('File stored at: ' . $path);
             }
         }
 

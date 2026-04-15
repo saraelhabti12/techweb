@@ -52,13 +52,21 @@ export default function Create({ auth }) {
 
     const submit = (e) => {
         e.preventDefault();
+        console.log('Submitting form to:', storeRoute);
+        console.log('Form data being submitted:', data);
+        
         post(route(storeRoute), {
             forceFormData: true,
+            onStart: () => console.log('Inertia post started...'),
+            onFinish: () => console.log('Inertia post finished.'),
+            onSuccess: () => console.log('Inertia post success!'),
             onError: (errors) => {
-                console.error('Form submission failed:', errors);
+                console.error('Form submission failed with errors:', errors);
             }
         });
     };
+
+    console.log('Create Client Page Rendered. isAdmin:', isAdmin, 'Route:', storeRoute, 'Processing:', processing);
 
     return (
         <Layout auth={auth}>
