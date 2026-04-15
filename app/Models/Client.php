@@ -16,8 +16,11 @@ class Client extends Model
         'name',
         'email',
         'phone',
-        'address',
+        'whatsapp',
+        'company_name',
         'city',
+        'address',
+        'website',
         'logo',
         'notes',
         'status',
@@ -33,5 +36,10 @@ class Client extends Model
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(ClientFile::class);
     }
 }

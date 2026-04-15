@@ -73,6 +73,36 @@ export default function Create({ projects, users, auth }) {
                                     ))}
                                 </select>
                                 {errors.project_id && <p className="mt-1 text-sm text-red-500 font-bold">{errors.project_id}</p>}
+
+                                {data.project_id && (
+                                    <div className="mt-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl space-y-2">
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-2">Client Details</h4>
+                                        {(() => {
+                                            const p = projects.find(p => p.id === parseInt(data.project_id));
+                                            if (!p) return null;
+                                            return (
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <p className="text-[9px] text-gray-500 uppercase font-bold">Name</p>
+                                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{p.client?.name || p.client_name || 'N/A'}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[9px] text-gray-500 uppercase font-bold">Phone</p>
+                                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{p.client?.phone || p.client_phone || 'N/A'}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[9px] text-gray-500 uppercase font-bold">Email</p>
+                                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{p.client?.email || p.client_email || 'N/A'}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[9px] text-gray-500 uppercase font-bold">City</p>
+                                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{p.client?.city || p.client_city || 'N/A'}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
                             </div>
 
                             <div>

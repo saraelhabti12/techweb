@@ -67,18 +67,25 @@ export default function EditProject({ project, categories, clients, auth }) {
                     {data.project_type === 'Client Project' && (
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client</label>
-                            <select
-                                value={data.client_id}
-                                onChange={(e) => setData('client_id', e.target.value)}
-                                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-                            >
-                                <option value="">Select a client</option>
-                                {clients.map((client) => (
-                                    <option key={client.id} value={client.id}>
-                                        {client.name} {client.phone ? `(${client.phone})` : ''}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="flex gap-2">
+                                <select
+                                    value={data.client_id}
+                                    onChange={(e) => setData('client_id', e.target.value)}
+                                    className="flex-1 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                >
+                                    <option value="">Select a client</option>
+                                    {clients.map((client) => (
+                                        <option key={client.id} value={client.id}>
+                                            {client.name} {client.phone ? `(${client.phone})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                <Link href={route('admin.clients.create')}>
+                                    <button type="button" className="p-2 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                        <PlusIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                    </button>
+                                </Link>
+                            </div>
                             {errors.client_id && <p className="text-red-500 text-sm mt-1">{errors.client_id}</p>}
                         </div>
                     )}

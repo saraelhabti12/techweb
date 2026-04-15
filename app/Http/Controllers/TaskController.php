@@ -55,7 +55,7 @@ class TaskController extends Controller
 
     public function create()
     {
-        $projects = Project::all();
+        $projects = Project::with('client')->get();
         $users = User::where('role', 'member')->get(); // Only members can be assigned tasks
         return inertia('Admin/Tasks/Create', compact('projects', 'users'));
     }
@@ -180,7 +180,7 @@ class TaskController extends Controller
 
     public function edit(Task $task)
     {
-        $projects = Project::all();
+        $projects = Project::with('client')->get();
         $users = User::where('role', 'member')->get();
         return inertia('Admin/Tasks/Edit', compact('task', 'projects', 'users'));
     }
@@ -284,9 +284,16 @@ class TaskController extends Controller
 
     public function show(Task $task)
     {
-        $task->load(['project', 'user', 'progressUpdates.user']); // eager load relationships
+        $task->load(['project.client', 'user', 'progressUpdates.user', 'members', 'files']); 
 
-        return inertia('Member/Tasks/TaskProgress', [
+        if (auth()->user()->role === 'admin' || auth()->user()->role === 'project_manager') {
+            return inertia('Admin/Tasks/Show', [
+                'task' => $task,
+                'auth' => auth()->user(),
+            ]);
+        }
+
+        return inertia('Member/Tasks/Progress', [
             'task' => $task,
             'auth' => auth()->user(),
         ]);
@@ -294,7 +301,7 @@ class TaskController extends Controller
 
     public function tasksIndex()
     {
-        $tasks = Task::with('project')
+        $tasks = Task::with('project.client')
             ->where('assigned_to', Auth::id())
             ->latest()
             ->get();
@@ -310,7 +317,7 @@ public function showTaskProgress(Task $task)
         'auth' => [
             'user' => Auth::user(),
         ],
-        'task' => $task->load('project', 'progressUpdates.user'),
+        'task' => $task->load('project.client', 'progressUpdates.user'),
     ]);
 }
 

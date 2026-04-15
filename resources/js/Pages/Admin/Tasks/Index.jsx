@@ -101,9 +101,14 @@ export default function Index({ tasks, auth, filters = {} }) {
                                             </span>
                                         </td>
                                         <td className="px-6 py-5">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                                                {task.project?.name || 'No Project'}
-                                            </span>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                                    {task.project?.name || 'No Project'}
+                                                </span>
+                                                <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-0.5">
+                                                    {task.project?.client?.name || task.project?.client_name || 'Individual'}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td className="px-6 py-5">
                                             <div className="flex items-center gap-2">

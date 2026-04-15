@@ -146,9 +146,11 @@ export default function AdminLayout({ auth, children, title = '' }) {
                         isOpen={openMenus.contacts} 
                         onClick={() => toggleMenu('contacts')}
                         sidebarOpen={sidebarOpen}
-                        active={route().current('admin.customers.*')}
+                        active={route().current('admin.customers.*') || route().current('admin.clients.*')}
                         links={[
                             { label: 'All Contacts', href: route('admin.customers.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                            { label: 'All Clients', href: route('admin.clients.index'), icon: <UsersIcon className="w-4 h-4" /> },
+                            { label: 'Add Client', href: route('admin.clients.create'), icon: <PlusIcon className="w-4 h-4" /> },
                         ]}
                     />
 

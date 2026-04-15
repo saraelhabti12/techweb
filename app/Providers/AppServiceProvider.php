@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use App\Models\Contact;
 
@@ -22,11 +23,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+         
         Vite::prefetch(concurrency: 3);
 
         Inertia::share([
         'messages' => fn () => Contact::latest()->get(),
         'unreadCount' => fn () => Contact::where('is_read', false)->count(),
     ]);
+    Schema::defaultStringLength(191);
     }
 }

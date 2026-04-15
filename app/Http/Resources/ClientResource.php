@@ -17,13 +17,20 @@ class ClientResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'email' => $this->email,
             'phone' => $this->phone,
+            'whatsapp' => $this->whatsapp,
+            'company_name' => $this->company_name,
             'city' => $this->city,
+            'address' => $this->address,
+            'website' => $this->website,
+            'logo' => $this->logo,
             'notes' => $this->notes,
             'status' => $this->status,
             'contact_method' => $this->contact_method,
             'contact_date' => $this->contact_date,
             'user' => new UserResource($this->whenLoaded('user')),
+            'files' => $this->files, // Or create a ClientFileResource if needed
             'created_at' => $this->created_at,
         ];
     }

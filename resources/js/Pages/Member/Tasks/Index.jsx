@@ -48,10 +48,15 @@ const TaskItem = ({ task }) => {
                         <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed mb-4">
                             {task.description || 'No description provided.'}
                         </p>
-                        <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                            <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md text-gray-600 dark:text-gray-300">
+                        <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                            <span className="bg-[#1F2BF3]/10 text-[#1F2BF3] px-2 py-1 rounded-md">
                                 Project: {task.project?.name || 'N/A'}
                             </span>
+                            {(task.project?.client?.name || task.project?.client_name) && (
+                                <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-md">
+                                    Client: {task.project?.client?.name || task.project?.client_name}
+                                </span>
+                            )}
                             <span>Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No deadline'}</span>
                         </div>
                     </div>

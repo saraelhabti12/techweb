@@ -71,7 +71,10 @@ Route::middleware(['auth', 'role:admin,project_manager'])->prefix('admin')->name
     Route::post('/appointments/{appointment}/status', [AdminAppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
     Route::get('/appointments/calendar', [AdminAppointmentController::class, 'calendar'])->name('appointments.calendar');
 
-    // Customers / CRM
+    // CRM / Clients
+    Route::resource('clients', ClientController::class);
+
+    // Customers / CRM (Contacts)
     Route::get('/customers', [ContactController::class, 'index'])->name('customers.index');
     Route::get('/customers/{id}', [ContactController::class, 'show'])->name('customers.show');
     Route::post('/customers/{id}/mark-read', [ContactController::class, 'markRead'])->name('customers.markRead');

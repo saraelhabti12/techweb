@@ -7,13 +7,19 @@ use App\Http\Resources\ClientResource;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class ClientController extends Controller
 {
     public function index()
     {
-        $clients = Auth::user()->clients()->latest()->get();
+        $user = Auth::user();
+        if ($user->role === 'admin' || $user->role === 'project_manager') {
+            $clients = Client::latest()->get();
+        } else {
+            $clients = $user->clients()->latest()->get();
+        }
 
         return Inertia::render('Member/Clients/Index', [
             'clients' => ClientResource::collection($clients)->resolve(),
@@ -29,30 +35,52 @@ class ClientController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
+            'whatsapp' => 'nullable|string|max:20',
+            'company_name' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:255',
+            'website' => 'nullable|url|max:255',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // max 2MB
             'notes' => 'nullable|string',
-            'status' => 'required|in:pending,interested,not_interested',
+            'status' => 'required|in:prospect,interested,client,not_interested,pending',
             'contact_method' => 'required|in:whatsapp,call,meeting',
             'contact_date' => 'nullable|date',
+            'files.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,png,jpeg|max:10240', // max 10MB per file
         ]);
 
-        Auth::user()->clients()->create([
-            'name' => $validated['name'],
-            'phone' => $validated['phone'],
-            'city' => $validated['city'],
-            'notes' => $validated['notes'],
-            'status' => $validated['status'],
-            'contact_method' => $validated['contact_method'],
-            'contact_date' => $validated['contact_date'],
-        ]);
+        $data = $validated;
+        unset($data['files']); // remove files from client data
 
-        return redirect()->route('member.clients.index')->with('success', 'Client added successfully to your CRM!');
+        if ($request->hasFile('logo')) {
+            $data['logo'] = $request->file('logo')->store('clients/logos', 'public');
+        }
+
+        $client = Auth::user()->clients()->create($data);
+
+        // Handle multiple file uploads
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $path = $file->store('clients/files', 'public');
+                $client->files()->create([
+                    'file_path' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'type' => $file->getClientMimeType(),
+                ]);
+            }
+        }
+
+        $redirectRoute = Auth::user()->role === 'admin' || Auth::user()->role === 'project_manager' ? 'admin.clients.index' : 'member.clients.index';
+        
+        return redirect()->route($redirectRoute)->with('success', 'Client added successfully!');
     }
 
     public function edit(Client $client)
     {
-        $this->authorize('update', $client);
+        if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'project_manager') {
+            Gate::authorize('update', $client);
+        }
 
         return Inertia::render('Member/Clients/Edit', [
             'client' => (new ClientResource($client))->resolve(),
@@ -61,29 +89,70 @@ class ClientController extends Controller
 
     public function update(Request $request, Client $client)
     {
-        $this->authorize('update', $client);
+        if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'project_manager') {
+            Gate::authorize('update', $client);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
+            'whatsapp' => 'nullable|string|max:20',
+            'company_name' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:255',
+            'website' => 'nullable|url|max:255',
+            'logo' => 'nullable|image|max:2048',
             'notes' => 'nullable|string',
-            'status' => 'required|in:pending,interested,not_interested',
+            'status' => 'required|in:prospect,interested,client,not_interested,pending',
             'contact_method' => 'required|in:whatsapp,call,meeting',
             'contact_date' => 'nullable|date',
+            'files.*' => 'nullable|file|max:10240',
         ]);
 
-        $client->update($validated);
+        $data = $validated;
+        unset($data['files']);
 
-        return redirect()->route('member.clients.index')->with('success', 'Client updated successfully.');
+        if ($request->hasFile('logo')) {
+            $data['logo'] = $request->file('logo')->store('clients/logos', 'public');
+        }
+
+        $client->update($data);
+
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $path = $file->store('clients/files', 'public');
+                $client->files()->create([
+                    'file_path' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'type' => $file->getClientMimeType(),
+                ]);
+            }
+        }
+
+        $redirectRoute = Auth::user()->role === 'admin' || Auth::user()->role === 'project_manager' ? 'admin.clients.index' : 'member.clients.index';
+        
+        try {
+            return redirect()->route($redirectRoute)->with('success', 'Client updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->route('dashboard')->with('success', 'Client updated successfully.');
+        }
     }
 
     public function destroy(Client $client)
     {
-        $this->authorize('delete', $client);
+        if (Auth::user()->role !== 'admin' && Auth::user()->role !== 'project_manager') {
+            Gate::authorize('delete', $client);
+        }
 
         $client->delete();
 
-        return redirect()->route('member.clients.index')->with('success', 'Client deleted.');
+        $redirectRoute = Auth::user()->role === 'admin' || Auth::user()->role === 'project_manager' ? 'admin.clients.index' : 'member.clients.index';
+        
+        try {
+            return redirect()->route($redirectRoute)->with('success', 'Client deleted.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('success', 'Client deleted.');
+        }
     }
 }

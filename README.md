@@ -154,3 +154,7 @@ Follow these steps to set up the project locally:
 ---
 
 **Developed for Techweb Agency** - *Empowering technology with structured management.*
+
+
+
+ana anqolk  shnu bagha n3ml kaml wnzeed wnta etini ra2yek wktbeli prompt lgemini cli bash  y3mlii dekshii , mohim ana bagha fash member ybghi yzeed shi client khass ytla3lo mn les infos li y9dar y3amar ta logo mohim ana bagha les infos li nqdar nzeed kamlin 3tini des infos ntina ktaar proposer shi wahedin mn eandek , wkhsseni yzeed ta possibilite yqdar y uploadi shiii document wla picture wla ay haja bgha member yzeeda ela qbel client yaeni tzadlo wahed l3iba dyal upload , wkhssenii  thayed dek icon dyal notification qdim li makhadamshi ybqali gher hadak jdid li ead emlnah w dek qdim ythayed mn navbar , wkhssni nzeed wahed l3iba isma history fnavbar fhal shi icon fih history dyal akhiir hajaat 3mlom admin wlaa member yaeni la zad shi projet tla3lo bli akhir haja hiya zdti project la eml task tla3lo la accepta rdv tla3loo ,,,,,

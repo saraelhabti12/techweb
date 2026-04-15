@@ -73,19 +73,26 @@ export default function CreateProject({ categories, clients, auth }) {
                                 <label htmlFor="client_id" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
                                     Select Client
                                 </label>
-                                <select
-                                    id="client_id"
-                                    value={data.client_id}
-                                    onChange={(e) => setData('client_id', e.target.value)}
-                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                >
-                                    <option value="">Choose a client</option>
-                                    {clients.map((client) => (
-                                        <option key={client.id} value={client.id}>
-                                            {client.name} - {client.phone}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="flex gap-2">
+                                    <select
+                                        id="client_id"
+                                        value={data.client_id}
+                                        onChange={(e) => setData('client_id', e.target.value)}
+                                        className="flex-1 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                    >
+                                        <option value="">Choose a client</option>
+                                        {clients.map((client) => (
+                                            <option key={client.id} value={client.id}>
+                                                {client.name} - {client.phone}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <Link href={route('admin.clients.create')}>
+                                        <DashboardButton type="button" variant="secondary" className="!px-4">
+                                            <PlusIcon className="w-5 h-5" />
+                                        </DashboardButton>
+                                    </Link>
+                                </div>
                                 {errors.client_id && <p className="mt-1 text-sm text-red-500 font-bold">{errors.client_id}</p>}
                             </div>
                         )}
