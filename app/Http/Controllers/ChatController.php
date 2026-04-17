@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Message;
 use App\Models\User;
+use App\Models\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -15,19 +16,33 @@ class ChatController extends Controller
      */
     public function index()
     {
+        $authId = Auth::id();
+
         // Fetch ALL users except the current authenticated user
-        $users = User::where('id', '!=', Auth::id())
-            ->orderBy('name', 'asc')
-            ->get();
-        
-        // Add unread count for each user to show in the sidebar
-        $users->map(function ($user) {
-            $user->unread_count = Message::where('sender_id', $user->id)
-                ->where('receiver_id', Auth::id())
-                ->where('is_read', false)
-                ->count();
-            return $user;
-        });
+        // Order by latest interaction
+        $users = User::where('id', '!=', $authId)
+            ->get()
+            ->map(function ($user) use ($authId) {
+                // Get latest message with this user
+                $latestMessage = Message::where(function ($query) use ($user, $authId) {
+                    $query->where('sender_id', $authId)->where('receiver_id', $user->id);
+                })->orWhere(function ($query) use ($user, $authId) {
+                    $query->where('sender_id', $user->id)->where('receiver_id', $authId);
+                })->latest()->first();
+
+                $user->latest_message_time = $latestMessage ? $latestMessage->created_at : null;
+                $user->unread_count = Message::where('sender_id', $user->id)
+                    ->where('receiver_id', $authId)
+                    ->where('is_read', false)
+                    ->count();
+                
+                // Add online status
+                $user->is_online = $user->isOnline();
+                
+                return $user;
+            })
+            ->sortByDesc('latest_message_time')
+            ->values();
 
         return Inertia::render('Chat/Index', [
             'users' => $users
@@ -47,6 +62,12 @@ class ChatController extends Controller
                 ->where('receiver_id', Auth::id());
         })->orderBy('created_at', 'asc')->get();
 
+        // Also mark messages as read
+        Message::where('sender_id', $user->id)
+            ->where('receiver_id', Auth::id())
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
         return response()->json($messages);
     }
 
@@ -65,6 +86,8 @@ class ChatController extends Controller
             'message' => $request->message,
             'is_read' => false
         ]);
+
+        Activity::log('Message Sent', "Sent message to: {$user->name}");
 
         // Send notification to the receiver
         $user->notify(new \App\Notifications\MessageReceived($message));
@@ -90,17 +113,30 @@ class ChatController extends Controller
      */
     public function usersWithUnreadCount()
     {
-        $users = User::where('id', '!=', Auth::id())
-            ->orderBy('name', 'asc')
-            ->get();
-        
-        $users->map(function ($user) {
-            $user->unread_count = Message::where('sender_id', $user->id)
-                ->where('receiver_id', Auth::id())
-                ->where('is_read', false)
-                ->count();
-            return $user;
-        });
+        $authId = Auth::id();
+
+        $users = User::where('id', '!=', $authId)
+            ->get()
+            ->map(function ($user) use ($authId) {
+                // Get latest message with this user
+                $latestMessage = Message::where(function ($query) use ($user, $authId) {
+                    $query->where('sender_id', $authId)->where('receiver_id', $user->id);
+                })->orWhere(function ($query) use ($user, $authId) {
+                    $query->where('sender_id', $user->id)->where('receiver_id', $authId);
+                })->latest()->first();
+
+                $user->latest_message_time = $latestMessage ? $latestMessage->created_at : null;
+                $user->unread_count = Message::where('sender_id', $user->id)
+                    ->where('receiver_id', $authId)
+                    ->where('is_read', false)
+                    ->count();
+
+                $user->is_online = $user->isOnline();
+
+                return $user;
+            })
+            ->sortByDesc('latest_message_time')
+            ->values();
 
         return response()->json($users);
     }

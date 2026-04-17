@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\Activity;
 use App\Mail\TaskAssignedMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ class TaskController extends Controller
         $search = $request->get('search');
         
         // Build query
-        $query = Task::with(['project', 'user', 'files']);
+        $query = Task::with(['project', 'user', 'files', 'members']);
         
         // Search filter
         if ($search) {
@@ -122,11 +123,11 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
             'deadline' => 'required|date|after_or_equal:due_date',
-            'status' => 'required|in:todo,in_progress,done',
+            'status' => 'required|in:todo,in_progress,completed,blocked',
             'files.*' => 'nullable|file|max:10240', // max 10MB par fichier
             'project_id' => 'required|exists:projects,id',
-            'assigned_to' => 'required|exists:users,id',
-            'members' => 'nullable|array', 
+            'assigned_to' => 'nullable|exists:users,id',
+            'members' => 'required|array|min:1', 
             'members.*' => 'exists:users,id',
         ]);
 
@@ -138,8 +139,10 @@ class TaskController extends Controller
             'deadline' => $request->deadline,
             'status' => $request->status,
             'project_id' => $request->project_id,
-            'assigned_to' => $request->assigned_to,
+            'assigned_to' => $request->assigned_to ?? ($request->members[0] ?? null),
         ]);
+
+        Activity::log('Task Created', "Created task: {$task->title}");
 
         // 2. Gérer les fichiers uploadés
         if ($request->hasFile('files')) {
@@ -162,8 +165,8 @@ class TaskController extends Controller
             \Illuminate\Support\Facades\Notification::send($members, new \App\Notifications\TaskAssigned($task));
         }
         
-        // Notify the primary assigned user
-        if ($task->user) {
+        // Notify the primary assigned user if not already in members
+        if ($task->assigned_to && !in_array($task->assigned_to, $request->members)) {
             $task->user->notify(new \App\Notifications\TaskAssigned($task));
         }
 
@@ -255,9 +258,11 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
             'deadline' => 'nullable|date|after_or_equal:due_date',
-            'status' => 'sometimes|in:todo,in_progress,done',
+            'status' => 'sometimes|in:todo,in_progress,completed,blocked',
             'project_id' => 'sometimes|exists:projects,id',
-            'assigned_to' => 'sometimes|exists:users,id',
+            'assigned_to' => 'nullable|exists:users,id',
+            'members' => 'sometimes|array|min:1',
+            'members.*' => 'exists:users,id',
             'files.*' => 'nullable|file|max:10240',
         ]);
 
@@ -265,6 +270,26 @@ class TaskController extends Controller
         $task->update($request->only([
             'title', 'description', 'due_date', 'deadline', 'status', 'project_id', 'assigned_to'
         ]));
+
+        // Check if all tasks for the project are done to mark the project as completed
+        if ($task->status === 'completed' && $task->project) {
+            $totalTasks = $task->project->tasks()->count();
+            $completedTasks = $task->project->tasks()->where('status', 'completed')->count();
+            
+            if ($totalTasks > 0 && $totalTasks === $completedTasks) {
+                $task->project->update(['status' => 'completed']);
+                Activity::log('Project Auto-Completed', "Project '{$task->project->name}' marked as completed because all tasks are done.");
+            }
+        }
+
+        if ($request->has('members')) {
+            $task->members()->sync($request->members);
+            
+            // If assigned_to is not in members and not explicitly provided, update it to the first member
+            if (!$request->has('assigned_to') && !in_array($task->assigned_to, $request->members)) {
+                $task->update(['assigned_to' => $request->members[0] ?? null]);
+            }
+        }
 
         // ✅ Gestion des fichiers multiples
         if ($request->hasFile('files')) {
@@ -301,8 +326,15 @@ class TaskController extends Controller
 
     public function tasksIndex()
     {
-        $tasks = Task::with('project.client')
-            ->where('assigned_to', Auth::id())
+        $user = Auth::user();
+        $tasks = Task::with(['project.client', 'files', 'members'])
+            ->withCount('progressUpdates')
+            ->where(function($query) use ($user) {
+                $query->where('assigned_to', $user->id)
+                      ->orWhereHas('members', function($q) use ($user) {
+                          $q->where('users.id', $user->id);
+                      });
+            })
             ->latest()
             ->get();
 
@@ -317,9 +349,34 @@ public function showTaskProgress(Task $task)
         'auth' => [
             'user' => Auth::user(),
         ],
-        'task' => $task->load('project.client', 'progressUpdates.user'),
+        'task' => $task->load(['project.client', 'progressUpdates.user', 'members', 'files']),
     ]);
 }
+
+    public function updateStatus(Request $request, Task $task)
+    {
+        $request->validate([
+            'status' => 'required|in:todo,in_progress,completed,blocked',
+        ]);
+
+        $oldStatus = $task->status;
+        $task->update(['status' => $request->status]);
+
+        Activity::log('Task Status Updated', "Updated task '{$task->title}' status from {$oldStatus} to {$request->status}");
+
+        // Check if all tasks for the project are done to mark the project as completed
+        if ($task->status === 'completed' && $task->project) {
+            $totalTasks = $task->project->tasks()->count();
+            $completedTasks = $task->project->tasks()->where('status', 'completed')->count();
+            
+            if ($totalTasks > 0 && $totalTasks === $completedTasks) {
+                $task->project->update(['status' => 'completed']);
+                Activity::log('Project Auto-Completed', "Project '{$task->project->name}' marked as completed because all tasks are done.");
+            }
+        }
+
+        return back()->with('success', 'Task status updated successfully!');
+    }
 
     public function destroy(Task $task)
     {

@@ -12,7 +12,6 @@ export default function Create({ projects, users, auth }) {
         deadline: '',
         status: 'todo',
         project_id: '',
-        assigned_to: '',
         members: [],
         files: []
     });
@@ -59,7 +58,7 @@ export default function Create({ projects, users, auth }) {
                             {errors.description && <p className="mt-1 text-sm text-red-500 font-bold">{errors.description}</p>}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 gap-6">
                             <div>
                                 <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Project</label>
                                 <select
@@ -81,7 +80,7 @@ export default function Create({ projects, users, auth }) {
                                             const p = projects.find(p => p.id === parseInt(data.project_id));
                                             if (!p) return null;
                                             return (
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                     <div>
                                                         <p className="text-[9px] text-gray-500 uppercase font-bold">Name</p>
                                                         <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{p.client?.name || p.client_name || 'N/A'}</p>
@@ -104,46 +103,59 @@ export default function Create({ projects, users, auth }) {
                                     </div>
                                 )}
                             </div>
-
-                            <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Assign To</label>
-                                <select
-                                    value={data.assigned_to}
-                                    onChange={(e) => setData('assigned_to', e.target.value)}
-                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                >
-                                    <option value="">Select member</option>
-                                    {users.map((user) => (
-                                        <option key={user.id} value={user.id}>{user.name}</option>
-                                    ))}
-                                </select>
-                                {errors.assigned_to && <p className="mt-1 text-sm text-red-500 font-bold">{errors.assigned_to}</p>}
-                            </div>
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Members (Optional)</label>
-                            <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-800/50 custom-scrollbar">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Assign Members</label>
+                                <span className="text-[9px] font-bold text-[#1F2BF3] bg-[#1F2BF3]/10 px-2 py-0.5 rounded-full">
+                                    {data.members.length} selected
+                                </span>
+                            </div>
+                            
+                            <div className="mb-3">
+                                <input 
+                                    type="text"
+                                    placeholder="Search members..."
+                                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1F2BF3] transition-all"
+                                    onChange={(e) => {
+                                        const term = e.target.value.toLowerCase();
+                                        const items = document.querySelectorAll('.member-item');
+                                        items.forEach(item => {
+                                            const name = item.getAttribute('data-name').toLowerCase();
+                                            item.style.display = name.includes(term) ? 'flex' : 'none';
+                                        });
+                                    }}
+                                />
+                            </div>
+
+                            <div className="space-y-1 max-h-56 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-2 bg-gray-50 dark:bg-gray-800/50 custom-scrollbar">
                                 {users.map((user) => (
-                                    <label key={user.id} className="flex items-center space-x-3 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            value={user.id}
-                                            checked={data.members.includes(user.id)}
-                                            onChange={(e) => {
-                                                const id = parseInt(e.target.value);
-                                                if (e.target.checked) {
-                                                    setData('members', [...data.members, id]);
-                                                } else {
-                                                    setData('members', data.members.filter((memberId) => memberId !== id));
-                                                }
-                                            }}
-                                            className="w-4 h-4 rounded border-gray-300 text-[#1F2BF3] focus:ring-[#1F2BF3]"
-                                        />
-                                        <span className="text-sm font-medium text-gray-900 dark:text-gray-300">{user.name}</span>
+                                    <label key={user.id} data-name={user.name} className="member-item flex items-center justify-between p-2.5 hover:bg-white dark:hover:bg-gray-800 rounded-lg cursor-pointer transition-colors group">
+                                        <div className="flex items-center space-x-3">
+                                            <input
+                                                type="checkbox"
+                                                value={user.id}
+                                                checked={data.members.includes(user.id)}
+                                                onChange={(e) => {
+                                                    const id = parseInt(e.target.value);
+                                                    if (e.target.checked) {
+                                                        setData('members', [...data.members, id]);
+                                                    } else {
+                                                        setData('members', data.members.filter((memberId) => memberId !== id));
+                                                    }
+                                                }}
+                                                className="w-4 h-4 rounded border-gray-300 text-[#1F2BF3] focus:ring-[#1F2BF3]"
+                                            />
+                                            <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-[#1F2BF3] transition-colors">{user.name}</span>
+                                        </div>
+                                        <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                                            {user.role}
+                                        </div>
                                     </label>
                                 ))}
                             </div>
+                            {errors.members && <p className="mt-1 text-sm text-red-500 font-bold">{errors.members}</p>}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -180,7 +192,8 @@ export default function Create({ projects, users, auth }) {
                                 >
                                     <option value="todo">To Do</option>
                                     <option value="in_progress">In Progress</option>
-                                    <option value="done">Done</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="blocked">Blocked</option>
                                 </select>
                                 {errors.status && <p className="mt-1 text-sm text-red-500 font-bold">{errors.status}</p>}
                             </div>

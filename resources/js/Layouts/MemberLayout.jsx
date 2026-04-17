@@ -2,6 +2,8 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationDropdown from '@/Components/NotificationDropdown';
+import HistoryDropdown from '@/Components/HistoryDropdown';
+import DarkModeToggle from '@/Components/DarkModeToggle';
 import { 
     LayoutDashboard, 
     Users, 
@@ -19,12 +21,31 @@ import {
     Menu
 } from 'lucide-react';
 
+import Avatar from '@/Components/UI/Avatar';
+import ApplicationLogo from '@/Components/ApplicationLogo';
+import axios from 'axios';
+
 export default function MemberLayout({ auth, children }) {
     const [teamHubOpen, setTeamHubOpen] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const { flash } = usePage().props;
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState({ type: '', text: '' });
+
+    // Heartbeat logic
+    useEffect(() => {
+        const heartbeat = () => {
+            axios.post(route('heartbeat')).catch(err => console.error("Heartbeat failed", err));
+        };
+
+        // Initial heartbeat
+        heartbeat();
+
+        // Interval every 20 seconds
+        const interval = setInterval(heartbeat, 20000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         if (flash?.success) {
@@ -66,10 +87,7 @@ export default function MemberLayout({ auth, children }) {
                 <div className="h-full flex justify-between items-center">
                     <div className="flex items-center gap-4">
                         <Link href="/member/dashboard" className="flex items-center gap-3 group">
-                            <div className="w-10 h-10 bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
-                                <img className="h-6 brightness-0 invert" src="/images/logotechweb.png" alt="TechWeb" />
-                            </div>
-                            <span className="font-black text-xl bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] bg-clip-text text-transparent hidden sm:block">TECHWEB</span>
+                            <ApplicationLogo className="h-10 w-auto group-hover:scale-110 transition-transform" />
                         </Link>
                     </div>
 
@@ -88,10 +106,12 @@ export default function MemberLayout({ auth, children }) {
                                 )}
                             </Link>
 
+                            <HistoryDropdown />
                             <NotificationDropdown />
+                            <DarkModeToggle />
 
                             <Link
-                                href="/member/attendance/qr"
+                                href="/member/attendance"
                                 className="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-[#1F2BF3] transition-all group"
                                 title="Attendance QR"
                             >
@@ -101,13 +121,7 @@ export default function MemberLayout({ auth, children }) {
 
                         <Link href={route('admin.profile')} className="flex items-center gap-3 p-1.5 pr-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all border border-transparent hover:border-gray-100 dark:hover:border-gray-800 group">
                             <div className="relative">
-                                {auth?.user?.avatar ? (
-                                    <img src={`/storage/${auth.user.avatar}`} alt={auth.user.name} className="h-10 w-10 rounded-xl object-cover shadow-sm border border-gray-100 dark:border-gray-800" />
-                                ) : (
-                                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] flex items-center justify-center text-white font-bold">
-                                        {auth?.user?.name?.charAt(0)}
-                                    </div>
-                                )}
+                                <Avatar user={auth?.user} size="md" className="border border-gray-100 dark:border-gray-800 shadow-sm" />
                                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-950 rounded-full"></div>
                             </div>
                             <div className="text-left hidden lg:block">
@@ -138,7 +152,7 @@ export default function MemberLayout({ auth, children }) {
                         <NavLink href="/member/progress" icon={<TrendingUp className="w-5 h-5" />}>
                             Progress Updates
                         </NavLink>
-                        <NavLink href="/member/my-attendance" icon={<Clock className="w-5 h-5" />}>
+                        <NavLink href="/member/attendance" icon={<Clock className="w-5 h-5" />}>
                             My Attendance
                         </NavLink>
 
@@ -193,7 +207,13 @@ export default function MemberLayout({ auth, children }) {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-y-auto scroll-smooth bg-gray-50/50 dark:bg-black">
+                <main className="flex-1 overflow-y-auto scroll-smooth bg-gray-50/50 dark:bg-black relative">
+                    {/* Ambient Background Glows */}
+                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#1F2BF3]/5 blur-[120px] rounded-full dark:opacity-20 opacity-10 animate-pulse" />
+                        <div className="absolute bottom-[10%] right-[-5%] w-[35%] h-[35%] bg-[#00D8C0]/5 blur-[120px] rounded-full dark:opacity-15 opacity-5" />
+                    </div>
+
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={usePage().url}

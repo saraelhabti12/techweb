@@ -17,6 +17,7 @@ class User extends Authenticatable
         'password',
         'role', 
         'avatar', 
+        'last_seen',
     ];
 
     protected $hidden = [
@@ -29,13 +30,34 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_seen' => 'datetime',
         ];
+    }
+
+    /**
+     * Check if the user is currently online.
+     * Online status is active if the last heartbeat was within the last 60 seconds.
+     */
+    public function isOnline()
+    {
+        if (!$this->last_seen) return false;
+        return $this->last_seen->gt(now()->subMinutes(1));
     }
 
     // Add relationships
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function lastAttendance()
+    {
+        return $this->hasOne(Attendance::class)->latestOfMany();
+    }
+
+    public function getLastAttendanceAtAttribute()
+    {
+        return $this->lastAttendance ? $this->lastAttendance->marked_at : null;
     }
 
     public function isAdmin()
@@ -86,5 +108,15 @@ class User extends Authenticatable
     public function groups()
     {
         return $this->belongsToMany(Group::class, 'group_user')->withTimestamps();
+    }
+
+    public function activities()
+    {
+        return $this->hasMany(Activity::class);
+    }
+
+    public function personalTodos()
+    {
+        return $this->hasMany(PersonalTodo::class);
     }
 }

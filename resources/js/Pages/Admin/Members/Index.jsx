@@ -7,6 +7,8 @@ import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
 import DashboardInput from '@/Components/UI/DashboardInput';
 import { motion } from 'framer-motion';
+import Avatar from '@/Components/UI/Avatar';
+import UserStatus from '@/Components/UI/UserStatus';
 
 const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this member?')) return;
@@ -91,22 +93,16 @@ export default function MembersIndex({ members, auth, filters = {} }) {
                                         <td className="px-6 py-5">
                                             <div className="flex items-center gap-4">
                                                 <div className="relative">
-                                                    {member.avatar ? (
-                                                        <img
-                                                            src={`/storage/${member.avatar}`}
-                                                            alt={member.name}
-                                                            className="h-12 w-12 rounded-xl object-cover shadow-sm ring-2 ring-white dark:ring-gray-900"
-                                                        />
-                                                    ) : (
-                                                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/10">
-                                                            {member.name.charAt(0).toUpperCase()}
-                                                        </div>
-                                                    )}
-                                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-950 rounded-full"></div>
+                                                    <Avatar user={member} size="md" />
+                                                    <div className="absolute -bottom-1 -right-1">
+                                                        <UserStatus user={member} showText={false} className="border-2 border-white dark:border-gray-950 rounded-full bg-white dark:bg-gray-950" />
+                                                    </div>
                                                 </div>
                                                 <div>
                                                     <div className="font-bold text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors">{member.name}</div>
-                                                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Member since {new Date(member.created_at).getFullYear()}</div>
+                                                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                                                        <UserStatus user={member} />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>

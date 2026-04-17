@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import dayjs from 'dayjs';
-import { ArrowLeftIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, MagnifyingGlassIcon, PlusIcon, EyeIcon, PencilSquareIcon, TrashIcon, ClockIcon, UserIcon } from '@heroicons/react/24/outline';
+import DashboardPage from "@/Components/UI/DashboardPage";
+import DashboardCard from "@/Components/UI/DashboardCard";
+import DashboardButton from "@/Components/UI/DashboardButton";
+import DashboardInput from "@/Components/UI/DashboardInput";
 
 export default function DayView({ schedules, selectedDate, auth }) {
     const [searchTerm, setSearchTerm] = useState('');
@@ -14,96 +18,134 @@ export default function DayView({ schedules, selectedDate, auth }) {
     );
 
     const handleDelete = (id) => {
-        if (confirm("Delete this schedule?")) {
+        if (confirm("Are you sure you want to delete this schedule?")) {
             router.delete(`/admin/schedule/${id}`);
         }
     };
 
     return (
-        <AdminLayout auth={auth} title={`Schedules for ${dayjs(selectedDate).format('DD MMMM YYYY')}`}>
+        <AdminLayout auth={auth}>
             <Head title={`Schedules for ${dayjs(selectedDate).format('DD MMMM YYYY')}`} />
-
-            <div className="mb-6">
-                <button
-                    onClick={() => window.history.back()}
-                    className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-                >
-                    <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                    Back to Calendar
-                </button>
-            </div>
-            <div className="flex justify-end mb-6">
-                <Link
-                    href="/admin/schedule/create"
-                    className="inline-flex items-center px-4 py-2 
-                        bg-purple-600 border border-transparent rounded-md 
-                        font-semibold text-xs text-white uppercase tracking-widest 
-                        hover:bg-purple-700 active:bg-purple-900 
-                        focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
-                        disabled:opacity-25 transition 
-                        dark:bg-purple-700 dark:hover:bg-purple-600"
-                >
-                    Add Schedule
-                </Link>
-            </div>
-
-            <div className="bg-gray-200 bg-opacity-30 dark:bg-gray-800 dark:bg-opacity-30 rounded-lg p-6 mb-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                        Events on {dayjs(selectedDate).format('dddd, DD MMMM YYYY')}
-                    </h2>
-                    <div className="relative w-64">
-                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full rounded-md border-gray-300 
-                                    dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 
-                                    shadow-sm pl-9
-                                    focus:border-purple-500 focus:ring-purple-500"
-                        />
+            
+            <DashboardPage 
+                title={dayjs(selectedDate).format('dddd, D MMMM')}
+                description={`Daily schedule overview for ${dayjs(selectedDate).format('YYYY')}`}
+                actions={
+                    <div className="flex items-center gap-3">
+                        <DashboardButton 
+                            variant="secondary" 
+                            onClick={() => window.history.back()}
+                        >
+                            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                            Back to Calendar
+                        </DashboardButton>
+                        <Link href="/admin/schedule/create">
+                            <DashboardButton>
+                                <PlusIcon className="w-4 h-4 mr-2" />
+                                Add Schedule
+                            </DashboardButton>
+                        </Link>
                     </div>
-                </div>
+                }
+            >
+                <div className="space-y-6">
+                    <DashboardCard noHover>
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                                Scheduled Events
+                            </h3>
+                            <div className="w-full md:w-72">
+                                <DashboardInput
+                                    placeholder="Search events..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    icon={MagnifyingGlassIcon}
+                                />
+                            </div>
+                        </div>
 
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-300 uppercase tracking-wider">Title</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-300 uppercase tracking-wider">Time</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-300 uppercase tracking-wider">Person</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-gray-300 uppercase tracking-wider">Content</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-gray-100 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30">
-                        {filtered.length > 0 ? (
-                            filtered.map((item) => (
-                                <tr key={item.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.title}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                        {item.time ? item.time.slice(0, 5) : '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.person || '-'}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.content || '-'}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                        <Link href={`/admin/schedule/${item.id}`} className="text-blue-500 hover:underline">Details</Link>
-                                        <Link href={`/admin/schedule/${item.id}/edit`} className="text-yellow-500 hover:underline">Edit</Link>
-                                        <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:underline">Delete</button>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="5" className="text-center p-4 text-gray-500 dark:text-gray-400">
-                                    No events for this day
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                        <div className="overflow-x-auto -mx-8">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-gray-100 dark:border-gray-800/50">
+                                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Event / Title</th>
+                                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Time</th>
+                                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Person</th>
+                                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Content</th>
+                                        <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50 dark:divide-gray-800/30">
+                                    {filtered.length > 0 ? (
+                                        filtered.map((item) => (
+                                            <tr key={item.id} className="group hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
+                                                <td className="px-8 py-5">
+                                                    <span className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors">
+                                                        {item.title}
+                                                    </span>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400">
+                                                        <ClockIcon className="w-4 h-4 text-[#1F2BF3]" />
+                                                        {item.time ? item.time.slice(0, 5) : '--:--'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400">
+                                                        <UserIcon className="w-4 h-4 text-[#00D8C0]" />
+                                                        {item.person || 'N/A'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 max-w-xs truncate">
+                                                        {item.content || 'No description'}
+                                                    </p>
+                                                </td>
+                                                <td className="px-8 py-5 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Link 
+                                                            href={`/admin/schedule/${item.id}`}
+                                                            className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3] hover:bg-[#1F2BF3] hover:text-white transition-all shadow-sm"
+                                                            title="View Details"
+                                                        >
+                                                            <EyeIcon className="w-4 h-4" />
+                                                        </Link>
+                                                        <Link 
+                                                            href={`/admin/schedule/${item.id}/edit`}
+                                                            className="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 hover:bg-amber-600 hover:text-white transition-all shadow-sm"
+                                                            title="Edit Event"
+                                                        >
+                                                            <PencilSquareIcon className="w-4 h-4" />
+                                                        </Link>
+                                                        <button 
+                                                            onClick={() => handleDelete(item.id)}
+                                                            className="p-2 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                                                            title="Delete Event"
+                                                        >
+                                                            <TrashIcon className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="5" className="px-8 py-12 text-center">
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <CalendarIcon className="w-12 h-12 text-gray-200 dark:text-gray-800" />
+                                                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+                                                        No events scheduled for this day
+                                                    </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </DashboardCard>
+                </div>
+            </DashboardPage>
         </AdminLayout>
     );
 }

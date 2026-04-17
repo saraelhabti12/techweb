@@ -1,65 +1,101 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from "react";
 import ReplyModal from "./ReplyModal";
-import { router ,Link } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import { EnvelopeIcon, PhoneIcon, BuildingOfficeIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 
-export default function Show({ message }) {
-  const [replyOpen, setReplyOpen] = useState(false);
+export default function Show({ message, auth }) {
+    const [replyOpen, setReplyOpen] = useState(false);
 
-  return (
-    <AdminLayout title="Message Detail">
-      <div className="p-16 bg-gray-500/30 rounded-xl shadow-lg border-2 border-purple-200 max-w-3xl mx-auto">
-        
-        <div className="mb-6">
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-          >
-            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Retour
-          </button>
-        </div>
+    return (
+        <AdminLayout auth={auth}>
+            <DashboardPage 
+                title="Message Details"
+                description={`Viewing message from ${message.full_name}`}
+                actions={
+                    <DashboardButton variant="secondary" onClick={() => window.history.back()}>
+                        Go Back
+                    </DashboardButton>
+                }
+            >
+                <div className="max-w-4xl mx-auto space-y-6">
+                    <DashboardCard>
+                        <div className="flex flex-col md:flex-row justify-between gap-6 mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{message.full_name}</h2>
+                                <p className="text-sm text-gray-500 font-medium">Customer Inquiry</p>
+                            </div>
+                            <div className="flex items-center">
+                                <DashboardButton onClick={() => setReplyOpen(true)} className="flex items-center gap-2">
+                                    <EnvelopeIcon className="w-5 h-5" />
+                                    Reply to Message
+                                </DashboardButton>
+                            </div>
+                        </div>
 
-        <h2 className="text-2xl font-bold mb-4 text-gray-900">{message.full_name}</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div className="space-y-1">
+                                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Email Address</span>
+                                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <EnvelopeIcon className="w-4 h-4 text-[#1F2BF3]" />
+                                    <span className="font-medium">{message.email}</span>
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Phone Number</span>
+                                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <PhoneIcon className="w-4 h-4 text-[#1F2BF3]" />
+                                    <span className="font-medium">{message.contact_number}</span>
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Company</span>
+                                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <BuildingOfficeIcon className="w-4 h-4 text-[#1F2BF3]" />
+                                    <span className="font-medium">{message.company_name || "—"}</span>
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Received Date</span>
+                                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <CalendarDaysIcon className="w-4 h-4 text-[#1F2BF3]" />
+                                    <span className="font-medium">{new Date(message.created_at).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
 
-        <div className="text-sm text-gray-900 mb-10 space-y-5">
-            <p>📧 <strong>Email:</strong> {message.email}</p>
-            <p>📞 <strong>Phone:</strong> {message.contact_number}</p>
-            <p>🏢 <strong>Company:</strong> {message.company_name || "—"}</p>
-            <p>🗓️ <strong>Date:</strong> {new Date(message.created_at).toLocaleString()}</p>
-        </div>
+                        <div className="space-y-4">
+                            <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Message Content</span>
+                            <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                <p className="whitespace-pre-wrap text-gray-800 dark:text-gray-200 leading-relaxed text-lg">
+                                    {message.message}
+                                </p>
+                            </div>
+                        </div>
 
-        <div className="p-6 mb-8 rounded-lg border border-purple-300 shadow-inner">
-          <p className="whitespace-pre-wrap text-gray-800 leading-relaxed">{message.message}</p>
-        </div>
+                        {message.services?.length > 0 && (
+                            <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
+                                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Requested Services</span>
+                                <div className="flex flex-wrap gap-2">
+                                    {message.services.map((srv, i) => (
+                                        <span key={i} className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3] rounded-xl text-xs font-bold">
+                                            {srv}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </DashboardCard>
+                </div>
 
-        {message.services?.length > 0 && (
-          <div className="mb-6">
-            <h3 className="font-semibold text-purple-600 mb-2">Services demandés :</h3>
-            <ul className="list-disc list-inside space-y-1 text-gray-700">
-              {message.services.map((srv, i) => (
-                <li key={i}>{srv}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <div className="flex justify-end">
-          <button
-            onClick={() => setReplyOpen(true)}
-            className="px-6 py-2 bg-purple-400 hover:bg-purple-500 text-white font-semibold rounded-lg shadow-md transition duration-200"
-          >
-            Reply to the message
-          </button>
-        </div>
-      </div>
-
-      <ReplyModal
-        open={replyOpen}
-        onClose={() => setReplyOpen(false)}
-        customerEmail={message.email}
-      />
-    </AdminLayout>
-  );
+                <ReplyModal
+                    open={replyOpen}
+                    onClose={() => setReplyOpen(false)}
+                    customerEmail={message.email}
+                />
+            </DashboardPage>
+        </AdminLayout>
+    );
 }

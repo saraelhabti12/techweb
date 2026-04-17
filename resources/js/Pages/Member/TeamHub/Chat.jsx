@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Head, useForm } from "@inertiajs/react";
+import { Head, useForm, usePage } from "@inertiajs/react";
 import MemberLayout from "@/Layouts/MemberLayout";
-import { usePage } from "@inertiajs/react";
 import {
   ChatBubbleLeftRightIcon,
   PaperAirplaneIcon,
   UserCircleIcon,
   MagnifyingGlassIcon,
   EyeIcon,
+  ArrowLeftIcon
 } from "@heroicons/react/24/outline";
 import axios from "axios";
-
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import DashboardInput from '@/Components/UI/DashboardInput';
 
 export default function Chat({ admins = [], messages = [], admin = null }) {
   const [selectedAdmin, setSelectedAdmin] = useState(admin);
@@ -20,10 +23,7 @@ export default function Chat({ admins = [], messages = [], admin = null }) {
   const [isLoading, setIsLoading] = useState(false);
   const { auth } = usePage().props;
 
-
   const [unreadCounts, setUnreadCounts] = useState({});
-
-
   const [contextMenu, setContextMenu] = useState(null);
 
   const handleRightClick = (e, message) => {
@@ -67,13 +67,11 @@ export default function Chat({ admins = [], messages = [], admin = null }) {
     setSelectedAdmin(admin);
   }, [messages, admin]);
 
-
   useEffect(() => {
     const initialCounts = {};
     admins.forEach((a) => (initialCounts[a.id] = 0));
     setUnreadCounts(initialCounts);
   }, [admins]);
-
 
   useEffect(() => {
     const fetchUnreadCounts = async () => {
@@ -92,12 +90,11 @@ export default function Chat({ admins = [], messages = [], admin = null }) {
       }
     };
 
-  fetchUnreadCounts(); 
-  const interval = setInterval(fetchUnreadCounts, 5000); 
+    fetchUnreadCounts(); 
+    const interval = setInterval(fetchUnreadCounts, 5000); 
 
-  return () => clearInterval(interval);
-}, [admins]);
-
+    return () => clearInterval(interval);
+  }, [admins]);
 
   const loadMessages = (admin) => {
     if (!admin) return;
@@ -107,9 +104,7 @@ export default function Chat({ admins = [], messages = [], admin = null }) {
       .then((res) => {
         setMessageList(res.data.messages || []);
         setIsLoading(false);
-
         axios.post(route("member.teamhub.chat.markAsRead", admin.id));
-
         setUnreadCounts((prev) => ({ ...prev, [admin.id]: 0 }));
       })
       .catch((err) => {
@@ -151,213 +146,226 @@ export default function Chat({ admins = [], messages = [], admin = null }) {
     <MemberLayout auth={auth}>
       <Head title="TeamHub Chat" />
 
-      <div
-        className="flex h-[calc(100vh-4rem)] bg-transparent bg-center bg-contain bg-no-repeat"
-        style={{ backgroundImage: "url('/images/blog2.jpg')" }}
+      <DashboardPage 
+        title="Admin Chat"
+        description="Direct communication with studio administrators and support team."
+        actions={
+          <DashboardButton variant="secondary" onClick={() => window.history.back()}>
+            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+            Back
+          </DashboardButton>
+        }
       >
-        <div className="w-1/3 bg-white/10 border-r border-purple-200 flex flex-col shadow-lg rounded-l-2xl">
-          <div className="p-4 border-b border-gray-300">
-            <h2 className="text-xl font-bold text-purple-800 mb-4">
-              Administrators
-            </h2>
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
-              <input
-                type="text"
+        <DashboardCard noHover className="p-0 overflow-hidden h-[calc(100vh-20rem)] flex">
+          {/* Admins Sidebar */}
+          <div className="w-80 border-r border-gray-100 dark:border-gray-800 flex flex-col bg-gray-50/30 dark:bg-black/10">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+              <DashboardInput
                 placeholder="Search admins..."
+                icon={MagnifyingGlassIcon}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-purple-300 rounded-2xl bg-gray-200/30 text-purple-900 placeholder-purple-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent backdrop-blur-md"
               />
             </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {filteredAdmins.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-sm text-gray-400 font-medium">No admins found</p>
+                </div>
+              ) : (
+                filteredAdmins.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => handleAdminSelect(a)}
+                    className={`w-full flex items-center p-4 rounded-2xl transition-all duration-300 ${
+                      selectedAdmin?.id === a.id
+                        ? 'bg-[#1F2BF3] text-white shadow-lg shadow-[#1F2BF3]/20'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    <div className="relative flex-shrink-0">
+                      {a.avatar ? (
+                        <img
+                          src={a.avatar.startsWith("http") ? a.avatar : `/storage/${a.avatar}`}
+                          alt={a.name}
+                          className="h-10 w-10 rounded-full object-cover border-2 border-white dark:border-gray-700"
+                        />
+                      ) : (
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                          selectedAdmin?.id === a.id ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-800'
+                        }`}>
+                          <UserCircleIcon className={`h-6 w-6 ${
+                            selectedAdmin?.id === a.id ? 'text-white' : 'text-gray-400'
+                          }`} />
+                        </div>
+                      )}
+                      {unreadCounts[a.id] > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white ring-2 ring-white dark:ring-gray-900">
+                          {unreadCounts[a.id]}
+                        </span>
+                      )}
+                    </div>
+                    <div className="ml-4 flex-1 text-left">
+                      <p className={`text-sm font-bold truncate ${
+                        selectedAdmin?.id === a.id ? 'text-white' : 'text-gray-900 dark:text-white'
+                      }`}>
+                        {a.name}
+                      </p>
+                      <p className={`text-[11px] font-medium truncate ${
+                        selectedAdmin?.id === a.id ? 'text-white/70' : 'text-gray-500'
+                      }`}>
+                        {a.email}
+                      </p>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
-            {filteredAdmins.length === 0 ? (
-              <div className="p-4 text-center text-purple-500">
-                {searchTerm ? "No admins found" : "No admins available"}
-              </div>
-            ) : (
-              filteredAdmins.map((a) => (
-                <button
-                  key={a.id}
-                  onClick={() => handleAdminSelect(a)}
-                  className={`w-full flex items-center p-3 rounded-2xl transition-transform transform hover:scale-105 ${
-                    selectedAdmin?.id === a.id
-                      ? "bg-purple-200/30 border-purple-400 shadow-inner"
-                      : "hover:bg-purple-100/20"
-                  }`}
-                >
-                  <div className="flex-shrink-0 relative">
-
-                {a.avatar ? (
-        <img
-          src={a.avatar.startsWith("http") ? a.avatar : `/storage/${a.avatar}`}
-          alt={a.name}
-          className="h-10 w-10 rounded-full object-cover shadow-sm"
-        />
-      ) : (
-        <UserCircleIcon className="h-10 w-10 text-purple-500" />
-      )}
-      </div>
-      <div className="ml-3 flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900 truncate">{a.name}</p>
-        <p className="text-xs text-purple-600 truncate">{a.email}</p>
-      </div>
-      {unreadCounts[a.id] > 0 && (
-        <span className="ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-purple-500 rounded-full">
-          {unreadCounts[a.id]}
-        </span>
-      )}
-      </button>
-
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="flex-1 flex flex-col">
-          {selectedAdmin ? (
-            <>
-              <div className="bg-gray-100/40 border-b border-gray-300 p-4 flex items-center justify-between shadow-inner rounded-tr-2xl">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
+          {/* Chat Area */}
+          <div className="flex-1 flex flex-col bg-white/50 dark:bg-black/5">
+            {selectedAdmin ? (
+              <>
+                {/* Chat Header */}
+                <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
                     {selectedAdmin.avatar ? (
                       <img
-                        src={
-                          selectedAdmin.avatar.startsWith("http")
-                            ? selectedAdmin.avatar
-                            : `/storage/${selectedAdmin.avatar}`
-                        }
+                        src={selectedAdmin.avatar.startsWith("http") ? selectedAdmin.avatar : `/storage/${selectedAdmin.avatar}`}
                         alt={selectedAdmin.name}
-                        className="h-10 w-10 rounded-full object-cover shadow-sm"
+                        className="h-12 w-12 rounded-full object-cover border-2 border-[#1F2BF3]/20"
                       />
                     ) : (
-                      <UserCircleIcon className="h-10 w-10 text-purple-500" />
+                      <div className="h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                        <UserCircleIcon className="h-7 w-7 text-gray-400" />
+                      </div>
                     )}
+                    <div>
+                      <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider">
+                        {selectedAdmin.name}
+                      </h3>
+                      <p className="text-xs font-medium text-gray-500">
+                        {selectedAdmin.email}
+                      </p>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <h3 className="text-lg font-bold text-gray-900">
-                      {selectedAdmin.name}
-                    </h3>
-                    <p className="text-sm text-gray-700">
-                      {selectedAdmin.email}
-                    </p>
-                  </div>
+                  <a href={route("member.teamhub.index")}>
+                    <DashboardButton variant="secondary" className="px-4 py-2">
+                      <EyeIcon className="h-4 w-4 mr-2" />
+                      Activities
+                    </DashboardButton>
+                  </a>
                 </div>
-                <a
-                  href={route("member.teamhub.index")}
-                  className="flex items-center px-3 py-2 text-sm text-purple-700 hover:text-purple-900 hover:bg-gray-200/30 rounded-xl transition-colors"
-                >
-                  <EyeIcon className="h-4 w-4 mr-2" /> View Activities
-                </a>
-              </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white/10 rounded-xl">
-                {isLoading ? (
-                  <div className="flex justify-center items-center h-full">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-                  </div>
-                ) : messageList.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-purple-500">
-                    <ChatBubbleLeftRightIcon className="h-12 w-12 mb-4" />
-                    <p>No messages yet. Start a conversation!</p>
-                  </div>
-                ) : (
-                  messageList.map((m) => (
-                    <div
-                      key={m.id}
-                      onContextMenu={(e) => handleRightClick(e, m)}
-                      className={`flex ${
-                        m.user_id === selectedAdmin.id
-                          ? "justify-start"
-                          : "justify-end"
-                      }`}
-                    >
+                {/* Messages Container */}
+                <div 
+                  className="flex-1 overflow-y-auto p-8 space-y-6"
+                  onClick={() => setContextMenu(null)}
+                >
+                  {isLoading ? (
+                    <div className="flex justify-center items-center h-full">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1F2BF3]"></div>
+                    </div>
+                  ) : messageList.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <ChatBubbleLeftRightIcon className="h-16 w-16 mb-4 text-gray-200 dark:text-gray-800" />
+                      <h4 className="text-lg font-black text-gray-300 dark:text-gray-700 uppercase tracking-tighter">No messages yet</h4>
+                      <p className="text-sm text-gray-400 font-medium">Start a conversation with {selectedAdmin.name}</p>
+                    </div>
+                  ) : (
+                    messageList.map((m) => (
                       <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl shadow-md ${
-                          m.user_id === selectedAdmin.id
-                            ? "bg-gray-100/30 text-purple-900"
-                            : "bg-purple-500/80 text-white"
+                        key={m.id}
+                        onContextMenu={(e) => handleRightClick(e, m)}
+                        className={`flex ${
+                          m.user_id === selectedAdmin.id ? 'justify-start' : 'justify-end'
                         }`}
                       >
-                        <p className="text-sm">{m.message}</p>
-                        <p
-                          className={`text-xs mt-1 ${
+                        <div className={`flex flex-col ${m.user_id === selectedAdmin.id ? 'items-start' : 'items-end'} max-w-[70%]`}>
+                          <div className={`px-6 py-3 rounded-2xl text-sm font-medium shadow-sm ${
                             m.user_id === selectedAdmin.id
-                              ? "text-purple-700"
-                              : "text-purple-200"
-                          }`}
-                        >
-                          {new Date(m.created_at).toLocaleTimeString()}
-                        </p>
+                              ? 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-100 dark:border-gray-700 rounded-bl-none'
+                              : 'bg-[#1F2BF3] text-white rounded-br-none'
+                          }`}>
+                            {m.message}
+                          </div>
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 px-1">
+                            {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))
-                )}
-                <div ref={messagesEndRef} />
-              </div>
+                    ))
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
 
-              <div className="bg-gray-100/40 backdrop-blur-lg border-t border-gray-300 p-4 flex items-center rounded-br-2xl">
-                <form onSubmit={sendMessage} className="flex w-full space-x-4">
-                  <input
-                    type="text"
-                    value={data.message}
-                    onChange={(e) => setData("message", e.target.value)}
-                    placeholder="Type your message..."
-                    className="flex-1 px-4 py-2 border border-purple-300 rounded-2xl bg-gray-200/30 text-purple-900 placeholder-purple-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent backdrop-blur-md"
-                    disabled={processing}
-                  />
-                  <button
-                    type="submit"
-                    disabled={processing || !data.message.trim()}
-                    className="px-4 py-2 bg-purple-600/80 text-white rounded-2xl hover:bg-purple-700/90 disabled:opacity-50 flex items-center space-x-2 transition-transform transform hover:scale-105"
-                  >
-                    <PaperAirplaneIcon className="h-4 w-4" />
-                    <span>Send</span>
-                  </button>
-                </form>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center bg-gray-100/30 backdrop-blur-lg rounded-tr-2xl rounded-br-2xl">
-              <div className="text-center">
-                <ChatBubbleLeftRightIcon className="h-16 w-16 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-purple-900 mb-2">
-                  Select an administrator to start chatting
+                {/* Message Input */}
+                <div className="p-6 border-t border-gray-100 dark:border-gray-800">
+                  <form onSubmit={sendMessage} className="flex gap-4">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={data.message}
+                        onChange={(e) => setData('message', e.target.value)}
+                        placeholder="Type your message..."
+                        className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                        disabled={processing}
+                      />
+                    </div>
+                    <DashboardButton
+                      type="submit"
+                      disabled={processing || !data.message.trim()}
+                    >
+                      <PaperAirplaneIcon className="h-4 w-4" />
+                    </DashboardButton>
+                  </form>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+                <div className="w-24 h-24 rounded-[2rem] bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center mb-6">
+                  <ChatBubbleLeftRightIcon className="h-12 w-12 text-gray-300 dark:text-gray-700" />
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-2">
+                  Select an admin
                 </h3>
-                <p className="text-purple-700">
-                  Choose an admin from the list to begin your conversation
+                <p className="text-sm font-medium text-gray-500 max-w-xs">
+                  Choose an administrator from the sidebar to start a real-time conversation.
                 </p>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
+            )}
+          </div>
+        </DashboardCard>
 
-      {contextMenu && (
-        <div
-          className="absolute bg-white shadow-lg border rounded-md z-50 py-1"
-          style={{
-            top: contextMenu.y,
-            left: contextMenu.x,
-          }}
-          onMouseLeave={() => setContextMenu(null)}
-        >
-          <button
-            onClick={handleCopy}
-            className="block px-4 py-1 text-sm hover:bg-gray-100 w-full text-left"
+        {/* Context Menu */}
+        {contextMenu && (
+          <div
+            style={{
+              top: contextMenu.y,
+              left: contextMenu.x,
+              position: 'fixed',
+            }}
+            className="bg-white dark:bg-gray-900 shadow-2xl border border-gray-100 dark:border-gray-800 rounded-2xl z-50 py-2 w-48 backdrop-blur-xl overflow-hidden"
+            onMouseLeave={() => setContextMenu(null)}
           >
-            Copier
-          </button>
-          <button
-            onClick={handleDelete}
-            className="block px-4 py-1 text-sm hover:bg-red-100 w-full text-left text-red-500"
-          >
-            Supprimer
-          </button>
-        </div>
-      )}
+            <button
+              onClick={handleCopy}
+              className="w-full px-4 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 text-left transition-colors"
+            >
+              Copier
+            </button>
+
+            <button
+              onClick={handleDelete}
+              className="w-full px-4 py-3 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-left transition-colors"
+            >
+              Supprimer
+            </button>
+          </div>
+        )}
+      </DashboardPage>
     </MemberLayout>
   );
 }

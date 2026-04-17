@@ -1,216 +1,174 @@
 <?php
 
-
-
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use inertia\inertia;
+use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
+use App\Http\Resources\UserResource;
 
 class AttendanceController extends Controller
 {
-    // For members to view their own attendance
+    /**
+     * Member: Smart Attendance Page
+     */
+    public function index()
+    {
+        $user = Auth::user();
+        $todayAttendance = Attendance::where('user_id', $user->id)
+            ->whereDate('date', now()->toDateString())
+            ->first();
+
+        return Inertia::render('Member/Attendance/SmartAttendance', [
+            'auth' => [
+                'user' => (new UserResource($user))->resolve()
+            ],
+            'todayAttendance' => $todayAttendance,
+        ]);
+    }
+
+    /**
+     * Member: Attendance History
+     */
     public function myAttendance()
     {
         $user = Auth::user();
-
-        $attendance = Attendance::where('user_id', $user->id)
+        $attendances = Attendance::where('user_id', $user->id)
             ->orderBy('marked_at', 'desc')
-            ->get(['type', 'marked_at']);
+            ->get();
 
-
-            return inertia('Member/Attendance/MyAttendance', [
-                'attendance' => $attendance,
-            ]);
+        return Inertia::render('Member/Attendance/MyAttendance', [
+            'attendance' => $attendances,
+        ]);
     }
 
+    /**
+     * Member: Generate/Get Dynamic QR Token
+     */
+    public function getQrCode()
+    {
+        $user = Auth::user();
+        
+        // Prevent generating QR if already marked today
+        $alreadyMarked = Attendance::where('user_id', $user->id)
+            ->whereDate('date', now()->toDateString())
+            ->exists();
+            
+        if ($alreadyMarked) {
+            return response()->json(['error' => 'Already marked present today'], 403);
+        }
 
-    public function showMemberAttendance(Request $request)
+        $token = Str::random(40);
+        $user->update(['attendance_token' => $token]);
+
+        $attendanceUrl = route('member.attendance.scan', ['token' => $token]);
+
+        $result = Builder::create()
+            ->writer(new PngWriter())
+            ->data($attendanceUrl)
+            ->size(300)
+            ->margin(10)
+            ->build();
+
+        return response()->json([
+            'qr' => base64_encode($result->getString()),
+            'token' => $token
+        ]);
+    }
+
+    /**
+     * Universal: Scan and Mark Attendance
+     */
+    public function scan($token)
+    {
+        $user = User::where('attendance_token', $token)->first();
+
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Invalid or expired QR code.');
+        }
+
+        $today = now()->toDateString();
+        
+        $alreadyMarked = Attendance::where('user_id', $user->id)
+            ->whereDate('date', $today)
+            ->exists();
+
+        if ($alreadyMarked) {
+            // If already marked, just redirect to success or dashboard
+            return redirect()->route('member.dashboard')->with('info', 'You are already marked present today.');
+        }
+
+        Attendance::create([
+            'user_id' => $user->id,
+            'date' => $today,
+            'type' => 'Check-In',
+            'status' => 'present',
+            'marked_at' => now(),
+        ]);
+
+        // Invalidate token
+        $user->update(['attendance_token' => null]);
+
+        return redirect()->route('member.dashboard')->with('success', 'Attendance marked successfully for today!');
+    }
+
+    /**
+     * Admin: Attendance Dashboard
+     */
+    public function adminDashboard(Request $request)
     {
         $date = $request->input('date', now()->toDateString());
-
-        // Get all members
+        
         $members = User::where('role', 'member')->get();
-
-        // Get attendances for that day
         $attendances = Attendance::whereDate('date', $date)->get();
 
-        // Prepare data for display
         $attendanceData = $members->map(function ($member) use ($attendances, $date) {
             $attendance = $attendances->firstWhere('user_id', $member->id);
-
-
-            $time = $attendance ? Carbon::parse($attendance->created_at)->format('H:i') : '--';
-
-
-            $status = 'Absent';
-    if ($attendance) {
-        $status = $attendance->status ?? 'Present'; // or derive from attendance if you store 'Late' etc.
-    }
-
+            
             return [
                 'user_id' => $member->id,
                 'name' => $member->name,
+                'email' => $member->email,
+                'avatar' => $member->avatar,
                 'date' => $date,
-                'time' => $time,
-               'status' => $status,
-
-                'type' => optional($attendance)->type ?? '--',
+                'time' => $attendance ? Carbon::parse($attendance->marked_at)->format('H:i') : '--',
+                'status' => $attendance ? 'Present' : 'Absent',
+                'marked_at' => $attendance ? $attendance->marked_at : null,
             ];
         });
 
-        return Inertia::render('Admin/Members/Attendance', [
-            'auth' => ['user' => Auth::user()],
+        $stats = [
+            'total' => $members->count(),
+            'present' => $attendances->count(),
+            'absent' => $members->count() - $attendances->count(),
+        ];
+
+        // Live Feed (Last 10 logs across all days or just today?)
+        // Let's do last 10 logs globally for "Live Feed"
+        $liveFeed = Attendance::with('user')
+            ->orderBy('marked_at', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function($a) {
+                return [
+                    'id' => $a->id,
+                    'user_name' => $a->user->name,
+                    'time' => Carbon::parse($a->marked_at)->diffForHumans(),
+                    'status' => 'marked present',
+                ];
+            });
+
+        return Inertia::render('Admin/Attendance/Dashboard', [
             'attendanceData' => $attendanceData,
             'selectedDate' => $date,
+            'stats' => $stats,
+            'liveFeed' => $liveFeed,
         ]);
-    }
-
-
-
-
-    // For admins to view all members' attendance
-    public function index()
-    {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('attendance.my');
-        }
-
-        $attendances = Attendance::with('member')
-            ->orderBy('date', 'desc')
-            ->paginate(15);
-
-        return view('attendance.index', compact('attendances'));
-    }
-
-    // For admins to view a specific member's attendance
-    public function memberAttendance(Member $member)
-    {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('attendance.my');
-        }
-
-        $attendances = $member->attendances()
-            ->orderBy('date', 'desc')
-            ->paginate(15);
-
-        return view('attendance.member', compact('attendances', 'member'));
-    }
-
-    public function create()
-    {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('attendance.my');
-        }
-
-        $members = Member::all();
-        return view('attendance.create', compact('members'));
-    }
-
-    public function store(Request $request)
-    {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('attendance.my');
-        }
-
-        $validated = $request->validate([
-            'member_id' => 'required|exists:members,id',
-            'date' => 'required|date',
-            'time_in' => 'nullable|date_format:H:i',
-            'time_out' => 'nullable|date_format:H:i|after:time_in',
-            'status' => 'required|in:present,absent,late,excused',
-            'notes' => 'nullable|string|max:255',
-        ]);
-
-        Attendance::create($validated);
-
-        return redirect()->route('attendance.index')
-            ->with('success', 'Attendance record created successfully.');
-    }
-
-    public function edit(Attendance $attendance)
-    {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('attendance.my');
-        }
-
-        $members = Member::all();
-        return view('attendance.edit', compact('attendance', 'members'));
-    }
-
-    public function update(Request $request, Attendance $attendance)
-    {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('attendance.my');
-        }
-
-        $validated = $request->validate([
-            'member_id' => 'required|exists:members,id',
-            'date' => 'required|date',
-            'time_in' => 'nullable|date_format:H:i',
-            'time_out' => 'nullable|date_format:H:i|after:time_in',
-            'status' => 'required|in:present,absent,late,excused',
-            'notes' => 'nullable|string|max:255',
-        ]);
-
-        $attendance->update($validated);
-
-        return redirect()->route('attendance.index')
-            ->with('success', 'Attendance record updated successfully.');
-    }
-
-    public function destroy(Attendance $attendance)
-    {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('attendance.my');
-        }
-
-        $attendance->delete();
-
-        return redirect()->route('attendance.index')
-            ->with('success', 'Attendance record deleted successfully.');
-    }
-
-    // For members to check in/out
-    public function checkIn()
-    {
-        $today = now()->toDateString();
-        $attendance = Auth::user()->attendances()
-            ->firstOrCreate(['date' => $today]);
-
-        if (!$attendance->time_in) {
-            $attendance->update([
-                'time_in' => now()->toTimeString(),
-                'status' => 'present'
-            ]);
-            return back()->with('success', 'Checked in successfully.');
-        }
-
-        return back()->with('error', 'You have already checked in today.');
-    }
-
-    public function checkOut()
-    {
-        $today = now()->toDateString();
-        $attendance = Auth::user()->attendances()
-            ->where('date', $today)
-            ->first();
-
-        if (!$attendance) {
-            return back()->with('error', 'You need to check in first.');
-        }
-
-        if (!$attendance->time_out) {
-            $attendance->update([
-                'time_out' => now()->toTimeString()
-            ]);
-            return back()->with('success', 'Checked out successfully.');
-        }
-
-        return back()->with('error', 'You have already checked out today.');
     }
 }

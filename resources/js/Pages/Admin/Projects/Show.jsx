@@ -1,113 +1,180 @@
-import { router ,Link } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { Link } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import { 
+    CalendarIcon, 
+    BriefcaseIcon, 
+    TagIcon, 
+    UserGroupIcon, 
+    CheckCircleIcon,
+    ClockIcon,
+    DocumentIcon,
+    ArrowDownTrayIcon
+} from '@heroicons/react/24/outline';
 
-export default function Show({ project }) {
-  return (
-    <AdminLayout header={`Détails du projet: ${project.name}`}>
+export default function Show({ project, auth }) {
+    return (
+        <AdminLayout auth={auth}>
+            <DashboardPage 
+                title={project.name}
+                description="Detailed overview of project progress, team members, and associated tasks."
+                actions={
+                    <div className="flex gap-2">
+                        <Link href={route('admin.projects.edit', project.id)}>
+                            <DashboardButton>Edit Project</DashboardButton>
+                        </Link>
+                        <DashboardButton variant="secondary" onClick={() => window.history.back()}>
+                            Go Back
+                        </DashboardButton>
+                    </div>
+                }
+            >
+                <div className="space-y-6">
+                    {/* Project Overview Card */}
+                    <DashboardCard>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="lg:col-span-2 space-y-6">
+                                <div>
+                                    <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Project Description</span>
+                                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
+                                        {project.description || 'No description provided for this project.'}
+                                    </p>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                                    <div>
+                                        <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Category</span>
+                                        <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold">
+                                            <TagIcon className="w-4 h-4 text-[#1F2BF3]" />
+                                            {project.category?.name || 'Uncategorized'}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Status</span>
+                                        <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3]">
+                                            {project.status}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Start Date</span>
+                                        <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold">
+                                            <CalendarIcon className="w-4 h-4 text-[#1F2BF3]" />
+                                            {project.start_date || 'N/A'}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">End Date</span>
+                                        <div className="flex items-center gap-2 text-gray-900 dark:text-white font-bold">
+                                            <CalendarIcon className="w-4 h-4 text-[#1F2BF3]" />
+                                            {project.end_date || 'N/A'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-      <div className="w-full h-screen rounded-lg p-6 ">
+                            <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
+                                    <UserGroupIcon className="w-4 h-4" />
+                                    Project Team
+                                </h3>
+                                <div className="space-y-4">
+                                    {project.members.map(member => (
+                                        <div key={member.id} className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-[#1F2BF3] flex items-center justify-center text-white text-xs font-bold">
+                                                {member.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-bold text-gray-900 dark:text-white">{member.name}</div>
+                                                <div className="text-[10px] text-gray-500 font-medium">{member.email}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {project.members.length === 0 && (
+                                        <p className="text-sm text-gray-500 italic">No members assigned yet.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </DashboardCard>
 
-        <div className="mb-6">
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-          >
-            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Retour
-          </button>
-        </div>
-      
-      <div className="w-full min-h-screen bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
+                    {/* Tasks Section */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-black uppercase tracking-widest text-gray-900 dark:text-white">Project Tasks</h3>
+                            <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs font-bold text-gray-500">
+                                {project.tasks.length} Total Tasks
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {project.tasks.map(task => (
+                                <DashboardCard key={task.id} className="group hover:border-[#1F2BF3] transition-all duration-300">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h4 className="font-bold text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors line-clamp-1">{task.title}</h4>
+                                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest
+                                            ${task.status === 'completed' || task.status === 'done' ? 'bg-emerald-50 text-emerald-600' :
+                                              task.status === 'in_progress' ? 'bg-blue-50 text-blue-600' :
+                                              task.status === 'blocked' ? 'bg-red-50 text-red-600' :
+                                              'bg-gray-50 text-gray-500'}
+                                        `}>{task.status.replace('_', ' ')}</span>
+                                    </div>
+
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 line-clamp-2 h-10">
+                                        {task.description || 'No description provided.'}
+                                    </p>
+
+                                    <div className="space-y-3 pt-4 border-t border-gray-50 dark:border-gray-800">
+                                        <div className="flex items-center justify-between text-[10px]">
+                                            <span className="font-black uppercase tracking-widest text-gray-400">Assignee</span>
+                                            <span className="font-bold text-gray-700 dark:text-gray-300">{task.user?.name || 'Unassigned'}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-[10px]">
+                                            <span className="font-black uppercase tracking-widest text-gray-400">Deadline</span>
+                                            <div className="flex items-center gap-1 font-bold text-gray-700 dark:text-gray-300">
+                                                <ClockIcon className="w-3 h-3 text-[#1F2BF3]" />
+                                                {task.deadline || 'N/A'}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {task.files.length > 0 && (
+                                        <div className="mt-6 pt-4 border-t border-gray-50 dark:border-gray-800">
+                                            <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Attachments</span>
+                                            <div className="flex flex-wrap gap-2">
+                                                {task.files.slice(0, 3).map(file => (
+                                                    <a
+                                                        key={file.id}
+                                                        href={`/storage/${file.file_path}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-1.5 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group/file"
+                                                        title={file.original_name}
+                                                    >
+                                                        <DocumentIcon className="w-4 h-4 text-gray-400 group-hover/file:text-[#1F2BF3]" />
+                                                    </a>
+                                                ))}
+                                                {task.files.length > 3 && (
+                                                    <span className="text-[10px] font-bold text-gray-400 flex items-center">+{task.files.length - 3} more</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </DashboardCard>
+                            ))}
+                        </div>
                         
-      <div className="p-6 mb-6 bg-gray-100 bg-opacity-50 dark:bg-gray-700 dark:bg-opacity-30 rounded-xl shadow border border-purple-200">
-        <h2 className="text-2xl font-bold mb-2 text-purple-700">{project.name}</h2>
-        <p className="mb-1"><strong>Description:</strong> {project.description || '—'}</p>
-        <p className="mb-1"><strong>Catégorie:</strong> {project.category?.name || '—'}</p>
-        <p className="mb-1"><strong>Début:</strong> {project.start_date || '—'}</p>
-        <p className="mb-1"><strong>Fin:</strong> {project.end_date || '—'}</p>
-        <p className="mb-1"><strong>Status:</strong> {project.status}</p>
-
-        <h3 className="mt-4 font-semibold text-purple-600">Membres du projet</h3>
-        <ul className="list-disc list-inside">
-          {project.members.map(member => (
-            <li key={member.id}>{member.name} ({member.email})</li>
-          ))}
-        </ul>
-      </div>
-
-      <h3 className="text-xl font-semibold mb-4 text-purple-700">Tâches du projet  :</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {project.tasks.map(task => (
-          <div
-            key={task.id}
-            className="w-full min-h-[200px] bg-gray-500 bg-opacity-10 dark:bg-gray-700 dark:bg-opacity-30 
-             rounded-lg p-6 mb-6 border border-purple-200 
-             hover:border-purple-500 hover:bg-opacity-40
-             transition duration-300 "
-          >
-            <div className=" flex justify-between items-center mb-3">
-              <h4 className="font-semibold text-purple-700">{task.title}</h4>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium
-                ${task.status === 'done' ? 'bg-green-200 text-green-800' :
-                  task.status === 'in_progress' ? 'bg-yellow-200 text-yellow-800' :
-                  'bg-gray-200 text-gray-800'}
-              `}>{task.status}</span>
-            </div>
-
-            <p className="mb-1"><strong>ID:</strong> {task.id}</p>
-            <p className="mb-1"><strong>Description:</strong> {task.description || '—'}</p>
-            <p className="mb-1"><strong>Deadline:</strong> {task.deadline || '—'}</p>
-            <p className="mb-1"><strong>Due Date:</strong> {task.due_date || '—'}</p>
-            <p className="mb-1"><strong>Assigné à:</strong> {task.user?.name || '—'}</p>
-            <p className="mb-1"><strong>Membres:</strong> {task.members.map(m => m.name).join(', ') || '—'}</p>
-            <p className="mb-1 text-xs text-gray-900"><strong>Créé le:</strong> {new Date(task.created_at).toLocaleString()}</p>
-            <p className="mb-2 text-xs text-gray-900"><strong>Mis à jour le:</strong> {new Date(task.updated_at).toLocaleString()}</p>
-
-            {task.files.length > 0 && (
-              <div className="mt-2">
-                <h5 className="font-medium text-purple-700 mb-2">Fichiers attachés :</h5>
-                <div className="flex flex-wrap gap-3">
-                  {task.files.map(file => {
-                    const isImage = ['jpg','jpeg','png','gif','webp'].some(ext =>
-                      file.original_name.toLowerCase().endsWith(ext)
-                    );
-                    return (
-                      <div
-                        key={file.id}
-                        className="flex flex-col items-center bg-gray-50 dark:bg-gray-700 p-2 rounded-lg shadow w-28 hover:shadow-lg transition-shadow"
-                      >
-                        {isImage && (
-                          <img
-                            src={`/storage/${file.file_path}`}
-                            alt={file.original_name}
-                            className="w-24 h-24 object-cover rounded mb-1"
-                          />
+                        {project.tasks.length === 0 && (
+                            <DashboardCard className="flex flex-col items-center justify-center py-12 text-center">
+                                <BriefcaseIcon className="w-12 h-12 text-gray-200 mb-4" />
+                                <h4 className="text-gray-900 dark:text-white font-bold mb-1">No tasks found</h4>
+                                <p className="text-sm text-gray-500">There are currently no tasks associated with this project.</p>
+                            </DashboardCard>
                         )}
-                        <a
-                          href={`/storage/${file.file_path}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-purple-700 hover:underline text-center text-xs break-words"
-                        >
-                          {file.original_name}
-                        </a>
-                        <span className="text-gray-500 text-xs mt-1">
-                          ({new Date(file.created_at).toLocaleDateString()})
-                        </span>
-                      </div>
-                    );
-                  })}
+                    </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      </div>
-      </div>
-
-    </AdminLayout>
-  );
+            </DashboardPage>
+        </AdminLayout>
+    );
 }
-

@@ -21,11 +21,19 @@ class Client extends Model
         'city',
         'address',
         'website',
+        'social_links',
         'logo',
         'notes',
         'status',
+        'is_blacklisted',
+        'blacklist_reason',
         'contact_method',
         'contact_date',
+    ];
+
+    protected $casts = [
+        'social_links' => 'array',
+        'contact_date' => 'date',
     ];
 
     public function user(): BelongsTo
@@ -41,5 +49,20 @@ class Client extends Model
     public function files(): HasMany
     {
         return $this->hasMany(ClientFile::class);
+    }
+
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    public function quotations(): HasMany
+    {
+        return $this->hasMany(Quotation::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
     }
 }

@@ -26,6 +26,17 @@ class Project extends Model
         'client_logo',
     ];
 
+    protected $appends = ['progress'];
+
+    public function getProgressAttribute()
+    {
+        $totalTasks = $this->tasks()->count();
+        if ($totalTasks === 0) return 0;
+        
+        $completedTasks = $this->tasks()->where('status', 'completed')->count();
+        return round(($completedTasks / $totalTasks) * 100);
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);

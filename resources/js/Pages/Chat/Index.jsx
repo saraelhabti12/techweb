@@ -9,6 +9,10 @@ import DashboardCard from '@/Components/UI/DashboardCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon, UsersIcon } from '@heroicons/react/24/outline';
 
+import Avatar from '@/Components/UI/Avatar';
+import UserStatus from '@/Components/UI/UserStatus';
+import EmojiChatInput from '@/Components/UI/EmojiChatInput';
+
 export default function Index({ auth, users }) {
     const [selectedUser, setSelectedUser] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -16,12 +20,14 @@ export default function Index({ auth, users }) {
     const [chatUsers, setChatUsers] = useState(users);
     const messagesEndRef = useRef(null);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const scrollToBottom = (behavior = "smooth") => {
+        messagesEndRef.current?.scrollIntoView({ behavior });
     };
 
     useEffect(() => {
-        scrollToBottom();
+        if (messages.length > 0) {
+            scrollToBottom();
+        }
     }, [messages]);
 
     useEffect(() => {
@@ -38,7 +44,10 @@ export default function Index({ auth, users }) {
     const fetchMessages = async (userId) => {
         try {
             const response = await axios.get(route('chat.messages', userId));
-            setMessages(response.data);
+            // Only update if messages length changed to avoid jumping
+            if (response.data.length !== messages.length) {
+                setMessages(response.data);
+            }
         } catch (error) {
             console.error("Error fetching messages", error);
         }
@@ -47,7 +56,14 @@ export default function Index({ auth, users }) {
     const fetchChatUsers = async () => {
         try {
             const response = await axios.get(route('chat.users'));
+            // Preserve selected user state
             setChatUsers(response.data);
+            if (selectedUser) {
+                const updatedSelectedUser = response.data.find(u => u.id === selectedUser.id);
+                if (updatedSelectedUser) {
+                    setSelectedUser(updatedSelectedUser);
+                }
+            }
         } catch (error) {
             console.error("Error fetching chat users", error);
         }
@@ -57,12 +73,14 @@ export default function Index({ auth, users }) {
         setSelectedUser(user);
         setMessages([]);
         await fetchMessages(user.id);
+        // We don't need to call markAsRead explicitly if fetchMessages handles it on backend
+        // But for safety:
         await axios.post(route('chat.markAsRead', user.id));
         fetchChatUsers();
+        setTimeout(() => scrollToBottom("auto"), 100);
     };
 
-    const sendMessage = async (e) => {
-        e.preventDefault();
+    const sendMessage = async () => {
         if (!newMessage.trim() || !selectedUser) return;
 
         const messageText = newMessage;
@@ -73,6 +91,7 @@ export default function Index({ auth, users }) {
                 message: messageText
             });
             setMessages(prev => [...prev, response.data]);
+            fetchChatUsers(); // Refresh list to move user to top
         } catch (error) {
             console.error("Error sending message", error);
         }
@@ -133,16 +152,10 @@ export default function Index({ auth, users }) {
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="relative">
-                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg shadow-inner overflow-hidden ${
-                                                    selectedUser?.id === user.id ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-700'
-                                                }`}>
-                                                    {user.avatar ? (
-                                                        <img src={`/storage/${user.avatar}`} alt={user.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        user.name.charAt(0)
-                                                    )}
+                                                <Avatar user={user} size="md" />
+                                                <div className="absolute -bottom-1 -right-1">
+                                                    <UserStatus user={user} showText={false} className="border-2 border-white dark:border-gray-900 rounded-full bg-white dark:bg-gray-900" />
                                                 </div>
-                                                <span className="absolute -bottom-1 -right-1 block h-3.5 w-3.5 rounded-full border-2 border-white dark:border-gray-900 bg-green-500"></span>
                                             </div>
                                             <div className="text-left overflow-hidden">
                                                 <div className={`font-bold truncate ${selectedUser?.id === user.id ? 'text-white' : 'group-hover:text-[#1F2BF3]'}`}>
@@ -173,19 +186,10 @@ export default function Index({ auth, users }) {
                                 {/* Chat Header */}
                                 <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-10 flex items-center justify-between shadow-sm">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/20 overflow-hidden">
-                                            {selectedUser.avatar ? (
-                                                <img src={`/storage/${selectedUser.avatar}`} alt={selectedUser.name} className="w-full h-full object-cover" />
-                                            ) : (
-                                                selectedUser.name.charAt(0)
-                                            )}
-                                        </div>
+                                        <Avatar user={selectedUser} size="md" className="shadow-lg shadow-blue-500/20" />
                                         <div>
                                             <div className="font-black text-lg text-gray-900 dark:text-white tracking-tight">{selectedUser.name}</div>
-                                            <div className="text-[10px] text-green-500 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
-                                                <span className="h-1.5 w-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                                                Online
-                                            </div>
+                                            <UserStatus user={selectedUser} />
                                         </div>
                                     </div>
                                 </div>
@@ -233,31 +237,12 @@ export default function Index({ auth, users }) {
 
                                 {/* Message Input */}
                                 <div className="p-6 bg-white dark:bg-gray-900/80 backdrop-blur-md border-t border-gray-100 dark:border-gray-800">
-                                    <form onSubmit={sendMessage} className="flex items-end gap-3 relative group">
-                                        <textarea
-                                            rows="1"
-                                            value={newMessage}
-                                            onChange={(e) => setNewMessage(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                    e.preventDefault();
-                                                    sendMessage(e);
-                                                }
-                                            }}
-                                            placeholder="Type your message..."
-                                            className="w-full bg-gray-50 dark:bg-gray-800 border-none text-gray-900 dark:text-white rounded-2xl px-5 py-4 pr-16 focus:ring-2 focus:ring-[#1F2BF3] shadow-inner resize-none min-h-[56px] max-h-32 custom-scrollbar transition-all"
-                                        />
-                                        <button
-                                            type="submit"
-                                            disabled={!newMessage.trim()}
-                                            className="absolute right-2 bottom-2 p-2.5 rounded-xl bg-[#1F2BF3] text-white shadow-lg shadow-blue-500/30 hover:scale-105 disabled:opacity-50 disabled:scale-100 disabled:shadow-none transition-all group"
-                                        >
-                                            <PaperAirplaneIcon className="w-5 h-5 -rotate-45 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                                        </button>
-                                    </form>
-                                    <div className="mt-3 text-center">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Press Enter to send, Shift + Enter for new line</span>
-                                    </div>
+                                    <EmojiChatInput 
+                                        value={newMessage}
+                                        onChange={setNewMessage}
+                                        onSend={sendMessage}
+                                        placeholder={`Message ${selectedUser.name}...`}
+                                    />
                                 </div>
                             </>
                         ) : (

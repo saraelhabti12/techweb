@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Category;
 use App\Models\Client;
+use App\Models\Activity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 
 class ProjectController extends Controller
@@ -19,8 +21,8 @@ class ProjectController extends Controller
         $day = $request->get('day');
         $search = $request->get('search');
         
-        // Build query
-        $query = Project::with('category');
+        // Build base query with necessary relationships
+        $query = Project::with(['category', 'members', 'client']);
         
         // Date filters
         if ($year) {
@@ -44,10 +46,16 @@ class ProjectController extends Controller
             });
         }
         
-        $projects = $query->get();
+        // Get all filtered projects
+        $projects = $query->latest()->get();
+        
+        // Separate projects into Active and Inactive
+        $activeProjects = $projects->where('status', 'active')->values();
+        $inactiveProjects = $projects->whereIn('status', ['completed', 'paused', 'cancelled', 'archived'])->values();
         
         return inertia('Admin/Projects/Index', [
-            'projects' => $projects,
+            'activeProjects' => $activeProjects,
+            'inactiveProjects' => $inactiveProjects,
             'filters' => [
                 'year' => $year,
                 'month' => $month,
@@ -60,8 +68,8 @@ class ProjectController extends Controller
     public function create()
     {
         $categories = Category::all();
-        $clients = Client::all(); // Fetch all clients
-        return inertia('Admin/Projects/Create', compact('categories', 'clients')); // Pass clients to the view
+        $clients = Client::where('is_blacklisted', false)->get(); 
+        return inertia('Admin/Projects/Create', compact('categories', 'clients')); 
     }
 
     public function store(Request $request)
@@ -73,7 +81,7 @@ class ProjectController extends Controller
             'description' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
-            'status' => 'required|in:pending,in_progress,completed',
+            'status' => 'required|in:active,completed,paused,cancelled,archived',
             'client_id' => 'required_if:project_type,Client Project|nullable|exists:clients,id',
         ]);
 
@@ -91,7 +99,8 @@ class ProjectController extends Controller
             $validatedData['client_id'] = null;
         }
 
-        Project::create($validatedData);
+        $project = Project::create($validatedData);
+        Activity::log('Project Created', "Created project: {$project->name}");
 
         return redirect()->route('admin.projects.index');
     }
@@ -99,7 +108,7 @@ class ProjectController extends Controller
     public function edit(Project $project)
     {
         $categories = Category::all();
-        $clients = Client::all();
+        $clients = Client::where('is_blacklisted', false)->get();
         return inertia('Admin/Projects/Edit', compact('project', 'categories', 'clients'));
     }
 
@@ -112,7 +121,7 @@ class ProjectController extends Controller
             'description' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
-            'status' => 'required|in:pending,in_progress,completed',
+            'status' => 'required|in:active,completed,paused,cancelled,archived',
             'client_id' => 'required_if:project_type,Client Project|nullable|exists:clients,id',
         ]);
 
@@ -141,37 +150,25 @@ class ProjectController extends Controller
         return redirect()->route('admin.projects.index');
     }
 
+    public function updateStatus(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:active,completed,paused,cancelled,archived'
+        ]);
+
+        $project->update($validated);
+
+        Activity::log('Project Status Updated', "Updated status of project '{$project->name}' to '{$validated['status']}'");
+
+        return back()->with('success', 'Project status updated successfully.');
+    }
+
     public function destroy(Project $project)
     {
         $project->delete();
 
         return redirect()->route('admin.projects.index');
     }
-
-    // public function show(Project $project)
-    // {
-    //     // Charger les relations pour afficher tous les détails
-    //     // $project->load('category', 'tasks', 'members');
-
-    //     // return Inertia::render('Admin/Projects/Show', [
-    //     //     'project' => $project,
-    //     // ]);
-
-    // //     return inertia('Admin/Projects/Show', [
-    // //     'project' => $project->load([
-    // //         'category',     // catégorie du projet
-    // //         'tasks.members', // membres de chaque tâche
-    // //         'members'        // membres du projet
-    // //     ])
-    // // ]);
-    // $project->load([
-    //     'category',        // catégorie du projet
-    //     'members',         // membres du projet
-    //     'tasks.members',   // membres assignés à chaque tâche
-    // ]);
-
-    // return inertia('Admin/Projects/Show', compact('project'));
-    // }
 
     public function show(Project $project)
     {
@@ -186,4 +183,29 @@ class ProjectController extends Controller
         return inertia('Admin/Projects/Show', compact('project'));
     }
 
+    public function clientHistory(Client $client)
+    {
+        $projects = $client->projects()->with('category')->latest()->get();
+        
+        $summary = [
+            'total' => $projects->count(),
+            'active' => $projects->where('status', 'active')->count(),
+            'completed' => $projects->where('status', 'completed')->count(),
+            'last_project_date' => $projects->first() ? $projects->first()->created_at->format('Y-m-d') : null,
+        ];
+
+        return response()->json([
+            'projects' => $projects->map(function($project) {
+                return [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'status' => $project->status,
+                    'created_at' => $project->created_at->format('Y-m-d'),
+                    'end_date' => $project->end_date,
+                    'category' => $project->category ? $project->category->name : 'N/A',
+                ];
+            }),
+            'summary' => $summary
+        ]);
+    }
 }

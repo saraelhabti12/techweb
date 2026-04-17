@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
-import { router, usePage } from '@inertiajs/react';
+import { router, usePage, Head } from '@inertiajs/react';
 import MemberLayout from '@/Layouts/MemberLayout';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
+import { MapPin, CheckCircle2, Navigation, AlertCircle } from 'lucide-react';
 
 export default function MarkAttendance({ auth, userName, token, hasArrival, hasDeparture }) {
   const { flash } = usePage().props;
@@ -67,63 +71,91 @@ export default function MarkAttendance({ auth, userName, token, hasArrival, hasD
 
   return (
     <MemberLayout auth={auth}>
-      <div className="max-w-md mx-auto p-8 text-center">
-        <h1 className="text-2xl font-bold mb-6">Hi, {userName}</h1>
+      <Head title="Mark Attendance" />
+      
+      <DashboardPage 
+        title={`Welcome, ${userName}`} 
+        description="Securely mark your arrival and departure using your current location."
+      >
+        <div className="max-w-md mx-auto">
+          <DashboardCard className="p-8 text-center">
+            <div className="w-20 h-20 rounded-[2rem] bg-[#1F2BF3]/10 flex items-center justify-center mx-auto mb-8 text-[#1F2BF3]">
+              <MapPin className="w-10 h-10" />
+            </div>
 
-        {flash?.error && (
-          <div className="mb-4 p-3 rounded bg-red-100 text-red-800">
-            {flash.error}
-          </div>
-        )}
+            {flash?.error && (
+              <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs font-bold uppercase tracking-widest flex items-center gap-3">
+                <AlertCircle className="w-4 h-4" />
+                {flash.error}
+              </div>
+            )}
 
-        {locationError && (
-          <div className="mb-4 p-3 rounded bg-red-100 text-red-800">
-            {locationError}
-          </div>
-        )}
+            {locationError && (
+              <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs font-bold uppercase tracking-widest flex items-center gap-3">
+                <AlertCircle className="w-4 h-4" />
+                {locationError}
+              </div>
+            )}
 
-        {location && (
-          <div className="mb-4 p-3 rounded bg-green-100 text-green-800">
-            Location captured: {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}
-          </div>
-        )}
+            {location && (
+              <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-bold uppercase tracking-widest flex items-center gap-3">
+                <CheckCircle2 className="w-4 h-4" />
+                Location Captured: {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+              </div>
+            )}
 
-        <div className="flex justify-center gap-4 mb-6">
-          <button
-            onClick={getLocation}
-            disabled={isLoading}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
-            {isLoading ? 'Getting Location...' : 'Get My Location'}
-          </button>
+            <div className="space-y-4">
+              {!location && (
+                <DashboardButton
+                  onClick={getLocation}
+                  disabled={isLoading}
+                  variant="secondary"
+                  className="w-full"
+                >
+                  <Navigation className={`w-4 h-4 mr-2 ${isLoading ? 'animate-pulse' : ''}`} />
+                  {isLoading ? 'Detecting Location...' : 'Get My Location'}
+                </DashboardButton>
+              )}
+
+              <div className="grid grid-cols-1 gap-4 pt-4">
+                <DashboardButton
+                  onClick={() => handleMark('arrival')}
+                  disabled={isLoading || hasArrival || !location}
+                  className="w-full"
+                  variant={hasArrival ? 'secondary' : 'primary'}
+                >
+                  {hasArrival ? (
+                    <div className="flex items-center">
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Arrival Marked
+                    </div>
+                  ) : 'Mark Arrival'}
+                </DashboardButton>
+
+                <DashboardButton
+                  onClick={() => handleMark('departure')}
+                  disabled={isLoading || hasDeparture || !hasArrival || !location}
+                  className="w-full"
+                  variant={hasDeparture ? 'secondary' : 'primary'}
+                >
+                  {hasDeparture ? (
+                    <div className="flex items-center">
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Departure Marked
+                    </div>
+                  ) : 'Mark Departure'}
+                </DashboardButton>
+              </div>
+              
+              {!location && !isLoading && (
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-6">
+                  Click 'Get My Location' to enable check-in
+                </p>
+              )}
+            </div>
+          </DashboardCard>
         </div>
-
-        <div className="flex justify-center gap-4">
-          <button
-            onClick={() => handleMark('arrival')}
-            disabled={isLoading || hasArrival || !location}
-            className={`px-5 py-2 rounded text-white disabled:opacity-50 ${
-              hasArrival
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-700'
-            }`}
-          >
-            {hasArrival ? 'Arrival Marked' : 'Mark Arrival'}
-          </button>
-
-          <button
-            onClick={() => handleMark('departure')}
-            disabled={isLoading || hasDeparture || !hasArrival || !location}
-            className={`px-5 py-2 rounded text-white disabled:opacity-50 ${
-              hasDeparture
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {hasDeparture ? 'Departure Marked' : 'Mark Departure'}
-          </button>
-        </div>
-      </div>
+      </DashboardPage>
     </MemberLayout>
   );
 }

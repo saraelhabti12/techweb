@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/react';
 import DeleteUserForm from '../Profile/Partials/DeleteUserForm';
 import UpdatePasswordForm from '../Profile/Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from '../Profile/Partials/UpdateProfileInformationForm';
+import UpdateProfilePhotoForm from '../Profile/Partials/UpdateProfilePhotoForm';
 import DashboardPage from '@/Components/UI/DashboardPage';
 import DashboardCard from '@/Components/UI/DashboardCard';
 
@@ -16,6 +17,20 @@ export default function Edit({ auth, mustVerifyEmail, status }) {
                 description="Manage your professional profile, security preferences, and account data."
             >
                 <div className="max-w-4xl mx-auto space-y-8">
+                    <DashboardCard className="!p-0 overflow-hidden border-transparent shadow-lg">
+                        <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+                                Profile Photo
+                            </h3>
+                            <p className="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
+                                Personalize your account with a profile picture.
+                            </p>
+                        </div>
+                        <div className="p-8">
+                            <UpdateProfilePhotoForm />
+                        </div>
+                    </DashboardCard>
+
                     <DashboardCard className="!p-0 overflow-hidden border-transparent shadow-lg">
                         <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
                             <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">

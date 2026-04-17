@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
 use App\Models\Schedule;
+use App\Models\Activity;
 use App\Notifications\AppointmentStatusUpdated;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -31,6 +32,7 @@ class AppointmentController extends Controller
 
         // If accepted, add to schedules (Calendar)
         if ($validated['status'] === 'accepted') {
+            Activity::log('Appointment Accepted', "Accepted appointment for: {$appointment->client->name}");
             Schedule::updateOrCreate(
                 ['title' => 'Appointment: ' . $appointment->client->name],
                 [

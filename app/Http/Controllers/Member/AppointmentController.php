@@ -29,7 +29,7 @@ class AppointmentController extends Controller
 
     public function create(Request $request)
     {
-        $clients = Auth::user()->clients()->get();
+        $clients = Auth::user()->clients()->where('is_blacklisted', false)->get();
 
         return Inertia::render('Member/Appointments/Create', [
             'clients' => ClientResource::collection($clients)->resolve(),

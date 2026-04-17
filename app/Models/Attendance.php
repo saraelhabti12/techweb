@@ -16,6 +16,7 @@ class Attendance extends Model
         'user_id',
         'date',
         'type',
+        'status',
         'marked_at',
         'latitude',
         'longitude',

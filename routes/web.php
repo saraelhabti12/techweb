@@ -19,7 +19,11 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\TemplateController;
+use App\Http\Controllers\PersonalTodoController;
 use App\Http\Controllers\Admin\ScheduleController;
+use App\Http\Controllers\Admin\QuotationController;
+use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Member\ClientController;
 use App\Http\Controllers\Member\AppointmentController;
 use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
@@ -64,6 +68,8 @@ Route::middleware(['auth', 'role:admin,project_manager'])->prefix('admin')->name
     Route::resource('templates', TemplateController::class);
     Route::resource('categories', CategoryController::class)->except(['show']);
     Route::resource('projects', ProjectController::class);
+    Route::get('projects/client-history/{client}', [ProjectController::class, 'clientHistory'])->name('projects.clientHistory');
+    Route::post('projects/{project}/status', [ProjectController::class, 'updateStatus'])->name('projects.updateStatus');
     Route::resource('tasks', TaskController::class);
     
     // Appointments
@@ -72,7 +78,24 @@ Route::middleware(['auth', 'role:admin,project_manager'])->prefix('admin')->name
     Route::get('/appointments/calendar', [AdminAppointmentController::class, 'calendar'])->name('appointments.calendar');
 
     // CRM / Clients
+    Route::get('clients/blacklist', [ClientController::class, 'blacklistIndex'])->name('clients.blacklist');
+    Route::post('clients/{client}/add-to-contacts', [ClientController::class, 'addToContacts'])->name('clients.addToContacts');
+    Route::post('clients/{client}/blacklist', [ClientController::class, 'blacklist'])->name('clients.blacklist.store');
+    Route::post('clients/{client}/unblock', [ClientController::class, 'unblock'])->name('clients.unblock');
     Route::resource('clients', ClientController::class);
+
+    // Financial Management
+    Route::resource('quotations', QuotationController::class);
+    Route::post('quotations/{quotation}/duplicate', [QuotationController::class, 'duplicate'])->name('quotations.duplicate');
+    Route::post('quotations/{quotation}/send-email', [QuotationController::class, 'sendEmail'])->name('quotations.send-email');
+    Route::post('quotations/{quotation}/convert-to-invoice', [QuotationController::class, 'convertToInvoice'])->name('quotations.convert-to-invoice');
+
+    Route::resource('invoices', InvoiceController::class);
+    Route::post('invoices/{invoice}/send-email', [InvoiceController::class, 'sendEmail'])->name('invoices.send-email');
+    Route::get('invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download-pdf');
+    Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid'])->name('invoices.mark-paid');
+
+    Route::resource('payments', PaymentController::class)->only(['store', 'destroy']);
 
     // Customers / CRM (Contacts)
     Route::get('/customers', [ContactController::class, 'index'])->name('customers.index');
@@ -104,12 +127,13 @@ Route::middleware(['auth', 'role:admin,project_manager'])->prefix('admin')->name
     Route::get('/profile', [ProfileController::class, 'editAdmin'])->name('profile');
     Route::patch('/profile', [ProfileController::class, 'updateAdmin'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroyAdmin'])->name('profile.destroy');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
 
     // Admin ONLY routes moved inside the admin prefix but wrapped in an additional role check if needed
     // However, since this group allows PMs, we might want to nest Admin-only stuff
     Route::middleware(['role:admin'])->group(function() {
         Route::resource('members', MemberController::class);
-        Route::get('/members-attendance', [AttendanceController::class, 'showMemberAttendance'])->name('members.attendance');
+        Route::get('/attendance-dashboard', [AttendanceController::class, 'adminDashboard'])->name('members.attendance');
         Route::post('/members/{user}/avatar', [MemberController::class, 'updateAvatar'])->name('members.avatar');
     });
 });
@@ -127,13 +151,14 @@ Route::middleware(['auth', 'role:member'])->prefix('member')->name('member.')->g
     // Tasks & Progress
     Route::get('/tasks', [TaskController::class, 'tasksIndex'])->name('tasks.index');
     Route::get('/tasks/{task}/progress', [TaskController::class, 'showTaskProgress'])->name('tasks.progress');
+    Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.updateStatus');
     Route::resource('progress', ProgressUpdateController::class)->only(['index', 'create', 'store', 'destroy']);
 
     // Attendance
-    Route::get('/attendance/qr', [MemberController::class, 'showQrCode'])->name('attendance.qr');
-    Route::get('/attendance/mark/{token}', [MemberController::class, 'showMarkPage'])->name('attendance.mark.page');
-    Route::post('/attendance/mark/{token}', [MemberController::class, 'mark'])->name('attendance.mark');
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('/attendance/qr', [AttendanceController::class, 'getQrCode'])->name('attendance.qr');
     Route::get('/my-attendance', [AttendanceController::class, 'myAttendance'])->name('myAttendance');
+    Route::get('/attendance/scan/{token}', [AttendanceController::class, 'scan'])->name('attendance.scan');
 
     // TeamHub
     Route::get('/teamhub', [\App\Http\Controllers\Member\TeamHubController::class, 'index'])->name('teamhub.index');
@@ -148,6 +173,7 @@ Route::middleware(['auth', 'role:member'])->prefix('member')->name('member.')->g
     Route::delete('/teamhub/chat/{message}', [TeamHubController::class, 'destroyMessage'])->name('teamhub.chat.delete');
     Route::post('/teamhub/chat/{admin}/mark-as-read', [TeamHubController::class, 'markAsRead'])->name('teamhub.chat.markAsRead');
     Route::get('/unread-count', [\App\Http\Controllers\Member\TeamHubController::class, 'unreadCount'])->name('unreadCount');
+    Route::get('invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download-pdf');
 });
 
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
@@ -164,6 +190,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ActivityController;
 
 // Notification routes
 Route::middleware(['auth'])->group(function () {
@@ -172,6 +199,21 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+    // Activity History
+    Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
+
+    // Heartbeat
+    Route::post('/heartbeat', [ProfileController::class, 'heartbeat'])->name('heartbeat');
+
+    // Personal Todo routes
+    Route::get('/personal-todos', [PersonalTodoController::class, 'index'])->name('personal-todos.index');
+    Route::post('/personal-todos', [PersonalTodoController::class, 'store'])->name('personal-todos.store');
+    Route::patch('/personal-todos/{personalTodo}', [PersonalTodoController::class, 'update'])->name('personal-todos.update');
+    Route::delete('/personal-todos/{personalTodo}', [PersonalTodoController::class, 'destroy'])->name('personal-todos.destroy');
+
+    // Client File deletion
+    Route::delete('/clients/files/{clientFile}', [ClientController::class, 'destroyFile'])->name('clients.files.destroy');
 });
 
 use App\Http\Controllers\GroupController;

@@ -56,9 +56,9 @@ export default function About() {
     ];
 
     const stats = [
-        { label: "Years Experience", val: "07", icon: <Briefcase className="w-6 h-6" /> },
-        { label: "Projects Done", val: "70", icon: <Zap className="w-6 h-6" /> },
-        { label: "Happy Clients", val: "92", icon: <Users className="w-6 h-6" /> },
+        { label: "Years Experience", val: "67", icon: <Briefcase className="w-6 h-6" /> },
+        { label: "Projects Done", val: "90", icon: <Zap className="w-6 h-6" /> },
+        { label: "Happy Clients", val: "200", icon: <Users className="w-6 h-6" /> },
         { label: "Awards Won", val: "60", icon: <Trophy className="w-6 h-6" /> }
     ];
 
@@ -136,7 +136,7 @@ export default function About() {
                             <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-white/5">
                                 <img src="/images/fav1.png" alt="CEO" className="w-14 h-14 rounded-xl object-cover" />
                                 <div>
-                                    <div className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider">Jacob Jones</div>
+                                    <div className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider"> Abdessalam Elamrani</div>
                                     <div className="text-xs font-bold text-[#1F2BF3] uppercase tracking-widest">CEO & Founder</div>
                                 </div>
                             </div>
@@ -145,55 +145,154 @@ export default function About() {
                 </section>
 
                 {/* SHOWCASE SECTION */}
-                <section className="relative py-32 px-6 sm:px-12 lg:px-24 bg-gray-50/50 dark:bg-[#080808]">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="text-center mb-20">
+                <section className="relative py-32 px-6 sm:px-12 lg:px-24 bg-gray-50/50 dark:bg-[#080808] overflow-hidden">
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#1F2BF3]/5 blur-[120px] rounded-full pointer-events-none" />
+                    
+                    <div className="max-w-7xl mx-auto relative z-10">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="text-center mb-20"
+                        >
                             <h2 className="text-xs font-black uppercase tracking-[0.4em] text-[#1F2BF3] mb-4">Portfolio Highlights</h2>
                             <h3 className="text-4xl lg:text-6xl font-black text-gray-900 dark:text-white mb-6 tracking-tight">Showcase of Excellence.</h3>
-                        </div>
+                            <div className="w-24 h-1 bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] mx-auto rounded-full" />
+                        </motion.div>
 
-                        <div className="flex flex-col lg:flex-row gap-12 items-center">
-                            <div className="flex lg:flex-col justify-center items-center lg:items-end gap-6 order-2 lg:order-1">
-                                {images.map((_, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => swiperRef.current?.slideToLoop(i)}
-                                        className={`group flex items-center gap-4 transition-all duration-300 ${
-                                            activeIndex === i ? "text-[#1F2BF3] scale-110" : "text-gray-400 opacity-50"
-                                        }`}
-                                    >
-                                        <span className="text-xs font-black font-mono">{(i + 1).toString().padStart(2, '0')}</span>
-                                        <div className={`h-[2px] rounded-full transition-all duration-500 ${
-                                            activeIndex === i ? "w-12 bg-[#1F2BF3]" : "w-6 bg-gray-300 dark:bg-gray-700 group-hover:w-8"
-                                        }`} />
-                                    </button>
-                                ))}
+                        <div className="flex flex-col lg:flex-row gap-16 items-center">
+                            {/* Left Side: Info and Controls */}
+                            <div className="w-full lg:w-1/3 order-2 lg:order-1">
+                                <div className="space-y-8">
+                                    <div className="hidden lg:block">
+                                        <AnimatePresence mode="wait">
+                                            <motion.div
+                                                key={activeIndex}
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 20 }}
+                                                transition={{ duration: 0.5 }}
+                                                className="space-y-4"
+                                            >
+                                                <span className="inline-block px-4 py-1.5 rounded-full bg-[#1F2BF3]/10 text-[#1F2BF3] text-[10px] font-black uppercase tracking-widest">
+                                                    Featured Project {activeIndex + 1}
+                                                </span>
+                                                <h4 className="text-3xl lg:text-4xl font-black text-gray-900 dark:text-white leading-tight">
+                                                    {activeIndex === 0 && "Digital Innovation"}
+                                                    {activeIndex === 1 && "Creative Strategy"}
+                                                    {activeIndex === 2 && "Future Tech"}
+                                                    {activeIndex === 3 && "Brand Identity"}
+                                                    {activeIndex === 4 && "Global Reach"}
+                                                </h4>
+                                                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                                                    Explore how we combine technical expertise with creative vision to deliver outstanding digital experiences.
+                                                </p>
+                                            </motion.div>
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {/* Pagination / Progress Indicators */}
+                                    <div className="flex lg:flex-col gap-6">
+                                        {images.map((_, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => swiperRef.current?.slideToLoop(i)}
+                                                className="group relative flex items-center gap-6"
+                                            >
+                                                <span className={`text-xs font-black font-mono transition-colors duration-300 ${
+                                                    activeIndex === i ? "text-[#1F2BF3]" : "text-gray-400"
+                                                }`}>
+                                                    {(i + 1).toString().padStart(2, '0')}
+                                                </span>
+                                                <div className="relative h-px flex-1 min-w-[60px] bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                                                    <motion.div 
+                                                        className="absolute inset-0 bg-[#1F2BF3]"
+                                                        initial={false}
+                                                        animate={{ 
+                                                            x: activeIndex === i ? "0%" : "-100%",
+                                                            opacity: activeIndex === i ? 1 : 0 
+                                                        }}
+                                                        transition={{ duration: 0.5 }}
+                                                    />
+                                                </div>
+                                                {activeIndex === i && (
+                                                    <motion.span 
+                                                        layoutId="activeIndicator"
+                                                        className="absolute -left-4 w-1.5 h-1.5 rounded-full bg-[#1F2BF3]"
+                                                    />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Navigation Buttons */}
+                                    <div className="flex gap-4 pt-4">
+                                        <button 
+                                            onClick={() => swiperRef.current?.slidePrev()}
+                                            className="w-14 h-14 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 flex items-center justify-center text-gray-900 dark:text-white shadow-xl hover:bg-[#1F2BF3] hover:text-white transition-all group"
+                                        >
+                                            <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+                                        </button>
+                                        <button 
+                                            onClick={() => swiperRef.current?.slideNext()}
+                                            className="w-14 h-14 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 flex items-center justify-center text-gray-900 dark:text-white shadow-xl hover:bg-[#1F2BF3] hover:text-white transition-all group"
+                                        >
+                                            <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="flex-1 w-full order-1 lg:order-2">
-                                <Swiper
-                                    modules={[Autoplay, EffectCreative]}
-                                    autoplay={{ delay: 4000, disableOnInteraction: false }}
-                                    loop={true}
-                                    speed={2000}
-                                    grabCursor={true}
-                                    effect="creative"
-                                    creativeEffect={{
-                                        prev: { translate: ["-120%", 0, -500], opacity: 0 },
-                                        next: { translate: ["120%", 0, -500], opacity: 0 },
-                                    }}
-                                    onSwiper={(swiper) => (swiperRef.current = swiper)}
-                                    onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
-                                    className="rounded-[3rem] shadow-2xl border-4 border-white dark:border-gray-900 overflow-hidden aspect-[4/3] lg:aspect-[16/9]"
-                                >
-                                    {images.map((src, i) => (
-                                        <SwiperSlide key={i}>
-                                            <div className="w-full h-full bg-gray-100 dark:bg-gray-900">
-                                                <img src={src} alt={`Slide ${i + 1}`} className="w-full h-full object-cover" />
-                                            </div>
-                                        </SwiperSlide>
-                                    ))}
-                                </Swiper>
+                            {/* Right Side: Main Slider */}
+                            <div className="w-full lg:w-2/3 order-1 lg:order-2">
+                                <div className="relative group">
+                                    <div className="absolute -inset-4 bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] opacity-0 group-hover:opacity-10 blur-2xl transition-opacity duration-700 rounded-[4rem]" />
+                                    
+                                    <Swiper
+                                        modules={[Autoplay, EffectCreative]}
+                                        autoplay={{ delay: 5000, disableOnInteraction: false }}
+                                        loop={true}
+                                        speed={1200}
+                                        grabCursor={true}
+                                        effect="creative"
+                                        creativeEffect={{
+                                            prev: { translate: ["-10%", 0, -200], rotate: [0, 0, -5], opacity: 0 },
+                                            next: { translate: ["120%", 0, 0], opacity: 1 },
+                                        }}
+                                        onSwiper={(swiper) => (swiperRef.current = swiper)}
+                                        onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
+                                        className="rounded-[3rem] lg:rounded-[4rem] shadow-2xl border-4 border-white dark:border-gray-900 overflow-hidden aspect-[4/3] lg:aspect-[16/10]"
+                                    >
+                                        {images.map((src, i) => (
+                                            <SwiperSlide key={i} className="overflow-hidden">
+                                                <motion.div 
+                                                    className="w-full h-full relative"
+                                                    whileHover={{ scale: 1.05 }}
+                                                    transition={{ duration: 1.5 }}
+                                                >
+                                                    <img 
+                                                        src={src} 
+                                                        alt={`Slide ${i + 1}`} 
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                                    
+                                                    {/* Floating Label on Image */}
+                                                    <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end transform translate-y-10 group-hover:translate-y-0 transition-transform duration-500">
+                                                        <div className="glass-morphism px-6 py-4 rounded-2xl border border-white/20 backdrop-blur-xl">
+                                                            <div className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">Interactive Case</div>
+                                                            <div className="text-xl font-black text-white">View Details</div>
+                                                        </div>
+                                                        <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-[#1F2BF3] shadow-2xl">
+                                                            <ArrowRight className="w-6 h-6" />
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            </SwiperSlide>
+                                        ))}
+                                    </Swiper>
+                                </div>
                             </div>
                         </div>
                     </div>

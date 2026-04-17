@@ -1,18 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MemberLayout from '@/Layouts/MemberLayout';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm, Link } from '@inertiajs/react';
 import DashboardPage from '@/Components/UI/DashboardPage';
 import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
-import { FileIcon, XMarkIcon, PhotoIcon, DocumentIcon } from '@heroicons/react/24/outline';
-
+import { XMarkIcon, PhotoIcon, DocumentIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 export default function Create({ auth }) {
     const isAdmin = auth.user.role === 'admin' || auth.user.role === 'project_manager';
     const Layout = isAdmin ? AdminLayout : MemberLayout;
     const storeRoute = isAdmin ? 'admin.clients.store' : 'member.clients.store';
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, transform } = useForm({
         name: '',
         email: '',
         phone: '',
@@ -21,6 +20,7 @@ export default function Create({ auth }) {
         city: '',
         address: '',
         website: '',
+        social_links: [],
         logo: null,
         notes: '',
         status: 'prospect',
@@ -30,6 +30,13 @@ export default function Create({ auth }) {
     });
 
     const [logoPreview, setLogoPreview] = useState(null);
+
+    // Debugging errors
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            console.error('Validation Errors:', errors);
+        }
+    }, [errors]);
 
     const handleLogoChange = (e) => {
         const file = e.target.files[0];
@@ -50,16 +57,41 @@ export default function Create({ auth }) {
         setData('files', newFiles);
     };
 
-    const submit = (e) => {
+    const addSocialLink = () => {
+        setData('social_links', [...data.social_links, { platform: 'instagram', url: '' }]);
+    };
+
+    const removeSocialLink = (index) => {
+        const newLinks = [...data.social_links];
+        newLinks.splice(index, 1);
+        setData('social_links', newLinks);
+    };
+
+    const updateSocialLink = (index, field, value) => {
+        const newLinks = [...data.social_links];
+        newLinks[index][field] = value;
+        setData('social_links', newLinks);
+    };
+
+    const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Submitting form to:', storeRoute);
-        console.log('Form data being submitted:', data);
         
+        console.log('Submitting form to:', storeRoute);
+        console.log('Current form data:', data);
+
+        // Ensure files are properly mapped for FormData
+        transform((data) => ({
+            ...data,
+            files: data.files.map(file => file),
+        }));
+
         post(route(storeRoute), {
             forceFormData: true,
             onStart: () => console.log('Inertia post started...'),
             onFinish: () => console.log('Inertia post finished.'),
-            onSuccess: () => console.log('Inertia post success!'),
+            onSuccess: () => {
+                console.log('Inertia post success!');
+            },
             onError: (errors) => {
                 console.error('Form submission failed with errors:', errors);
             }
@@ -82,7 +114,7 @@ export default function Create({ auth }) {
                 }
             >
                 <DashboardCard className="max-w-5xl mx-auto">
-                    <form onSubmit={submit} className="space-y-8" encType="multipart/form-data">
+                    <form onSubmit={handleSubmit} className="space-y-8" encType="multipart/form-data">
                         
                         {/* Section 1: Basic & Business Identity */}
                         <div className="space-y-6">
@@ -151,6 +183,68 @@ export default function Create({ auth }) {
                                         />
                                         {errors.website && <p className="mt-1 text-sm text-red-500 font-bold">{errors.website}</p>}
                                     </div>
+
+                                    <div className="md:col-span-2 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Social Media Links</label>
+                                            <button
+                                                type="button"
+                                                onClick={addSocialLink}
+                                                className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#1F2BF3] uppercase tracking-wider hover:opacity-80 transition-all"
+                                            >
+                                                <PlusIcon className="w-3.5 h-3.5" />
+                                                Add Link
+                                            </button>
+                                        </div>
+
+                                        {data.social_links.length > 0 ? (
+                                            <div className="space-y-3">
+                                                {data.social_links.map((link, index) => (
+                                                    <div key={index} className="flex gap-3 items-start">
+                                                        <div className="w-1/3">
+                                                            <select
+                                                                value={link.platform}
+                                                                onChange={e => updateSocialLink(index, 'platform', e.target.value)}
+                                                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all text-sm"
+                                                            >
+                                                                <option value="instagram">Instagram</option>
+                                                                <option value="tiktok">TikTok</option>
+                                                                <option value="youtube">YouTube</option>
+                                                                <option value="facebook">Facebook</option>
+                                                                <option value="linkedin">LinkedIn</option>
+                                                                <option value="twitter">X (Twitter)</option>
+                                                                <option value="other">Other</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <input
+                                                                type="url"
+                                                                value={link.url}
+                                                                onChange={e => updateSocialLink(index, 'url', e.target.value)}
+                                                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all text-sm"
+                                                                placeholder="https://..."
+                                                                required
+                                                            />
+                                                            {errors[`social_links.${index}.url`] && (
+                                                                <p className="mt-1 text-[10px] text-red-500 font-bold">{errors[`social_links.${index}.url`]}</p>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeSocialLink(index)}
+                                                            className="mt-3 p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                                        >
+                                                            <TrashIcon className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-6 border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-2xl">
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No social links added yet</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -204,7 +298,7 @@ export default function Create({ auth }) {
                                         value={data.city}
                                         onChange={e => setData('city', e.target.value)}
                                         className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                        placeholder="Tanger"
+                                        placeholder="Tangier"
                                     />
                                     {errors.city && <p className="mt-1 text-sm text-red-500 font-bold">{errors.city}</p>}
                                 </div>
@@ -216,7 +310,7 @@ export default function Create({ auth }) {
                                         value={data.address}
                                         onChange={e => setData('address', e.target.value)}
                                         className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                        placeholder="Boulevard Pasteur, Tanger, Morocco"
+                                        placeholder="Boulevard Pasteur, Tangier, Morocco"
                                     />
                                     {errors.address && <p className="mt-1 text-sm text-red-500 font-bold">{errors.address}</p>}
                                 </div>
@@ -303,7 +397,7 @@ export default function Create({ auth }) {
                                             <div key={index} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
                                                 <div className="flex items-center gap-3 overflow-hidden">
                                                     <div className="p-2 bg-[#1F2BF3]/10 rounded-lg">
-                                                        <FileIcon className="w-5 h-5 text-[#1F2BF3]" />
+                                                    <DocumentIcon  className="w-5 h-5 text-[#1F2BF3]" />
                                                     </div>
                                                     <span className="text-xs font-bold text-gray-600 dark:text-gray-300 truncate">{file.name}</span>
                                                 </div>

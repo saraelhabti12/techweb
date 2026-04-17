@@ -1,66 +1,83 @@
 import React from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import MemberLayout from '@/Layouts/MemberLayout';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeft, Layout, FileText, ChevronRight, Inbox } from 'lucide-react';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
 
 export default function TeamHubIndex() {
     const { activities = [], auth } = usePage().props;
 
     return (
         <MemberLayout auth={auth}>
-            <div className='bg-purple-50 border border-purple-200 dark:bg-gray-800 shadow rounded-lg p-6'>
-            
-            <div className="mb-6">
-            <button
-                onClick={() => window.history.back()}
-                className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
+            <DashboardPage 
+                title="Team Hub" 
+                description="Explore activities, collaborated files, and team updates assigned to you."
+                actions={
+                    <DashboardButton variant="secondary" onClick={() => window.history.back()}>
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back
+                    </DashboardButton>
+                }
             >
-                <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                Retour
-            </button>
-            </div>
-            <h1 className="text-2xl font-semibold mb-10 text-gray-900 dark:text-gray-200">
-                TeamHub Activities
-            </h1>
-
-            {!activities || activities.length === 0 ? (
-                <p className="text-gray-600 dark:text-gray-400">
-                    No activities assigned to you yet.
-                </p>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {activities.map(activity => (
-                        <div
-                            key={activity?.id || Math.random()}
-                            className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 flex flex-col justify-between"
-                        >
-                            <div>
-                                <h2 className="text-lg font-medium text-gray-800 dark:text-gray-100">
-                                    {activity?.title || 'Untitled Activity'}
-                                </h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                                    {activity?.content ? activity.content.substring(0, 100) + '...' : 'No description'}
-                                </p>
-                            </div>
-
-                            <div className="mt-4 flex justify-between items-center">
-                                {activity?.id && (
-                                    <Link
-                                        href={route('member.teamhub.show', activity.id)}
-                                        className="text-purple-600 dark:text-teal-400 hover:underline text-sm font-medium"
-                                    >
-                                        View Details
-                                    </Link>
-                                )}
-                                <span className="text-xs text-gray-400">
-                                    Files: {activity?.files?.length || 0}
-                                </span>
-                            </div>
+                {!activities || activities.length === 0 ? (
+                    <DashboardCard className="p-16 text-center" noHover>
+                        <div className="w-20 h-20 rounded-[2.5rem] bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center mx-auto mb-6">
+                            <Inbox className="w-10 h-10 text-gray-300" />
                         </div>
-                    ))}
-                </div>
-            )}
-            </div>
+                        <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-2">
+                            No activities yet
+                        </h3>
+                        <p className="text-sm font-medium text-gray-500 max-w-xs mx-auto">
+                            When your administrators assign activities or share files with you, they will appear here.
+                        </p>
+                    </DashboardCard>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {activities.map(activity => (
+                            <DashboardCard
+                                key={activity?.id || Math.random()}
+                                className="flex flex-col h-full"
+                            >
+                                <div className="p-2 flex-1">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-[#1F2BF3]/10 flex items-center justify-center text-[#1F2BF3]">
+                                            <Layout className="w-6 h-6" />
+                                        </div>
+                                        <div className="px-3 py-1 rounded-lg bg-gray-50 dark:bg-gray-800 text-[9px] font-black text-gray-400 uppercase tracking-widest border border-gray-100 dark:border-gray-700">
+                                            Activity
+                                        </div>
+                                    </div>
+                                    
+                                    <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-3 leading-tight">
+                                        {activity?.title || 'Untitled Activity'}
+                                    </h2>
+                                    
+                                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed mb-6">
+                                        {activity?.content ? activity.content : 'No detailed description available for this activity.'}
+                                    </p>
+                                </div>
+
+                                <div className="mt-auto pt-6 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                                    <div className="flex items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                        <FileText className="w-3.5 h-3.5 mr-2 text-[#1F2BF3]" />
+                                        {activity?.files?.length || 0} Files
+                                    </div>
+                                    
+                                    {activity?.id && (
+                                        <Link href={route('member.teamhub.show', activity.id)}>
+                                            <DashboardButton variant="secondary" className="px-4 py-2 text-[9px]">
+                                                View <ChevronRight className="w-3 h-3 ml-1" />
+                                            </DashboardButton>
+                                        </Link>
+                                    )}
+                                </div>
+                            </DashboardCard>
+                        ))}
+                    </div>
+                )}
+            </DashboardPage>
         </MemberLayout>
     );
 }

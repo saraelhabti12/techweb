@@ -1,7 +1,9 @@
 import React from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useForm, Head } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
 
 export default function Create({ auth }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -18,92 +20,100 @@ export default function Create({ auth }) {
     };
 
     return (
-        <AdminLayout auth={auth} title="Add Schedule">
-            <Head title="Add Schedule" />
-            <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6">
-                    <div className="mb-6">
-                        <button
-                            onClick={() => window.history.back()}
-                            className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
-                        >
-                            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                            Retour
-                        </button>
-                    </div>
-
-                    <h1 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add New Schedule</h1>
-
-                    <form onSubmit={submit} className="space-y-4">
+        <AdminLayout auth={auth}>
+            <Head title="Create Schedule" />
+            <DashboardPage 
+                title="Create New Schedule"
+                description="Schedule a new appointment, meeting, or event."
+                actions={
+                    <DashboardButton variant="secondary" onClick={() => window.history.back()}>
+                        Go Back
+                    </DashboardButton>
+                }
+            >
+                <DashboardCard className="max-w-4xl mx-auto">
+                    <form onSubmit={submit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                Event Title
+                            </label>
                             <input
                                 type="text"
                                 value={data.title}
                                 onChange={(e) => setData('title', e.target.value)}
-                                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                placeholder="Enter title..."
+                                autoFocus
                             />
-                            {errors.title && <div className="text-red-500 text-sm">{errors.title}</div>}
+                            {errors.title && <div className="mt-1 text-sm text-red-500 font-bold">{errors.title}</div>}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                    Date
+                                </label>
                                 <input
                                     type="date"
                                     value={data.date}
                                     onChange={(e) => setData('date', e.target.value)}
-                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
                                 />
-                                {errors.date && <div className="text-red-500 text-sm">{errors.date}</div>}
+                                {errors.date && <div className="mt-1 text-sm text-red-500 font-bold">{errors.date}</div>}
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time</label>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                    Time
+                                </label>
                                 <input
                                     type="time"
                                     value={data.time}
                                     onChange={(e) => setData('time', e.target.value)}
-                                    className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
                                 />
-                                {errors.time && <div className="text-red-500 text-sm">{errors.time}</div>}
+                                {errors.time && <div className="mt-1 text-sm text-red-500 font-bold">{errors.time}</div>}
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Person</label>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                Person In Charge / Participant
+                            </label>
                             <input
                                 type="text"
                                 value={data.person}
                                 onChange={(e) => setData('person', e.target.value)}
-                                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                placeholder="Enter name..."
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Content</label>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+                                Event Description / Content
+                            </label>
                             <textarea
                                 value={data.content}
                                 onChange={(e) => setData('content', e.target.value)}
-                                className="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
                                 rows={4}
+                                placeholder="Details about the event..."
                             />
                         </div>
 
-                        <div className="flex justify-center">
-                            <button
+                        <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
+                            <DashboardButton
                                 type="submit"
                                 disabled={processing}
-                                className="inline-flex items-center px-16 py-3 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 active:bg-purple-900 focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 disabled:opacity-25 transition dark:bg-purple-700 dark:hover:bg-purple-600"
+                                className="w-full"
                             >
-                                {processing ? 'Saving...' : 'Save'}
-                            </button>
+                                {processing ? 'Creating...' : 'Create Schedule Event'}
+                            </DashboardButton>
                         </div>
                     </form>
-                </div>
-            </div>
+                </DashboardCard>
+            </DashboardPage>
         </AdminLayout>
     );
 }
-
-

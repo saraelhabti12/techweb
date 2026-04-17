@@ -40,12 +40,15 @@ class MemberController extends Controller
         $stats = [
             'todo' => $tasks->where('status', 'todo')->count(),
             'in_progress' => $tasks->where('status', 'in_progress')->count(),
-            'done' => $tasks->where('status', 'done')->count(),
+            'completed' => $tasks->where('status', 'completed')->count(),
+            'blocked' => $tasks->where('status', 'blocked')->count(),
         ];
 
         return Inertia::render('Member/Dashboard', [
             'tasks' => TaskResource::collection($tasks)->resolve(),
             'stats' => $stats,
+            'personalTodos' => Auth::user()->personalTodos()->latest()->get(),
+            'clients' => Auth::user()->clients()->latest()->take(5)->get(),
         ]);
     }
 
@@ -162,112 +165,6 @@ class MemberController extends Controller
 
         return redirect()->route('admin.members.show', $user->id)
             ->with('success', 'Avatar updated successfully!');
-    }
-
-    public function showQrCode()
-    {
-        $user = auth()->user();
-        $token = Str::random(40);
-        $user->update(['attendance_token' => $token]);
-
-        $attendanceUrl = route('member.attendance.mark', ['token' => $token]);
-
-        $result = Builder::create()
-            ->writer(new PngWriter())
-            ->data($attendanceUrl)
-            ->size(250)
-            ->build();
-
-        return response()->json([
-            'qr' => base64_encode($result->getString()),
-            'token' => $token
-        ]);
-    }
-
-    public function mark($token)
-    {
-        $user = User::where('attendance_token', $token)->first();
-
-        if (!$user) {
-            return abort(404, 'Invalid token.');
-        }
-
-        $type = request()->input('type');
-        $latitude = request()->input('latitude');
-        $longitude = request()->input('longitude');
-
-        if (!in_array($type, ['arrival', 'departure'])) {
-            return redirect()->back()->with('error', 'Invalid attendance type.');
-        }
-
-        if (!$latitude || !$longitude) {
-            return redirect()->back()->with('error', 'Location is required.');
-        }
-
-        $alreadyMarked = Attendance::where('user_id', $user->id)
-            ->whereDate('date', now()->toDateString())
-            ->where('type', $type)
-            ->exists();
-
-        if ($alreadyMarked) {
-            return Inertia::location(route('member.dashboard'));
-        }
-
-        $address = $this->reverseGeocode($latitude, $longitude);
-
-        Attendance::create([
-            'user_id' => $user->id,
-            'type' => $type,
-            'date' => now()->toDateString(),
-            'marked_at' => now(),
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-            'location_address' => $address,
-        ]);
-
-        $user->update(['attendance_token' => Str::random(40)]);
-
-        return Inertia::location(route('member.dashboard'));
-    }
-
-    private function reverseGeocode($latitude, $longitude)
-    {
-        try {
-            $response = Http::get('https://nominatim.openstreetmap.org/reverse', [
-                'format' => 'json',
-                'lat' => $latitude,
-                'lon' => $longitude,
-                'zoom' => 18,
-                'addressdetails' => 1
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                return $data['display_name'] ?? null;
-            }
-        } catch (\Exception $e) {
-            \Log::error("Geocoding failed: " . $e->getMessage());
-        }
-        return null;
-    }
-
-    public function showMarkPage($token)
-    {
-        $user = User::where('attendance_token', $token)->first();
-
-        if (!$user) {
-            return abort(404, 'Invalid token.');
-        }
-
-        $attendance = Attendance::where('user_id', $user->id)
-            ->whereDate('date', Carbon::today())
-            ->first();
-
-        return Inertia::render('Member/Attendance/Mark', [
-            'userName' => $user->name,
-            'token' => $token,
-            'attendance' => $attendance
-        ]);
     }
 
     public function tasksIndex(): Response

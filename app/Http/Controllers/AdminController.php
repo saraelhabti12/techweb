@@ -12,6 +12,9 @@ use App\Models\User;
 use Carbon\Carbon;
 use App\Models\Contact;
 use App\Models\Template;
+use App\Models\Invoice;
+use App\Models\Payment;
+use App\Models\Quotation;
 
 
 class AdminController extends Controller
@@ -53,9 +56,26 @@ class AdminController extends Controller
             'total_tasks' => (clone $dateQuery)->count(),
             'todo' => (clone $dateQuery)->where('status', 'todo')->count(),
             'in_progress' => (clone $dateQuery)->where('status', 'in_progress')->count(),
-            'done' => (clone $dateQuery)->where('status', 'done')->count(),
+            'completed' => (clone $dateQuery)->where('status', 'completed')->count(),
+            'blocked' => (clone $dateQuery)->where('status', 'blocked')->count(),
             'templates' => Template::count(),
         ];
+
+        // Member task statistics
+        $membersStats = User::where('role', 'member')
+            ->withCount([
+                'tasks as total_tasks',
+                'tasks as todo_tasks' => function ($query) {
+                    $query->where('status', 'todo');
+                },
+                'tasks as in_progress_tasks' => function ($query) {
+                    $query->where('status', 'in_progress');
+                },
+                'tasks as completed_tasks' => function ($query) {
+                    $query->where('status', 'completed');
+                }
+            ])
+            ->get();
 
         // Task trend data for the last 6 months
         $taskTrendData = [];
@@ -94,18 +114,28 @@ class AdminController extends Controller
             ->where('updated_at', '>=', now()->subDays(7))
             ->orderBy('updated_at', 'desc')
             ->take(3)
-            ->get(['id', 'title', 'status', 'updated_at', 'assigned_to'])
+            ->get()
             ->map(function ($task) {
-                $action = $task->status === 'done' ? 'completed' : 'updated';
+                $action = $task->status === 'completed' ? 'completed' : 'updated';
                 return [
                     'user' => $task->user ? $task->user->name : 'System',
-                    'avatar' => $task->user ? substr($task->user->name, 0, 2) : 'SY',
+                    'user_obj' => $task->user, // Pass the whole user object for Avatar component
                     'action' => $action,
                     'item' => $task->title,
                     'time' => Carbon::parse($task->updated_at)->diffForHumans()
                 ];
             })
             ->toArray();
+
+        // Financial statistics
+        $financialStats = [
+            'unpaid_invoices' => Invoice::where('status', '!=', 'paid')->count(),
+            'paid_this_month' => Payment::whereMonth('payment_date', now()->month)
+                ->whereYear('payment_date', now()->year)
+                ->sum('amount'),
+            'revenue_total' => Payment::sum('amount'),
+            'quotations_pending' => Quotation::where('status', 'pending')->count(),
+        ];
 
         return Inertia::render('Admin/Dashboard', [
             'auth' => [
@@ -114,18 +144,17 @@ class AdminController extends Controller
             'recentTasks' => $recentTasks,
             'recentProjects' => $recentProjects,
             'stats' => $stats,
+            'financialStats' => $financialStats,
+            'membersStats' => $membersStats,
             'taskTrendData' => $taskTrendData,
             'upcomingDeadlines' => $upcomingDeadlines,
             'teamActivity' => $teamActivity,
+            'personalTodos' => Auth::user()->personalTodos()->latest()->get(),
             'filters' => [
                 'year' => $year,
                 'month' => $month,
                 'day' => $day,
             ],
-
-            // Ajout pour MessagesBell
-            'messages' => Contact::latest()->get(),
-            'unreadCount' => Contact::where('is_read', false)->count(),
         ]);
     }
 }

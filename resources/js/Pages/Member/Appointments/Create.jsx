@@ -1,7 +1,10 @@
 import React from 'react';
 import MemberLayout from '@/Layouts/MemberLayout';
 import { Head, useForm, Link } from '@inertiajs/react';
-import { ArrowLeft, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User } from 'lucide-react';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
 
 export default function Create({ auth, clients, client_id = null }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -19,75 +22,92 @@ export default function Create({ auth, clients, client_id = null }) {
         <MemberLayout auth={auth}>
             <Head title="Request Appointment" />
 
-            <div className="max-w-2xl mx-auto space-y-6">
-                <Link
-                    href={route('member.clients.index')}
-                    className="inline-flex items-center text-sm text-purple-600 hover:text-purple-700 font-medium"
-                >
-                    <ArrowLeft className="w-4 h-4 mr-1" />
-                    Back to Clients
-                </Link>
+            <DashboardPage 
+                title="Studio Visit" 
+                description="Submit an appointment request for admin approval."
+                actions={
+                    <Link href={route('member.appointments.index')}>
+                        <DashboardButton variant="secondary">
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Back to Appointments
+                        </DashboardButton>
+                    </Link>
+                }
+            >
+                <div className="max-w-3xl">
+                    <DashboardCard>
+                        <form onSubmit={submit} className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5 ml-2">
+                                        Select Client
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <User className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <select
+                                            value={data.client_id}
+                                            onChange={e => setData('client_id', e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 pl-11 shadow-sm transition-all appearance-none font-bold text-sm"
+                                            required
+                                        >
+                                            <option value="">-- Choose a client --</option>
+                                            {clients.map(client => (
+                                                <option key={client.id} value={client.id}>{client.name} ({client.phone})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    {errors.client_id && <p className="text-rose-500 text-xs font-bold mt-1 ml-2 uppercase tracking-wider">{errors.client_id}</p>}
+                                </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Request Studio Visit</h1>
-                    <p className="text-sm text-gray-500 mb-8">Submit an appointment request for admin approval.</p>
-
-                    <form onSubmit={submit} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Select Client</label>
-                            <select
-                                value={data.client_id}
-                                onChange={e => setData('client_id', e.target.value)}
-                                className="w-full rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                                required
-                            >
-                                <option value="">-- Choose a client --</option>
-                                {clients.map(client => (
-                                    <option key={client.id} value={client.id}>{client.name} ({client.phone})</option>
-                                ))}
-                            </select>
-                            {errors.client_id && <p className="text-red-500 text-xs mt-1">{errors.client_id}</p>}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Proposed Date & Time</label>
-                            <div className="relative">
-                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                                <input
-                                    type="datetime-local"
-                                    value={data.appointment_date}
-                                    onChange={e => setData('appointment_date', e.target.value)}
-                                    className="w-full pl-10 rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                                    required
-                                />
+                                <div className="space-y-2">
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5 ml-2">
+                                        Proposed Date & Time
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <Calendar className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            type="datetime-local"
+                                            value={data.appointment_date}
+                                            onChange={e => setData('appointment_date', e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 pl-11 shadow-sm transition-all font-bold text-sm"
+                                            required
+                                        />
+                                    </div>
+                                    {errors.appointment_date && <p className="text-rose-500 text-xs font-bold mt-1 ml-2 uppercase tracking-wider">{errors.appointment_date}</p>}
+                                </div>
                             </div>
-                            {errors.appointment_date && <p className="text-red-500 text-xs mt-1">{errors.appointment_date}</p>}
-                        </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Notes for Admin</label>
-                            <textarea
-                                value={data.notes}
-                                onChange={e => setData('notes', e.target.value)}
-                                className="w-full rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
-                                rows="4"
-                                placeholder="Explain the purpose of the visit or any special requests..."
-                            />
-                            {errors.notes && <p className="text-red-500 text-xs mt-1">{errors.notes}</p>}
-                        </div>
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5 ml-2">
+                                    Notes for Admin
+                                </label>
+                                <textarea
+                                    value={data.notes}
+                                    onChange={e => setData('notes', e.target.value)}
+                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all font-bold text-sm min-h-[150px]"
+                                    rows="4"
+                                    placeholder="Explain the purpose of the visit or any special requests..."
+                                />
+                                {errors.notes && <p className="text-rose-500 text-xs font-bold mt-1 ml-2 uppercase tracking-wider">{errors.notes}</p>}
+                            </div>
 
-                        <div className="flex justify-end pt-4">
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-200 transition-all"
-                            >
-                                {processing ? 'Sending...' : 'Send Request'}
-                            </button>
-                        </div>
-                    </form>
+                            <div className="flex justify-end pt-4">
+                                <DashboardButton
+                                    type="submit"
+                                    disabled={processing}
+                                    className="w-full md:w-auto"
+                                >
+                                    {processing ? 'Sending...' : 'Send Request'}
+                                </DashboardButton>
+                            </div>
+                        </form>
+                    </DashboardCard>
                 </div>
-            </div>
+            </DashboardPage>
         </MemberLayout>
     );
 }

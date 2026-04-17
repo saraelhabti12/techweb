@@ -1,8 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import MessagesBell from '@/Pages/Admin/Customer/MessagesBell';
 import NotificationDropdown from '@/Components/NotificationDropdown';
+import HistoryDropdown from '@/Components/HistoryDropdown';
+import DarkModeToggle from '@/Components/DarkModeToggle';
 import {
     HomeIcon,
     FolderIcon,
@@ -20,13 +21,33 @@ import {
     UsersIcon,
     ChatBubbleLeftRightIcon,
     Bars3Icon,
-    XMarkIcon
+    XMarkIcon,
+    ShieldExclamationIcon
 } from '@heroicons/react/24/outline';
 
+import Avatar from '@/Components/UI/Avatar';
+import ApplicationLogo from '@/Components/ApplicationLogo';
+import axios from 'axios';
+
 export default function AdminLayout({ auth, children, title = '' }) {
-    const { messages = [], unreadCount = 0, unreadChatCount = 0 } = usePage().props;
+    const { unreadChatCount = 0 } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    
+    // Heartbeat logic
+    useEffect(() => {
+        const heartbeat = () => {
+            axios.post(route('heartbeat')).catch(err => console.error("Heartbeat failed", err));
+        };
+
+        // Initial heartbeat
+        heartbeat();
+
+        // Interval every 20 seconds
+        const interval = setInterval(heartbeat, 20000);
+
+        return () => clearInterval(interval);
+    }, []);
     
     const [openMenus, setOpenMenus] = useState({
         projects: false,
@@ -39,7 +60,25 @@ export default function AdminLayout({ auth, children, title = '' }) {
         schedule: false,
         teamhub: false,
         appointments: false,
+        financial: false,
     });
+
+    useEffect(() => {
+        setOpenMenus(prev => ({
+            ...prev,
+            projects: route().current('admin.projects.*'),
+            tasks: route().current('admin.tasks.*') || route().current('admin.progress.*'),
+            members: route().current('admin.members.*'),
+            contacts: route().current('admin.customers.*') || route().current('admin.clients.*'),
+            financial: route().current('admin.quotations.*') || route().current('admin.invoices.*'),
+            appointments: route().current('admin.appointments.*'),
+            categories: route().current('admin.categories.*'),
+            blogs: route().current('admin.blogs.*'),
+            templates: route().current('admin.templates.*'),
+            schedule: route().current('admin.schedule.*'),
+            teamhub: route().current('admin.teamhub.*'),
+        }));
+    }, []);
 
     const toggleMenu = (menu) => {
         setOpenMenus((prev) => ({
@@ -61,18 +100,7 @@ export default function AdminLayout({ auth, children, title = '' }) {
                 {/* Logo Section */}
                 <div className="h-20 flex items-center px-6 border-b border-gray-100 dark:border-gray-800/50">
                     <Link href="/admin/dashboard" className="flex items-center gap-3 overflow-hidden">
-                        <div className="min-w-[40px] h-10 bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            <img src="/images/logotechweb.png" alt="Logo" className="h-6 w-auto brightness-0 invert" />
-                        </div>
-                        {sidebarOpen && (
-                            <motion.span 
-                                initial={{ opacity: 0 }} 
-                                animate={{ opacity: 1 }}
-                                className="font-extrabold text-xl bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] bg-clip-text text-transparent truncate"
-                            >
-                                TECHWEB
-                            </motion.span>
-                        )}
+                        <ApplicationLogo className="h-10 w-auto" />
                     </Link>
                 </div>
 
@@ -151,6 +179,20 @@ export default function AdminLayout({ auth, children, title = '' }) {
                             { label: 'All Contacts', href: route('admin.customers.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
                             { label: 'All Clients', href: route('admin.clients.index'), icon: <UsersIcon className="w-4 h-4" /> },
                             { label: 'Add Client', href: route('admin.clients.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                            { label: 'Blocked Clients', href: route('admin.clients.blacklist'), icon: <ShieldExclamationIcon className="w-4 h-4" /> },
+                        ]}
+                    />
+
+                    <NavGroup 
+                        label="Financial" 
+                        icon={<DocumentTextIcon className="w-5 h-5" />} 
+                        isOpen={openMenus.financial}
+                        onClick={() => toggleMenu('financial')}
+                        sidebarOpen={sidebarOpen}
+                        active={route().current('admin.quotations.*') || route().current('admin.invoices.*')}
+                        links={[
+                            { label: 'Quotations', href: route('admin.quotations.index'), icon: <DocumentTextIcon className="w-4 h-4" /> },
+                            { label: 'Invoices', href: route('admin.invoices.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
                         ]}
                     />
 
@@ -229,10 +271,7 @@ export default function AdminLayout({ auth, children, title = '' }) {
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-[#0A0A0A] border-b border-gray-200 dark:border-gray-800 z-40 px-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] rounded-lg flex items-center justify-center">
-                        <img src="/images/logotechweb.png" alt="Logo" className="h-4 brightness-0 invert" />
-                    </div>
-                    <span className="font-bold text-lg dark:text-white">TECHWEB</span>
+                    <ApplicationLogo className="h-8 w-auto" />
                 </div>
                 <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 text-gray-600 dark:text-gray-400">
                     {mobileMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
@@ -260,19 +299,14 @@ export default function AdminLayout({ auth, children, title = '' }) {
                                     </span>
                                 )}
                             </Link>
+                            <HistoryDropdown />
                             <NotificationDropdown />
-                            <MessagesBell unreadCount={unreadCount} messages={messages} />
+                            <DarkModeToggle />
                         </div>
 
                         <Link href={route('admin.profile')} className="flex items-center gap-3 p-1.5 pr-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all border border-transparent hover:border-gray-100 dark:hover:border-gray-800 group">
                             <div className="relative">
-                                {auth?.user?.avatar ? (
-                                    <img src={`/storage/${auth.user.avatar}`} alt={auth.user.name} className="h-10 w-10 rounded-xl object-cover shadow-sm border border-gray-100 dark:border-gray-800" />
-                                ) : (
-                                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] flex items-center justify-center text-white font-bold">
-                                        {auth?.user?.name?.charAt(0)}
-                                    </div>
-                                )}
+                                <Avatar user={auth?.user} size="md" className="border border-gray-100 dark:border-gray-800 shadow-sm" />
                                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-950 rounded-full"></div>
                             </div>
                             <div className="text-left hidden xl:block">
@@ -284,7 +318,13 @@ export default function AdminLayout({ auth, children, title = '' }) {
                 </header>
 
                 {/* Main Content Scrollable */}
-                <main className="flex-1 overflow-y-auto scroll-smooth bg-gray-50 dark:bg-black">
+                <main className="flex-1 overflow-y-auto scroll-smooth bg-gray-50 dark:bg-black relative">
+                    {/* Ambient Background Glows */}
+                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#1F2BF3]/5 blur-[120px] rounded-full dark:opacity-20 opacity-10 animate-pulse" />
+                        <div className="absolute bottom-[10%] right-[-5%] w-[35%] h-[35%] bg-[#00D8C0]/5 blur-[120px] rounded-full dark:opacity-15 opacity-5" />
+                    </div>
+
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={route().current()}
@@ -317,7 +357,7 @@ export default function AdminLayout({ auth, children, title = '' }) {
                             className="fixed top-0 left-0 bottom-0 w-80 bg-white dark:bg-[#0A0A0A] z-50 lg:hidden shadow-2xl flex flex-col"
                         >
                             <div className="h-20 flex items-center justify-between px-6 border-b dark:border-gray-800">
-                                <span className="text-2xl font-black bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] bg-clip-text text-transparent">TECHWEB</span>
+                                <ApplicationLogo className="h-10 w-auto" />
                                 <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-xl bg-gray-50 dark:bg-gray-900">
                                     <XMarkIcon className="w-6 h-6 dark:text-white" />
                                 </button>
@@ -325,6 +365,19 @@ export default function AdminLayout({ auth, children, title = '' }) {
                             <div className="flex-1 overflow-y-auto p-4">
                                 {/* Duplicate nav here for mobile if needed, or extract to component */}
                                 <NavItem href={route('admin.dashboard')} icon={<ChartBarIcon className="w-5 h-5" />} label="Dashboard" active={route().current('admin.dashboard')} sidebarOpen={true} />
+                                
+                                <NavGroup 
+                                    label="Financial" 
+                                    icon={<DocumentTextIcon className="w-5 h-5" />} 
+                                    isOpen={openMenus.financial}
+                                    onClick={() => toggleMenu('financial')}
+                                    sidebarOpen={true}
+                                    active={route().current('admin.quotations.*') || route().current('admin.invoices.*')}
+                                    links={[
+                                        { label: 'Quotations', href: route('admin.quotations.index') },
+                                        { label: 'Invoices', href: route('admin.invoices.index') },
+                                    ]}
+                                />
                                 {/* ... more items */}
                             </div>
                         </motion.aside>

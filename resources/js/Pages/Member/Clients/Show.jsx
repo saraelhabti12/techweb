@@ -15,10 +15,16 @@ import {
     FileText, 
     Download,
     Building2,
-    ExternalLink
+    ExternalLink,
+    Instagram,
+    Facebook,
+    Linkedin,
+    Twitter,
+    Youtube,
+    Play
 } from 'lucide-react';
 
-export default function Show({ auth, client }) {
+export default function Show({ auth, client, quotations = [], invoices = [], financials = {} }) {
     const isAdmin = auth.user.role === 'admin' || auth.user.role === 'project_manager';
     const Layout = isAdmin ? AdminLayout : MemberLayout;
     const editRoute = isAdmin ? 'admin.clients.edit' : 'member.clients.edit';
@@ -92,6 +98,37 @@ export default function Show({ auth, client }) {
                                             <ExternalLink className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100" />
                                         </a>
                                     )}
+
+                                    {client.social_links && client.social_links.length > 0 && (
+                                        <div className="pt-4 border-t border-gray-100 dark:border-gray-800 text-left">
+                                            <p className="text-[10px] font-black uppercase text-gray-400 mb-3 ml-1">Social Presence</p>
+                                            <div className="grid grid-cols-4 gap-2">
+                                                {client.social_links.map((link, index) => {
+                                                    const Icon = {
+                                                        instagram: Instagram,
+                                                        tiktok: Play, // Tiktok often uses Play or generic Music icon if not available
+                                                        youtube: Youtube,
+                                                        facebook: Facebook,
+                                                        linkedin: Linkedin,
+                                                        twitter: Twitter,
+                                                        other: ExternalLink
+                                                    }[link.platform] || Globe;
+
+                                                    return (
+                                                        <a 
+                                                            key={index} 
+                                                            href={link.url} 
+                                                            target="_blank" 
+                                                            className="flex items-center justify-center aspect-square rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-400 hover:text-[#1F2BF3] hover:bg-[#1F2BF3]/5 transition-all"
+                                                            title={link.platform}
+                                                        >
+                                                            <Icon className="w-5 h-5" />
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </DashboardCard>
@@ -164,6 +201,97 @@ export default function Show({ auth, client }) {
                                 </div>
                             )}
                         </DashboardCard>
+
+                        {/* Invoices List */}
+                        <DashboardCard title="Client Invoices">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-gray-100 dark:border-gray-800">
+                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Number</th>
+                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Date</th>
+                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Total</th>
+                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Status</th>
+                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
+                                        {invoices && invoices.length > 0 ? invoices.map((invoice) => (
+                                            <tr key={invoice.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                                                <td className="px-4 py-3 font-mono text-xs font-bold">{invoice.invoice_number}</td>
+                                                <td className="px-4 py-3 text-xs text-gray-500">{new Date(invoice.date).toLocaleDateString()}</td>
+                                                <td className="px-4 py-3 text-xs font-bold">{invoice.total} DH</td>
+                                                <td className="px-4 py-3">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                                                        invoice.status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                                                    }`}>
+                                                        {invoice.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <a 
+                                                        href={route(isAdmin ? 'admin.invoices.download-pdf' : 'member.invoices.download-pdf', invoice.id)}
+                                                        className="p-1.5 inline-flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
+                                                        title="Download Invoice"
+                                                        target="_blank"
+                                                    >
+                                                        <Download className="w-3.5 h-3.5" />
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan="5" className="px-4 py-8 text-center text-gray-400 text-xs italic">
+                                                    No invoices issued yet.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </DashboardCard>
+
+                        {/* Financial History */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <DashboardCard title="Financial Pulse">
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-4 bg-gray-50 dark:bg-gray-800/30 rounded-2xl">
+                                            <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Total Revenue</p>
+                                            <p className="text-xl font-black text-emerald-600">{financials.total_revenue || 0}€</p>
+                                        </div>
+                                        <div className="p-4 bg-gray-50 dark:bg-gray-800/30 rounded-2xl">
+                                            <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Unpaid Amount</p>
+                                            <p className="text-xl font-black text-rose-600">{financials.unpaid_amount || 0}€</p>
+                                        </div>
+                                        <div className="p-4 bg-gray-50 dark:bg-gray-800/30 rounded-2xl">
+                                            <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Accepted Devis</p>
+                                            <p className="text-xl font-black text-blue-600">{financials.accepted_quotations || 0}</p>
+                                        </div>
+                                        <div className="p-4 bg-gray-50 dark:bg-gray-800/30 rounded-2xl">
+                                            <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Total Invoices</p>
+                                            <p className="text-xl font-black text-indigo-600">{financials.invoices_count || 0}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </DashboardCard>
+
+                            <DashboardCard title="Payment Records">
+                                <div className="space-y-3">
+                                    {financials.payment_history && financials.payment_history.length > 0 ? financials.payment_history.map(payment => (
+                                        <div key={payment.id} className="flex justify-between items-center p-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm">
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-900 dark:text-white">{payment.amount}€ - {payment.payment_method}</p>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase">{new Date(payment.payment_date).toLocaleDateString()}</p>
+                                            </div>
+                                            <div className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded">SUCCESS</div>
+                                        </div>
+                                    )) : (
+                                        <p className="text-center text-gray-400 text-xs py-8">No payment history available.</p>
+                                    )}
+                                </div>
+                            </DashboardCard>
+                        </div>
                     </div>
                 </div>
             </DashboardPage>

@@ -1,109 +1,109 @@
 import React from 'react';
-import { router ,Link } from '@inertiajs/react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { ArrowLeft, User, Mail, Shield, Calendar } from 'lucide-react';
+import DashboardPage from '@/Components/UI/DashboardPage';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
 import AvatarUploader from '@/Components/Admin/AvatarUploader';
+import { User, Mail, Shield, Calendar, PencilIcon, TrashIcon } from 'lucide-react';
 
 export default function Show({ member, auth }) {
-  const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this member?')) {
-      await fetch(`/members/${member.id}`, {
-        method: 'DELETE',
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-        },
-      }).then(() => window.location.href = '/members');
-    }
-  };
+    const handleDelete = () => {
+        if (confirm('Are you sure you want to delete this member?')) {
+            router.delete(route('admin.members.destroy', member.id));
+        }
+    };
 
-  return (
-    <AdminLayout auth={auth} header="Members Management">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-gray-500 bg-opacity-30 dark:bg-gray-700 dark:bg-opacity-30 rounded-lg p-6 shadow">
-          <div className="mb-6">
-            <button
-              onClick={() => window.history.back()}
-              className="inline-flex items-center text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200 font-semibold"
+    return (
+        <AdminLayout auth={auth}>
+            <DashboardPage 
+                title="Member Profile"
+                description={`Viewing details for ${member.name}`}
+                actions={
+                    <DashboardButton variant="secondary" onClick={() => window.history.back()}>
+                        Go Back
+                    </DashboardButton>
+                }
             >
-              <ArrowLeftIcon className="h-5 w-5 mr-2" />
-              Retour
-            </button>
-          </div>
+                <div className="max-w-4xl mx-auto space-y-6">
+                    <DashboardCard>
+                        <div className="flex flex-col items-center mb-8 pb-8 border-b border-gray-100 dark:border-gray-800">
+                            <div className="mb-6">
+                                <AvatarUploader user={member} />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                                {member.name}
+                            </h2>
+                            <p className="px-4 py-1 bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3] rounded-full text-xs font-black uppercase tracking-widest">
+                                {member.role || (member.is_admin ? 'Admin' : 'Member')}
+                            </p>
+                        </div>
 
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Member Details
-            </h1>
-          </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-6">
+                                <div>
+                                    <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Full Name</span>
+                                    <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                                        <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                            <User className="w-5 h-5 text-[#1F2BF3]" />
+                                        </div>
+                                        <span className="font-bold">{member.name}</span>
+                                    </div>
+                                </div>
 
-          <div className="flex justify-center mb-6">
-            <AvatarUploader user={member} />
-          </div>
+                                <div>
+                                    <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Email Address</span>
+                                    <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                                        <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                            <Mail className="w-5 h-5 text-[#1F2BF3]" />
+                                        </div>
+                                        <span className="font-bold">{member.email}</span>
+                                    </div>
+                                </div>
+                            </div>
 
-          <div className="space-y-4 text-gray-900 dark:text-gray-200">
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-gray-300 flex items-center gap-2">
-                <User className="w-5 h-5 text-purple-600" /> Full Name:
-              </span>
-              <span className="ml-7 text-gray-900 dark:text-gray-100">{member.name}</span>
-            </p>
+                            <div className="space-y-6">
+                                <div>
+                                    <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">System Role</span>
+                                    <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                                        <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                            <Shield className="w-5 h-5 text-[#1F2BF3]" />
+                                        </div>
+                                        <span className="font-bold uppercase">{member.role || (member.is_admin ? 'Admin' : 'Member')}</span>
+                                    </div>
+                                </div>
 
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-gray-300 flex items-center gap-2">
-                <Mail className="w-5 h-5 text-purple-600" /> Email:
-              </span>
-              <span className="ml-7 text-gray-900 dark:text-gray-100">{member.email}</span>
-            </p>
+                                <div>
+                                    <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Member Since</span>
+                                    <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                                        <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                            <Calendar className="w-5 h-5 text-[#1F2BF3]" />
+                                        </div>
+                                        <span className="font-bold">{new Date(member.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-gray-300 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-purple-600" /> Role:
-              </span>
-              <span className="ml-7 text-gray-900 dark:text-gray-100">
-                {member.is_admin ? 'Admin' : 'Member'}
-              </span>
-            </p>
-
-            <p>
-              <span className="font-semibold text-gray-900 dark:text-gray-300 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-purple-600" /> Created At:
-              </span>
-              <span className="ml-7 text-gray-900 dark:text-gray-100">
-                {new Date(member.created_at).toLocaleDateString()}
-              </span>
-            </p>
-          </div>
-
-          <div className="flex justify-center gap-6 mt-8">
-            <Link
-              href={`/members/${member.id}/edit`}
-              className="inline-flex items-center px-8 py-3 
-                         bg-purple-600 border border-transparent rounded-md 
-                         font-semibold text-xs text-white uppercase tracking-widest 
-                         hover:bg-purple-700 active:bg-purple-900 
-                         focus:outline-none focus:border-purple-900 focus:ring focus:ring-purple-300 
-                         transition dark:bg-purple-700 dark:hover:bg-purple-600"
-            >
-              Edit
-            </Link>
-            <button
-              onClick={handleDelete}
-              className="inline-flex items-center px-8 py-3 
-                         bg-red-600 border border-transparent rounded-md 
-                         font-semibold text-xs text-white uppercase tracking-widest 
-                         hover:bg-red-700 active:bg-red-900 
-                         focus:outline-none focus:border-red-900 focus:ring focus:ring-red-300 
-                         transition dark:bg-red-700 dark:hover:bg-red-600"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </AdminLayout>
-  );
+                        <div className="mt-12 pt-8 border-t border-gray-100 dark:border-gray-800 flex justify-center gap-4">
+                            <Link href={route('admin.members.edit', member.id)}>
+                                <DashboardButton className="flex items-center gap-2 px-8">
+                                    <PencilIcon className="w-4 h-4" />
+                                    Edit Profile
+                                </DashboardButton>
+                            </Link>
+                            <DashboardButton 
+                                variant="secondary" 
+                                onClick={handleDelete}
+                                className="flex items-center gap-2 px-8 !text-red-500 hover:!bg-red-50 dark:hover:!bg-red-900/20"
+                            >
+                                <TrashIcon className="w-4 h-4" />
+                                Delete Member
+                            </DashboardButton>
+                        </div>
+                    </DashboardCard>
+                </div>
+            </DashboardPage>
+        </AdminLayout>
+    );
 }
-
-
-

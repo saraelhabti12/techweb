@@ -10,7 +10,9 @@ export default function Show({ task, auth }) {
         switch (status) {
             case 'todo': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
             case 'in_progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+            case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
             case 'done': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+            case 'blocked': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
             default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
         }
     };
@@ -66,33 +68,44 @@ export default function Show({ task, auth }) {
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-6">
                                 <div>
-                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Primary Assignee</h3>
-                                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] flex items-center justify-center text-sm font-bold text-white">
-                                            {task.user?.name?.charAt(0) || '?'}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-gray-900 dark:text-white">{task.user?.name || 'Unassigned'}</p>
-                                            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Lead Member</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Supporting Members</h3>
-                                    <div className="flex -space-x-2 overflow-hidden">
-                                        {task.members.length > 0 ? task.members.map((member) => (
-                                            <div 
-                                                key={member.id} 
-                                                title={member.name}
-                                                className="inline-block h-10 w-10 rounded-full ring-2 ring-white dark:ring-gray-900 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300"
-                                            >
-                                                {member.name.charAt(0)}
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1F2BF3] mb-4">Task Team</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* Lead Member (if assigned_to is set) */}
+                                        {task.user && (
+                                            <div className="flex items-center gap-3 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100/50 dark:border-blue-900/30">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] flex items-center justify-center text-base font-bold text-white shadow-lg ring-4 ring-blue-100 dark:ring-blue-900/20">
+                                                    {task.user.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-black text-gray-900 dark:text-white line-clamp-1">{task.user.name}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[9px] font-black uppercase text-[#1F2BF3] tracking-widest">Team Lead</span>
+                                                        <CheckCircleIcon className="w-3 h-3 text-[#1F2BF3]" />
+                                                    </div>
+                                                </div>
                                             </div>
-                                        )) : (
-                                            <p className="text-xs text-gray-500 italic">No additional members</p>
+                                        )}
+
+                                        {/* Other Members */}
+                                        {task.members.filter(m => m.id !== task.assigned_to).map((member) => (
+                                            <div key={member.id} className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
+                                                    {member.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{member.name}</p>
+                                                    <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{member.role}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {(!task.user && task.members.length === 0) && (
+                                            <div className="col-span-2 py-8 text-center bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                                                <UserGroupIcon className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No members assigned</p>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -220,7 +233,7 @@ export default function Show({ task, auth }) {
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs text-gray-500 font-bold uppercase">Team Size</span>
-                                    <span className="text-sm font-black text-[#1F2BF3]">{task.members?.length + 1}</span>
+                                    <span className="text-sm font-black text-[#1F2BF3]">{task.members?.length || 0}</span>
                                 </div>
                             </div>
                         </DashboardCard>

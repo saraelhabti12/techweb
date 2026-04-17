@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
+import DashboardCard from '@/Components/UI/DashboardCard';
+import DashboardButton from '@/Components/UI/DashboardButton';
 
 export default function Create({ categories , allTags}) {
   const [form, setForm] = useState({
@@ -69,59 +71,127 @@ export default function Create({ categories , allTags}) {
     });
   };
 
+  const labelClass = "block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5";
+  const inputClass = "w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all";
+
   return (
-    // <MainLayout>
-      <div className="container mx-auto py-12">
-        <h1 className="text-4xl font-bold mb-6 text-[#8000FF] text-center">Create The Blog</h1>
+    <MainLayout>
+      <div className="container mx-auto py-12 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-black mb-8 text-gray-900 dark:text-white tracking-tight">Create Blog Post</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+          <DashboardCard>
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>Title</label>
+                  <input 
+                    type="text" 
+                    name="title" 
+                    placeholder="Blog Title" 
+                    value={form.title} 
+                    onChange={handleChange} 
+                    className={inputClass} 
+                  />
+                </div>
 
-          <input type="text" name="title" placeholder="Titre du blog" value={form.title} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8000FF]" />
+                <div>
+                  <label className={labelClass}>Author</label>
+                  <input 
+                    type="text" 
+                    name="author" 
+                    placeholder="Author Name" 
+                    value={form.author} 
+                    onChange={handleChange} 
+                    className={inputClass} 
+                  />
+                </div>
+              </div>
 
-          <input type="text" name="author" placeholder="Auteur" value={form.author} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8000FF]" />
+              <div>
+                <label className={labelClass}>Excerpt</label>
+                <textarea 
+                  name="excerpt" 
+                  placeholder="A short summary of the blog post" 
+                  value={form.excerpt} 
+                  onChange={handleChange} 
+                  className={inputClass}
+                  rows="3"
+                />
+              </div>
 
-          <textarea name="excerpt" placeholder="Extrait" value={form.excerpt} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8000FF]" />
+              <div>
+                <label className={labelClass}>Images</label>
+                <input 
+                  type="file" 
+                  multiple 
+                  onChange={handleImageChange} 
+                  className={inputClass} 
+                />
+                <div className="flex flex-wrap gap-4 mt-4">
+                  {previewImages.map((src, i) => (
+                    <img key={i} src={src} alt={`preview-${i}`} className="w-24 h-24 object-cover rounded-xl shadow-lg border-2 border-white dark:border-gray-800" />
+                  ))}
+                </div>
+              </div>
 
-          <div>
-            <input type="file" multiple onChange={handleImageChange} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8000FF]" />
-            <div className="flex gap-4 mt-4">
-              {previewImages.map((src, i) => (
-                <img key={i} src={src} alt={`preview-${i}`} className="w-24 h-24 object-cover rounded-lg shadow" />
-              ))}
-            </div>
-          </div>
+              <div>
+                <label className={labelClass}>Content (HTML)</label>
+                <textarea 
+                  name="content" 
+                  placeholder="Main blog content..." 
+                  value={form.content} 
+                  onChange={handleChange} 
+                  className={`${inputClass} min-h-[300px]`} 
+                />
+              </div>
 
-          <textarea name="content" placeholder="Contenu HTML" value={form.content} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg h-60 focus:outline-none focus:ring-2 focus:ring-[#8000FF]" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>Category</label>
+                  <select 
+                    name="category" 
+                    value={form.category} 
+                    onChange={handleChange} 
+                    className={inputClass}
+                  >
+                    <option value="">Choose a category</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
 
-          <select name="category" value={form.category} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8000FF]">
-            <option value="">Choisir une catégorie</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
+                <div className="space-y-2">
+                  <label className={labelClass}>Tags</label>
+                  <div className="flex flex-wrap gap-2">
+                    {allTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => toggleTag(tag)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+                          form.tags.includes(tag) 
+                            ? 'bg-[#1F2BF3] text-white shadow-lg shadow-[#1F2BF3]/25' 
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-          <div className="space-y-2">
-            <label className="block font-medium text-gray-700 dark:text-white mb-1">Tags</label>
-            <div className="flex flex-wrap gap-2">
-              {allTags.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className={`px-3 py-1 rounded-full text-white ${
-                    form.tags.includes(tag) ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-700'
-                  } hover:bg-purple-700 transition`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button type="submit" className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">Create</button>
-
-        </form>
+              <div className="flex justify-end pt-4">
+                <DashboardButton type="submit">
+                  Publish Post
+                </DashboardButton>
+              </div>
+            </form>
+          </DashboardCard>
+        </div>
       </div>
-    // </MainLayout>
+    </MainLayout>
   );
 }

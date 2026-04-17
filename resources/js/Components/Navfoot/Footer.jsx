@@ -37,7 +37,7 @@ export default function Footer() {
                             <h3 className="text-lg font-medium mb-8">Contact Us</h3>
                             <address className="text-gray-300 not-italic space-y-4">
                                 <p className="mb-2 text-gray-300 hover:text-white">123 Business Ave, Suite 100</p>
-                                <p className="mb-2 text-gray-300 hover:text-white">Tanger, Morocco </p>
+                                <p className="mb-2 text-gray-300 hover:text-white">Tangier, Morocco </p>
                                 <p className="mb-2 text-gray-300 hover:text-white">Email: info@techweb.ma</p>
                                 <p className="mb-2 text-gray-300 hover:text-white">Phone: +212 6 12 34 56 78</p>
                             </address>

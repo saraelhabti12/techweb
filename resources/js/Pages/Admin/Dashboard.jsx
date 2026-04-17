@@ -19,8 +19,10 @@ import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
 import DashboardPage from '@/Components/UI/DashboardPage';
 import { motion } from 'framer-motion';
+import Avatar from '@/Components/UI/Avatar';
+import TodoWidget from '@/Components/UI/TodoWidget';
 
-export default function AdminDashboard({ auth, stats, recentProjects, recentTasks, taskTrendData, upcomingDeadlines, teamActivity, filters = {} }) {
+export default function AdminDashboard({ auth, stats, financialStats = {}, recentProjects, recentTasks, taskTrendData, upcomingDeadlines, teamActivity, membersStats = [], personalTodos = [], filters = {} }) {
     const [dateFilters, setDateFilters] = useState({
         year: filters.year || '',
         month: filters.month || '',
@@ -30,7 +32,8 @@ export default function AdminDashboard({ auth, stats, recentProjects, recentTask
     const statusDistributionData = [
         { name: 'To Do', value: stats.todo, color: '#F59E0B' },
         { name: 'In Progress', value: stats.in_progress, color: '#3B82F6' },
-        { name: 'Completed', value: stats.done, color: '#10B981' },
+        { name: 'Completed', value: stats.completed, color: '#10B981' },
+        { name: 'Blocked', value: stats.blocked, color: '#EF4444' },
     ];
 
     const handleFilterChange = (filterType, value) => {
@@ -87,6 +90,42 @@ export default function AdminDashboard({ auth, stats, recentProjects, recentTask
                     </div>
                 }
             >
+                {/* Financial Overview Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div onClick={() => router.visit(route('admin.invoices.index'))} className="cursor-pointer">
+                        <StatCard
+                            title="Unpaid Invoices"
+                            value={financialStats.unpaid_invoices}
+                            icon={<ExclamationTriangleIcon className="w-6 h-6" />}
+                            gradient="from-rose-500 to-pink-600"
+                        />
+                    </div>
+                    <div onClick={() => router.visit(route('admin.invoices.index'))} className="cursor-pointer">
+                        <StatCard
+                            title="Paid This Month"
+                            value={`${new Intl.NumberFormat('fr-FR').format(financialStats.paid_this_month)}€`}
+                            icon={<CheckCircleIcon className="w-6 h-6" />}
+                            gradient="from-emerald-500 to-teal-600"
+                        />
+                    </div>
+                    <div onClick={() => router.visit(route('admin.invoices.index'))} className="cursor-pointer">
+                        <StatCard
+                            title="Total Revenue"
+                            value={`${new Intl.NumberFormat('fr-FR').format(financialStats.revenue_total)}€`}
+                            icon={<ChartBarIcon className="w-6 h-6" />}
+                            gradient="from-indigo-500 to-blue-600"
+                        />
+                    </div>
+                    <div onClick={() => router.visit(route('admin.quotations.index'))} className="cursor-pointer">
+                        <StatCard
+                            title="Quotations Pending"
+                            value={financialStats.quotations_pending}
+                            icon={<ClockIcon className="w-6 h-6" />}
+                            gradient="from-amber-500 to-orange-600"
+                        />
+                    </div>
+                </div>
+
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <StatCard
@@ -109,54 +148,98 @@ export default function AdminDashboard({ auth, stats, recentProjects, recentTask
                     />
                     <StatCard
                         title="Completed"
-                        value={stats.done}
+                        value={stats.completed}
                         icon={<CheckCircleIcon className="w-6 h-6" />}
                         gradient="from-emerald-400 to-teal-500"
                     />
                 </div>
 
-                {/* Filters & Main Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Filters Card */}
-                    <DashboardCard className="lg:col-span-1 flex flex-col justify-between">
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                    <FunnelIcon className="w-5 h-5 text-[#1F2BF3]" />
+                {/* Team Progress Section */}
+                <div className="mt-8">
+                    <DashboardCard>
+                        <div className="flex items-center justify-between mb-8">
+                            <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                                    <UsersIcon className="w-5 h-5 text-[#1F2BF3]" />
                                 </div>
-                                <h3 className="font-bold text-gray-900 dark:text-white">Smart Filters</h3>
-                            </div>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">Year</label>
-                                    <select
-                                        value={dateFilters.year}
-                                        onChange={(e) => handleFilterChange('year', e.target.value)}
-                                        className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#1F2BF3] dark:text-white"
-                                    >
-                                        <option value="">All Years</option>
-                                        {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">Month</label>
-                                    <select
-                                        value={dateFilters.month}
-                                        onChange={(e) => handleFilterChange('month', e.target.value)}
-                                        className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#1F2BF3] dark:text-white"
-                                    >
-                                        <option value="">All Months</option>
-                                        {monthOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                                    </select>
-                                </div>
-                            </div>
+                                Member Performance
+                            </h3>
+                            <Link href="/admin/members" className="text-xs font-bold text-[#1F2BF3] hover:underline uppercase tracking-widest">Manage Team</Link>
                         </div>
-                        <div className="mt-8 p-4 bg-gradient-to-br from-[#1F2BF3]/10 to-[#00D8C0]/10 rounded-2xl border border-[#1F2BF3]/10">
-                            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                                <span className="font-bold text-[#1F2BF3]">Pro Tip:</span> Use filters to analyze task performance trends over specific periods.
-                            </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {membersStats.map((member) => (
+                                <motion.div key={member.id} whileHover={{ y: -5 }} className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-3xl border border-gray-100 dark:border-gray-700/50 shadow-sm">
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="relative">
+                                            <Avatar user={member} size="md" className="ring-2 ring-[#1F2BF3]/10" />
+                                            {member.total_tasks > 0 && (
+                                                <div className="absolute -top-1 -right-1 bg-[#1F2BF3] text-white text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
+                                                    {member.total_tasks}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-gray-900 dark:text-white truncate">{member.name}</p>
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest truncate">{member.role}</p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <ProgressItem label="To Do" value={member.todo_tasks} total={member.total_tasks} color="bg-amber-400" />
+                                        <ProgressItem label="In Progress" value={member.in_progress_tasks} total={member.total_tasks} color="bg-blue-500" />
+                                        <ProgressItem label="Completed" value={member.completed_tasks} total={member.total_tasks} color="bg-emerald-500" />
+                                    </div>
+                                </motion.div>
+                            ))}
                         </div>
                     </DashboardCard>
+                </div>
+
+                {/* Filters & Main Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Filters & Todo Card */}
+                    <div className="lg:col-span-1 space-y-8">
+                        <TodoWidget initialTodos={personalTodos} />
+                        
+                        <DashboardCard className="flex flex-col justify-between">
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                        <FunnelIcon className="w-5 h-5 text-[#1F2BF3]" />
+                                    </div>
+                                    <h3 className="font-bold text-gray-900 dark:text-white">Smart Filters</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">Year</label>
+                                        <select
+                                            value={dateFilters.year}
+                                            onChange={(e) => handleFilterChange('year', e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#1F2BF3] dark:text-white"
+                                        >
+                                            <option value="">All Years</option>
+                                            {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">Month</label>
+                                        <select
+                                            value={dateFilters.month}
+                                            onChange={(e) => handleFilterChange('month', e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#1F2BF3] dark:text-white"
+                                        >
+                                            <option value="">All Months</option>
+                                            {monthOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="mt-8 p-4 bg-gradient-to-br from-[#1F2BF3]/10 to-[#00D8C0]/10 rounded-2xl border border-[#1F2BF3]/10">
+                                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                                    <span className="font-bold text-[#1F2BF3]">Pro Tip:</span> Use filters to analyze task performance trends over specific periods.
+                                </p>
+                            </div>
+                        </DashboardCard>
+                    </div>
 
                     {/* Task Trend Area Chart */}
                     <DashboardCard className="lg:col-span-2">
@@ -256,9 +339,7 @@ export default function AdminDashboard({ auth, stats, recentProjects, recentTask
                             <div className="space-y-6 relative">
                                 {teamActivity.map((activity, index) => (
                                     <div key={index} className="flex gap-4 relative">
-                                        <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-950 border-2 border-[#1F2BF3] flex items-center justify-center text-[10px] font-bold text-[#1F2BF3] z-10 shrink-0">
-                                            {activity.avatar}
-                                        </div>
+                                        <Avatar user={activity.user_obj} size="sm" className="z-10 shrink-0 shadow-md ring-2 ring-white dark:ring-gray-900" />
                                         <div className="pt-1 min-w-0">
                                             <p className="text-xs text-gray-800 dark:text-gray-200 leading-relaxed">
                                                 <span className="font-bold">{activity.user}</span> {activity.action} 
@@ -274,6 +355,26 @@ export default function AdminDashboard({ auth, stats, recentProjects, recentTask
                 </div>
             </DashboardPage>
         </AdminLayout>
+    );
+}
+
+function ProgressItem({ label, value, total, color }) {
+    const percentage = total > 0 ? (value / total) * 100 : 0;
+    
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-1.5">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</span>
+                <span className="text-[10px] font-black text-gray-900 dark:text-white bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-700">{value}</span>
+            </div>
+            <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${percentage}%` }}
+                    className={`h-full ${color}`}
+                />
+            </div>
+        </div>
     );
 }
 

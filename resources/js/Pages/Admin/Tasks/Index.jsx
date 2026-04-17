@@ -111,13 +111,21 @@ export default function Index({ tasks, auth, filters = {} }) {
                                             </div>
                                         </td>
                                         <td className="px-6 py-5">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
-                                                    {task.user?.name?.charAt(0) || '?'}
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] flex items-center justify-center text-[10px] font-bold text-white shadow-sm flex-shrink-0">
+                                                        {task.user?.name?.charAt(0) || (task.members && task.members[0]?.name?.charAt(0)) || '?'}
+                                                    </div>
+                                                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[120px]">
+                                                        {task.user?.name || (task.members && task.members[0]?.name) || 'Unassigned'}
+                                                    </span>
                                                 </div>
-                                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                                    {task.user?.name || 'Unassigned'}
-                                                </span>
+                                                {task.members && task.members.length > 1 && (
+                                                    <span className="mt-1 text-[9px] font-black text-[#1F2BF3] uppercase tracking-widest flex items-center gap-1">
+                                                        <span className="w-1 h-1 rounded-full bg-[#1F2BF3]" />
+                                                        +{task.members.length - 1} more members
+                                                    </span>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-6 py-5">

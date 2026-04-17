@@ -19,9 +19,9 @@ export default function ContactUs() {
     };
 
     const contactInfo = [
-        { icon: <Mail className="w-6 h-6" />, label: "Email Support", val: "contact@techweb.ma", desc: "Available 24/7 for inquiries." },
-        { icon: <Phone className="w-6 h-6" />, label: "Call Directly", val: "+212 600 000 000", desc: "Mon-Fri from 9am to 6pm." },
-        { icon: <MapPin className="w-6 h-6" />, label: "Visit Studios", val: "Tanger, Morocco", desc: "Innovating from the heart of the north." },
+        { icon: <Mail className="w-6 h-6" />, label: "Email Support", val: "techweb.ma@gmail.com", desc: "Available 24/7 for inquiries." },
+        { icon: <Phone className="w-6 h-6" />, label: "Call Directly", val: "+212 631 475 047", desc: "Mon-Fri from 9am to 6pm." },
+        { icon: <MapPin className="w-6 h-6" />, label: "Visit Studios", val: "Tangier, Morocco", desc: "Innovating from the heart of the north." },
         { icon: <Clock className="w-6 h-6" />, label: "Response Time", val: "< 12 Hours", desc: "Our experts respond rapidly." }
     ];
 
@@ -212,7 +212,7 @@ export default function ContactUs() {
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-16">
                             <h2 className="text-xs font-black uppercase tracking-[0.4em] text-[#1F2BF3] mb-4">Location</h2>
-                            <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white">Our Tanger Studio.</h3>
+                            <h3 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white">Our Tangier Studio.</h3>
                         </div>
 
                         <div className="relative rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white dark:border-gray-900 aspect-[21/9] min-h-[400px]">

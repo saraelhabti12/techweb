@@ -88,25 +88,30 @@ export default function HomePage({ blogs = [], templates = [] }) {
 
     const team = [
         {
-            name: "Anas Menkouch",
+            name: "Abdessalam Elamrani",
             role: "CEO & Founder",
             image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anas"
         },
         {
-            name: "Sarah El Amrani",
-            role: "Lead Designer",
+            name: "Sara ElHabti",
+            role: "Full stuck Developer",
             image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
         },
         {
-            name: "Mehdi Benkacem",
-            role: "Full Stack Developer",
+            name: "Mohamed Elafia",
+            role: "Photographer",
             image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mehdi"
         },
         {
-            name: "Yasmine Mourad",
-            role: "Marketing Strategist",
+            name: "Salah ",
+            role: "Editor",
             image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Yasmine"
-        }
+        },
+        {
+            name: "Salah ",
+            role: "Ressource humain",
+            image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Yasmine"
+        },
     ];
 
     const roadmap = [
@@ -508,7 +513,7 @@ export default function HomePage({ blogs = [], templates = [] }) {
                                     {[
                                         { icon: <Mail className="w-6 h-6" />, label: "Email Us", val: "contact@techweb.ma" },
                                         { icon: <Phone className="w-6 h-6" />, label: "Call Experts", val: "+212 600 000 000" },
-                                        { icon: <MapPin className="w-6 h-6" />, label: "Visit Studios", val: "Casablanca, Morocco" }
+                                        { icon: <MapPin className="w-6 h-6" />, label: "Visit Studios", val: "Tangier, Morocco" }
                                     ].map((info, i) => (
                                         <div key={i} className="flex items-center gap-6 group">
                                             <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-[#1F2BF3] transition-colors group-hover:bg-[#1F2BF3] group-hover:text-white">
