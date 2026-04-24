@@ -1,4 +1,4 @@
-#!/Users/techweb/Desktop/techweb/gemini_env/bin/python3
+#!/Users/techweb/Desktop/techweb/gemini_env/bin/python3 
 import sys
 import os
 from google import genai

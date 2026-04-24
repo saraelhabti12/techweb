@@ -49,7 +49,7 @@ export default function Index({ auth, invoices }) {
             >
                 <DashboardCard>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                             <thead>
                                 <tr className="border-b border-gray-100 dark:border-gray-800">
                                     <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Number</th>

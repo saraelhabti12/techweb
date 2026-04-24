@@ -46,9 +46,7 @@ export default function Index({ auth, clients, filters = {} }) {
     };
 
     const addToContacts = (id) => {
-        if (confirm('Move this client to official Contacts database?')) {
-            router.post(route('admin.clients.addToContacts', id));
-        }
+        router.post(route('admin.clients.addToContacts', id));
     };
 
     const openBlacklistModal = (client) => {
@@ -130,7 +128,7 @@ export default function Index({ auth, clients, filters = {} }) {
 
                 <DashboardCard className="!p-0 overflow-hidden border-none shadow-2xl shadow-blue-500/5">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                             <thead>
                                 <tr className="bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-md">
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Business Identity</th>
@@ -293,14 +291,24 @@ export default function Index({ auth, clients, filters = {} }) {
                                                     
                                                     {isAdmin && (
                                                         <div className="flex items-center justify-end gap-2 mt-1">
-                                                            <button
-                                                                onClick={() => addToContacts(client.id)}
-                                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3] text-[9px] font-black uppercase tracking-tighter hover:bg-[#1F2BF3] hover:text-white transition-all border border-blue-100 dark:border-blue-800"
-                                                                title="Add to Contacts"
-                                                            >
-                                                                <UserCheck className="w-3 h-3" />
-                                                                Contact
-                                                            </button>
+                                                            {client.is_in_contacts ? (
+                                                                <div 
+                                                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-[9px] font-black uppercase tracking-tighter border border-emerald-100 dark:border-emerald-800 shadow-sm"
+                                                                    title="Already in Contacts"
+                                                                >
+                                                                    <UserCheck className="w-3 h-3" />
+                                                                    Added
+                                                                </div>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => addToContacts(client.id)}
+                                                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3] text-[9px] font-black uppercase tracking-tighter hover:bg-[#1F2BF3] hover:text-white transition-all border border-blue-100 dark:border-blue-800"
+                                                                    title="Add to Contacts"
+                                                                >
+                                                                    <UserCheck className="w-3 h-3" />
+                                                                    Contact
+                                                                </button>
+                                                            )}
                                                             <button
                                                                 onClick={() => openBlacklistModal(client)}
                                                                 className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 text-[9px] font-black uppercase tracking-tighter hover:bg-red-600 hover:text-white transition-all border border-red-100 dark:border-red-800"

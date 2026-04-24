@@ -11,32 +11,26 @@ use Inertia\Inertia;
 use Carbon\Carbon;
 
 
+use App\Traits\AdvancedFilterTrait;
+
 class ProjectController extends Controller
 {
+    use AdvancedFilterTrait;
+
     public function index(Request $request)
     {
         // Get filter parameters
-        $year = $request->get('year');
-        $month = $request->get('month');
-        $day = $request->get('day');
-        $search = $request->get('search');
+        $filters = $request->only(['year', 'month', 'day', 'week', 'period', 'search']);
         
         // Build base query with necessary relationships
         $query = Project::with(['category', 'members', 'client']);
         
-        // Date filters
-        if ($year) {
-            $query->whereYear('created_at', $year);
-        }
-        if ($month) {
-            $query->whereMonth('created_at', $month);
-        }
-        if ($day) {
-            $query->whereDay('created_at', $day);
-        }
+        // Apply advanced filters
+        $this->applyAdvancedFilters($query, $filters);
         
         // Search filter
-        if ($search) {
+        if ($request->filled('search')) {
+            $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%")
@@ -56,12 +50,8 @@ class ProjectController extends Controller
         return inertia('Admin/Projects/Index', [
             'activeProjects' => $activeProjects,
             'inactiveProjects' => $inactiveProjects,
-            'filters' => [
-                'year' => $year,
-                'month' => $month,
-                'day' => $day,
-                'search' => $search,
-            ]
+            'filters' => $filters,
+            'filterOptions' => $this->getFilterOptions()
         ]);
     }
 

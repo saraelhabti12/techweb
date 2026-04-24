@@ -21,13 +21,24 @@ import DashboardPage from '@/Components/UI/DashboardPage';
 import { motion } from 'framer-motion';
 import Avatar from '@/Components/UI/Avatar';
 import TodoWidget from '@/Components/UI/TodoWidget';
+import DashboardFilter from '@/Components/Admin/DashboardFilter';
 
-export default function AdminDashboard({ auth, stats, financialStats = {}, recentProjects, recentTasks, taskTrendData, upcomingDeadlines, teamActivity, membersStats = [], personalTodos = [], filters = {} }) {
-    const [dateFilters, setDateFilters] = useState({
-        year: filters.year || '',
-        month: filters.month || '',
-        day: filters.day || ''
-    });
+export default function AdminDashboard({ auth, stats, financialStats = {}, recentProjects, recentTasks, taskTrendData, upcomingDeadlines, teamActivity, membersStats = [], personalTodos = [], filters = {}, filterOptions = { years: [], months: [], days: [] } }) {
+    
+    const handleFilterChange = (type, value) => {
+        const newFilters = { 
+            period: 'all', // Reset period when using specific filters
+            year: filters.year,
+            month: filters.month,
+            day: filters.day,
+            [type]: value 
+        };
+        
+        router.get(route('admin.dashboard'), newFilters, {
+            preserveState: true,
+            preserveScroll: true
+        });
+    };
 
     const statusDistributionData = [
         { name: 'To Do', value: stats.todo, color: '#F59E0B' },
@@ -36,51 +47,37 @@ export default function AdminDashboard({ auth, stats, financialStats = {}, recen
         { name: 'Blocked', value: stats.blocked, color: '#EF4444' },
     ];
 
-    const handleFilterChange = (filterType, value) => {
-        const newFilters = { ...dateFilters, [filterType]: value };
-        setDateFilters(newFilters);
-        
-        const params = {};
-        if (newFilters.year) params.year = newFilters.year;
-        if (newFilters.month) params.month = newFilters.month;
-        if (newFilters.day) params.day = newFilters.day;
-        
-        router.get(route('admin.dashboard'), params, {
-            preserveState: true,
-            preserveScroll: true
-        });
+    const getFullPeriodLabel = () => {
+        if (filters.period && filters.period !== 'all') {
+            return filters.period.replace('_', ' ');
+        }
+        if (filters.start_date) {
+            return filters.start_date;
+        }
+
+        let label = "";
+        if (filters.day && filters.day !== 'all') {
+            label += filters.day + "s ";
+        }
+        if (filters.month && filters.month !== 'all') {
+            const m = filterOptions.months.find(m => m.id == filters.month);
+            label += (m ? m.name : "") + " ";
+        }
+        if (filters.year && filters.year !== 'all') {
+            label += filters.year;
+        } else if (!label) {
+            label = "All Time";
+        }
+        return label.trim();
     };
-
-    const clearFilters = () => {
-        setDateFilters({ year: '', month: '', day: '' });
-        router.get(route('admin.dashboard'), {}, {
-            preserveState: true,
-            preserveScroll: true
-        });
-    };
-
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1; 
-
-    const yearOptions = Array.from({ length: 6 }, (_, i) => (currentYear - 2 + i).toString());
-    const monthOptions = [
-        { value: '1', label: 'Jan' }, { value: '2', label: 'Feb' }, { value: '3', label: 'Mar' },
-        { value: '4', label: 'Apr' }, { value: '5', label: 'May' }, { value: '6', label: 'Jun' },
-        { value: '7', label: 'Jul' }, { value: '8', label: 'Aug' }, { value: '9', label: 'Sep' },
-        { value: '10', label: 'Oct' }, { value: '11', label: 'Nov' }, { value: '12', label: 'Dec' }
-    ];
 
     return (
         <AdminLayout auth={auth}>
             <DashboardPage 
                 title={`Welcome back, ${auth.user.name.split(' ')[0]}!`}
-                description="Here's a premium overview of your platform's performance today."
+                description={`Here's your platform's performance overview for ${getFullPeriodLabel()}.`}
                 actions={
                     <div className="flex items-center gap-3">
-                        <DashboardButton variant="secondary" onClick={clearFilters} className="text-xs py-2">
-                            Clear Filters
-                        </DashboardButton>
                         <Link href={route('admin.projects.create')}>
                             <DashboardButton className="text-xs py-2 flex items-center gap-2">
                                 <PlusIcon className="w-4 h-4" />
@@ -90,6 +87,9 @@ export default function AdminDashboard({ auth, stats, financialStats = {}, recen
                     </div>
                 }
             >
+                {/* Premium Filter Section */}
+                <DashboardFilter filters={filters} filterOptions={filterOptions} />
+
                 {/* Financial Overview Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div onClick={() => router.visit(route('admin.invoices.index'))} className="cursor-pointer">
@@ -102,15 +102,15 @@ export default function AdminDashboard({ auth, stats, financialStats = {}, recen
                     </div>
                     <div onClick={() => router.visit(route('admin.invoices.index'))} className="cursor-pointer">
                         <StatCard
-                            title="Paid This Month"
-                            value={`${new Intl.NumberFormat('fr-FR').format(financialStats.paid_this_month)}€`}
+                            title={`Revenue (${getFullPeriodLabel()})`}
+                            value={`${new Intl.NumberFormat('fr-FR').format(financialStats.revenue_period)}€`}
                             icon={<CheckCircleIcon className="w-6 h-6" />}
                             gradient="from-emerald-500 to-teal-600"
                         />
                     </div>
                     <div onClick={() => router.visit(route('admin.invoices.index'))} className="cursor-pointer">
                         <StatCard
-                            title="Total Revenue"
+                            title="Lifetime Revenue"
                             value={`${new Intl.NumberFormat('fr-FR').format(financialStats.revenue_total)}€`}
                             icon={<ChartBarIcon className="w-6 h-6" />}
                             gradient="from-indigo-500 to-blue-600"
@@ -126,28 +126,28 @@ export default function AdminDashboard({ auth, stats, financialStats = {}, recen
                     </div>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Main Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                     <StatCard
-                        title="Total Tasks"
+                        title="New Tasks"
                         value={stats.total_tasks}
                         icon={<ClipboardDocumentIcon className="w-6 h-6" />}
                         gradient="from-blue-500 to-indigo-600"
                     />
                     <StatCard
-                        title="To Do"
-                        value={stats.todo}
-                        icon={<ClockIcon className="w-6 h-6" />}
-                        gradient="from-amber-400 to-orange-500"
+                        title="New Projects"
+                        value={stats.projects_count}
+                        icon={<ListBulletIcon className="w-6 h-6" />}
+                        gradient="from-violet-500 to-purple-600"
                     />
                     <StatCard
-                        title="In Progress"
-                        value={stats.in_progress}
-                        icon={<ArrowPathIcon className="w-6 h-6" />}
-                        gradient="from-cyan-400 to-blue-500"
+                        title="New Clients"
+                        value={stats.clients_count}
+                        icon={<UsersIcon className="w-6 h-6" />}
+                        gradient="from-orange-500 to-red-500"
                     />
                     <StatCard
-                        title="Completed"
+                        title="Completed Tasks"
                         value={stats.completed}
                         icon={<CheckCircleIcon className="w-6 h-6" />}
                         gradient="from-emerald-400 to-teal-500"
@@ -194,51 +194,11 @@ export default function AdminDashboard({ auth, stats, financialStats = {}, recen
                     </DashboardCard>
                 </div>
 
-                {/* Filters & Main Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Filters & Todo Card */}
-                    <div className="lg:col-span-1 space-y-8">
+                {/* Main Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
+                    {/* Todo Widget */}
+                    <div className="lg:col-span-1">
                         <TodoWidget initialTodos={personalTodos} />
-                        
-                        <DashboardCard className="flex flex-col justify-between">
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                        <FunnelIcon className="w-5 h-5 text-[#1F2BF3]" />
-                                    </div>
-                                    <h3 className="font-bold text-gray-900 dark:text-white">Smart Filters</h3>
-                                </div>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">Year</label>
-                                        <select
-                                            value={dateFilters.year}
-                                            onChange={(e) => handleFilterChange('year', e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#1F2BF3] dark:text-white"
-                                        >
-                                            <option value="">All Years</option>
-                                            {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5 block">Month</label>
-                                        <select
-                                            value={dateFilters.month}
-                                            onChange={(e) => handleFilterChange('month', e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#1F2BF3] dark:text-white"
-                                        >
-                                            <option value="">All Months</option>
-                                            {monthOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="mt-8 p-4 bg-gradient-to-br from-[#1F2BF3]/10 to-[#00D8C0]/10 rounded-2xl border border-[#1F2BF3]/10">
-                                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    <span className="font-bold text-[#1F2BF3]">Pro Tip:</span> Use filters to analyze task performance trends over specific periods.
-                                </p>
-                            </div>
-                        </DashboardCard>
                     </div>
 
                     {/* Task Trend Area Chart */}

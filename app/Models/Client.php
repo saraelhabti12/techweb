@@ -41,14 +41,19 @@ class Client extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function appointments(): HasMany
+    public function contacts()
     {
-        return $this->hasMany(Appointment::class);
+        return $this->hasMany(Contact::class);
     }
 
     public function files(): HasMany
     {
         return $this->hasMany(ClientFile::class);
+    }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
     }
 
     public function projects(): HasMany

@@ -3,7 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { 
     FileText, Plus, Search, Edit, Trash2, Copy, 
-    Send, CheckCircle, XCircle, Clock, ArrowRight
+    Send, CheckCircle, XCircle, Clock, ArrowRight, Download
 } from 'lucide-react';
 import DashboardPage from '@/Components/UI/DashboardPage';
 import DashboardCard from '@/Components/UI/DashboardCard';
@@ -54,7 +54,7 @@ export default function Index({ auth, quotations }) {
             >
                 <DashboardCard>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                             <thead>
                                 <tr className="border-b border-gray-100 dark:border-gray-800">
                                     <th className="px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Number</th>
@@ -94,6 +94,14 @@ export default function Index({ auth, quotations }) {
                                         </td>
                                         <td className="px-6 py-4 text-right space-x-2">
                                             <div className="flex justify-end gap-2">
+                                                <a 
+                                                    href={route('admin.quotations.download-pdf', quotation.id)}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Download PDF"
+                                                    target="_blank"
+                                                >
+                                                    <Download className="w-4 h-4" />
+                                                </a>
                                                 {quotation.status === 'accepted' && (
                                                     <button 
                                                         onClick={() => handleConvertToInvoice(quotation.id)}

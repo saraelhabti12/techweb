@@ -1,18 +1,70 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, router } from '@inertiajs/react';
-import { CheckCircle, XCircle, Clock, User, Phone, MessageSquare } from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { CheckCircle, XCircle, Clock, User, Phone, MessageSquare, TagIcon, CalendarDaysIcon, PlusIcon } from 'lucide-react';
 import DashboardPage from '@/Components/UI/DashboardPage';
 import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
+import Modal from '@/Components/Modal';
+import DashboardInput from '@/Components/UI/DashboardInput';
+import InputError from '@/Components/InputError';
 import { motion } from 'framer-motion';
 
 export default function Index({ auth, appointments }) {
+    const [selectedApt, setSelectedApt] = useState(null);
+    const [showApproveModal, setShowApproveModal] = useState(false);
+
+    const { data, setData, post, processing, errors, reset } = useForm({
+        status: 'accepted',
+        end_time: '',
+        type: 'client_visit',
+        notes: '',
+    });
+
     const handleStatusUpdate = (id, status) => {
-        if (confirm(`Are you sure you want to ${status} this appointment?`)) {
-            router.post(route('admin.appointments.updateStatus', id), { status });
+        if (status === 'accepted') {
+            const apt = appointments.find(a => a.id === id);
+            setSelectedApt(apt);
+            // Default end time 1 hour later
+            const startDate = new Date(apt.appointment_date);
+            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+            setData({
+                status: 'accepted',
+                end_time: endDate.toTimeString().slice(0, 5),
+                type: 'client_visit',
+                notes: apt.notes || '',
+            });
+            setShowApproveModal(true);
+        } else {
+            if (confirm(`Are you sure you want to reject this appointment?`)) {
+                router.post(route('admin.appointments.updateStatus', id), { status: 'rejected' });
+            }
         }
     };
+
+    const submitApproval = (e) => {
+        e.preventDefault();
+        // Construct end_date from appointment_date and end_time
+        const baseDate = selectedApt.appointment_date.split('T')[0];
+        const end_date = `${baseDate} ${data.end_time}`;
+
+        post(route('admin.appointments.updateStatus', selectedApt.id), {
+            data: {
+                ...data,
+                end_date
+            },
+            onSuccess: () => {
+                setShowApproveModal(false);
+                reset();
+            },
+        });
+    };
+
+    const eventTypes = [
+        { id: 'client_visit', label: 'Client Visit', color: '#7c3aed' },
+        { id: 'client_meeting', label: 'Client Meeting', color: '#3b82f6' },
+        { id: 'internal_meeting', label: 'Internal Meeting', color: '#10b981' },
+    ];
 
     return (
         <AdminLayout auth={auth}>
@@ -38,13 +90,17 @@ export default function Index({ auth, appointments }) {
                                                 <User className="w-8 h-8" />
                                             </div>
                                             <div className="space-y-1">
-                                                <h3 className="font-black text-xl text-gray-900 dark:text-white tracking-tight">{apt.client.name}</h3>
-                                                <div className="flex items-center text-sm font-bold text-gray-500">
-                                                    <Phone className="w-3.5 h-3.5 mr-2 text-[#1F2BF3]" />
-                                                    {apt.client.phone}
-                                                </div>
+                                                <h3 className="font-black text-xl text-gray-900 dark:text-white tracking-tight">
+                                                    {apt.title || apt.client?.name || 'Untitled Appointment'}
+                                                </h3>
+                                                {apt.client && (
+                                                    <div className="flex items-center text-sm font-bold text-gray-500">
+                                                        <Phone className="w-3.5 h-3.5 mr-2 text-[#1F2BF3]" />
+                                                        {apt.client.phone}
+                                                    </div>
+                                                )}
                                                 <div className="text-[10px] font-black uppercase tracking-widest text-[#1F2BF3] bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded inline-block">
-                                                    Requested by: {apt.user.name}
+                                                    Requested by: {apt.user?.name || 'Admin'}
                                                 </div>
                                             </div>
                                         </div>
@@ -104,6 +160,102 @@ export default function Index({ auth, appointments }) {
                     )}
                 </div>
             </DashboardPage>
+
+            {/* Approval Modal */}
+            <Modal show={showApproveModal} onClose={() => setShowApproveModal(false)} maxWidth="xl">
+                {selectedApt && (
+                    <form onSubmit={submitApproval} className="p-8 bg-white dark:bg-[#0A0A0A]">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="p-3 bg-emerald-500/10 rounded-2xl">
+                                <CheckCircle className="w-6 h-6 text-emerald-500" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                                    Approve Appointment
+                                </h2>
+                                <p className="text-sm font-bold text-gray-400">Finalize details for {selectedApt.client.name}</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2 block">Date</label>
+                                    <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-[1.25rem] border border-gray-100 dark:border-white/5 text-sm font-bold text-gray-900 dark:text-white">
+                                        {new Date(selectedApt.appointment_date).toLocaleDateString()}
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2 block">From</label>
+                                    <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-[1.25rem] border border-gray-100 dark:border-white/5 text-sm font-bold text-gray-900 dark:text-white">
+                                        {new Date(selectedApt.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <DashboardInput
+                                label="To (End Time)"
+                                type="time"
+                                icon={Clock}
+                                value={data.end_time}
+                                onChange={e => setData('end_time', e.target.value)}
+                            />
+                            <InputError message={errors.end_date} />
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 ml-2">
+                                    Appointment Type
+                                </label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <TagIcon className="h-5 w-5 text-gray-400 group-focus-within:text-[#1F2BF3] transition-colors" />
+                                    </div>
+                                    <select
+                                        value={data.type}
+                                        onChange={e => setData('type', e.target.value)}
+                                        className="w-full bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 text-gray-900 dark:text-white rounded-[1.25rem] shadow-sm focus:ring-4 focus:ring-[#1F2BF3]/10 focus:border-[#1F2BF3] transition-all duration-300 pl-11 py-4 text-sm font-bold appearance-none"
+                                    >
+                                        {eventTypes.map(type => (
+                                            <option key={type.id} value={type.id}>{type.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <InputError message={errors.type} />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 ml-2">
+                                    Internal Notes
+                                </label>
+                                <textarea
+                                    value={data.notes}
+                                    onChange={e => setData('notes', e.target.value)}
+                                    className="w-full bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 text-gray-900 dark:text-white rounded-[1.25rem] shadow-sm focus:ring-4 focus:ring-[#1F2BF3]/10 focus:border-[#1F2BF3] transition-all duration-300 px-5 py-4 text-sm font-bold min-h-[100px]"
+                                    placeholder="Any internal notes about this visit..."
+                                />
+                                <InputError message={errors.notes} />
+                            </div>
+                        </div>
+
+                        <div className="mt-8 flex justify-end gap-3">
+                            <DashboardButton 
+                                type="button" 
+                                variant="secondary" 
+                                onClick={() => setShowApproveModal(false)}
+                            >
+                                Cancel
+                            </DashboardButton>
+                            <DashboardButton 
+                                type="submit" 
+                                disabled={processing}
+                                className="!bg-[#1F2BF3] hover:!bg-[#00D8C0] text-white px-8"
+                            >
+                                Confirm Approval
+                            </DashboardButton>
+                        </div>
+                    </form>
+                )}
+            </Modal>
         </AdminLayout>
     );
 }

@@ -60,7 +60,7 @@ export default function Blacklist({ auth, clients, filters = {} }) {
 
                 <DashboardCard className="!p-0 overflow-hidden border border-red-100 dark:border-red-900/30">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                             <thead>
                                 <tr className="bg-red-50/50 dark:bg-red-900/10 backdrop-blur-md">
                                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-red-400">Blocked Identity</th>

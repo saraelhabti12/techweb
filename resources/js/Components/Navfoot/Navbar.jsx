@@ -1,195 +1,246 @@
-import { Link } from '@inertiajs/react';
-import DarkModeToggle from '../DarkModeToggle';
-import { useState, useEffect, useRef } from "react";
-import { ChevronDownIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import ServicesMegaMenu from '@/Components/ServicesMegaMenu';
+import { Link, usePage } from '@inertiajs/react';
+import { useState, useEffect } from "react";
+import { 
+    X, 
+    User, 
+    Sun, 
+    Moon,
+    ArrowUpRight,
+    Instagram,
+    Twitter,
+    Linkedin,
+    ArrowRight
+} from "lucide-react";
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function Navbar({ transparent = false }) {
-    const [openServices, setOpenServices] = useState(false);
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+export default function Navbar() {
+    const { auth } = usePage().props;
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [scrollY, setScrollY] = useState(0);
-    const [scrollDirection, setScrollDirection] = useState("up");
-    const menuRef = useRef(null);
+    const [isDark, setIsDark] = useState(false);
 
     useEffect(() => {
-        let lastScroll = window.scrollY;
-        const handleScroll = () => {
-            const currentScroll = window.scrollY;
-            if (currentScroll > lastScroll && currentScroll > 100) setScrollDirection("down");
-            else setScrollDirection("up");
-            lastScroll = currentScroll;
-            setScrollY(currentScroll);
-        };
+        setIsDark(document.documentElement.classList.contains("dark"));
+        const handleScroll = () => setScrollY(window.scrollY);
         window.addEventListener("scroll", handleScroll);
         
-        const handleClickOutside = (event) => {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setOpenServices(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
+        // Prevent scroll when menu is open
+        if (isMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
 
         return () => {
             window.removeEventListener("scroll", handleScroll);
-            document.removeEventListener("mousedown", handleClickOutside);
+            document.body.style.overflow = 'unset';
         };
-    }, []);
+    }, [isMenuOpen]);
 
-    const navLinkClass = "relative text-gray-700 dark:text-gray-200 font-bold text-sm tracking-tight hover:text-[#1F2BF3] dark:hover:text-[#00D8C0] transition-colors py-2 group";
-    
-    const activeIndicator = "absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] transition-all duration-300 group-hover:w-full";
+    const toggleDarkMode = () => {
+        document.documentElement.classList.toggle("dark");
+        setIsDark(!isDark);
+    };
+
+    const menuVariants = {
+        closed: {
+            y: "-100%",
+            transition: { 
+                duration: 0.8, 
+                ease: [0.76, 0, 0.24, 1],
+                when: "afterChildren"
+            }
+        },
+        open: {
+            y: "0%",
+            transition: { 
+                duration: 0.8, 
+                ease: [0.76, 0, 0.24, 1],
+                when: "beforeChildren"
+            }
+        }
+    };
+
+    const itemVariants = {
+        closed: { x: -50, opacity: 0 },
+        open: i => ({
+            x: 0,
+            opacity: 1,
+            transition: { 
+                delay: 0.3 + (i * 0.1), 
+                duration: 0.6, 
+                ease: [0.16, 1, 0.3, 1] 
+            }
+        })
+    };
+
+    const infoVariants = {
+        closed: { opacity: 0, y: 20 },
+        open: { 
+            opacity: 1, 
+            y: 0, 
+            transition: { delay: 0.7, duration: 0.6 } 
+        }
+    };
+
+    const navItems = [
+        { name: "Home", href: "/" },
+        { name: "About", href: "/AboutUs" },
+        { name: "Services", href: "/Services" },
+        { name: "Projects", href: "/Projects" },
+        { name: "Contact", href: "/ContactUs" }
+    ];
 
     return (
-        <header
-            className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${
-                transparent && scrollY < 50
-                    ? "bg-transparent py-6"
-                    : "bg-white/80 dark:bg-[#050505]/80 backdrop-blur-xl shadow-lg py-4"
-            } ${scrollDirection === "down" ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"}`}
-        >
-            <div className="max-w-7xl mx-auto px-6 lg:px-10">
-                <div className="flex justify-between items-center h-12">
+        <>
+            <header
+                className={`fixed top-0 left-0 w-full z-[100] transition-all duration-700 ${
+                    scrollY > 50 ? "py-4" : "py-8"
+                }`}
+            >
+                <div className="max-w-[95rem] mx-auto px-6 lg:px-12 flex justify-between items-center">
                     {/* Logo */}
-                    <div className="flex items-center">
-                        <Link href="/" className="flex-shrink-0 group">
-                            <img
-                                className="h-10 w-auto block dark:hidden transition-transform duration-500 group-hover:scale-110"
-                                src="/images/logotechweb.png"
-                                alt="TechWeb"
-                            />
-                            <img
-                                className="h-10 w-auto hidden dark:block transition-transform duration-500 group-hover:scale-110"
-                                src="/images/logo3.png"
-                                alt="TechWeb Dark"
-                            />
-                        </Link>
-                    </div>
+                    <Link href="/" className="relative z-[110] group">
+                        <img className="h-8 w-auto block dark:hidden transition-transform duration-500 group-hover:scale-110" src="/images/logotechweb.png" alt="TechWeb" />
+                        <img className="h-8 w-auto hidden dark:block transition-transform duration-500 group-hover:scale-110" src="/images/logo3.png" alt="TechWeb" />
+                    </Link>
 
-                    {/* Desktop Navigation */}
-                    <nav className="hidden md:flex space-x-10 items-center">
-                        <Link href="/" className={navLinkClass}>
-                            Home
-                            <span className={activeIndicator} />
-                        </Link>
-                        <Link href="/AboutUs" className={navLinkClass}>
-                            About Us
-                            <span className={activeIndicator} />
-                        </Link>
+                    {/* Right Side Actions */}
+                    <div className="flex items-center gap-8 relative z-[110]">
+                        <button onClick={toggleDarkMode} className="text-gray-900 dark:text-white hover:text-[#1F2BF3] transition-colors">
+                            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                        </button>
                         
-                        <div 
-                            className="static" 
-                            ref={menuRef}
-                            onMouseEnter={() => setOpenServices(true)}
-                            onMouseLeave={() => setOpenServices(false)}
-                        >
-                            <button
-                                onClick={() => setOpenServices(!openServices)}
-                                className={`${navLinkClass} flex items-center gap-1.5`}
-                            >
-                                Services
-                                <ChevronDownIcon
-                                    className={`w-4 h-4 transition-transform duration-500 ${
-                                        openServices ? "rotate-180 text-[#1F2BF3] dark:text-[#00D8C0]" : "rotate-0"
-                                    }`}
-                                />
-                                <span className={activeIndicator} />
-                            </button>
-
-                            <ServicesMegaMenu 
-                                isOpen={openServices} 
-                                onClose={() => setOpenServices(false)} 
-                            />
-                        </div>
-
-                        <Link href="/Projects" className={navLinkClass}>
-                            Projects
-                            <span className={activeIndicator} />
-                        </Link>
-                        <Link href="/ContactUs" className={navLinkClass}>
-                            Contact Us
-                            <span className={activeIndicator} />
-                        </Link>
-                    </nav>
-
-                    {/* Right Actions */}
-                    <div className="flex items-center space-x-4">
-                        <div className="hidden sm:flex items-center space-x-3">
-                            <Link
-                                href="/ContactUs"
-                                className="px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] rounded-xl shadow-[0_10px_20px_rgba(31,43,243,0.3)] hover:shadow-[0_15px_25px_rgba(31,43,243,0.4)] hover:-translate-y-0.5 transition-all active:scale-95"
-                            >
-                                Start Project
-                            </Link>
-                        </div>
-                        
-                        <div className="h-6 w-[1px] bg-gray-200 dark:bg-white/10 mx-2" />
-                        
-                        <Link
-                            href={route('login')}
-                            className="px-4 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 hover:text-[#1F2BF3] dark:hover:text-[#00D8C0] transition-colors"
-                        >
-                            Sign In
+                        <Link href={auth?.user ? route('dashboard') : route('login')} className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white hover:border-[#1F2BF3] hover:text-[#1F2BF3] transition-all group">
+                            <User className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         </Link>
 
-                        <DarkModeToggle />
-
-                        {/* Mobile Menu Button */}
                         <button 
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className="group flex items-center gap-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full overflow-hidden transition-transform active:scale-95"
                         >
-                            {mobileMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] relative z-10 pl-2">
+                                {isMenuOpen ? "CLOSE" : "MENU"}
+                            </span>
+                            <div className="flex flex-col gap-1.5 relative z-10 w-6">
+                                <motion.div animate={{ rotate: isMenuOpen ? 45 : 0, y: isMenuOpen ? 4 : 0 }} className="w-full h-[1.5px] bg-current" />
+                                <motion.div animate={{ opacity: isMenuOpen ? 0 : 1 }} className="w-full h-[1.5px] bg-current" />
+                                <motion.div animate={{ rotate: isMenuOpen ? -45 : 0, y: isMenuOpen ? -4 : 0 }} className="w-full h-[1.5px] bg-current" />
+                            </div>
                         </button>
                     </div>
                 </div>
-            </div>
+            </header>
 
-            {/* Mobile Navigation Drawer */}
+            {/* REFERENCE STYLE FULL-SCREEN MENU */}
             <AnimatePresence>
-                {mobileMenuOpen && (
+                {isMenuOpen && (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="md:hidden bg-white dark:bg-[#080808] border-t border-gray-100 dark:border-white/5 overflow-hidden"
+                        variants={menuVariants}
+                        initial="closed"
+                        animate="open"
+                        exit="closed"
+                        className="fixed inset-0 z-[105] bg-white dark:bg-[#050505] overflow-hidden"
                     >
-                        <div className="px-6 py-8 space-y-6">
-                            <Link href="/" className="block text-lg font-bold text-gray-900 dark:text-white">Home</Link>
-                            <Link href="/AboutUs" className="block text-lg font-bold text-gray-900 dark:text-white">About Us</Link>
-                            
-                            <div className="space-y-4">
-                                <button 
-                                    onClick={() => setOpenServices(!openServices)}
-                                    className="flex items-center justify-between w-full text-lg font-bold text-gray-900 dark:text-white"
-                                >
-                                    Services
-                                    <ChevronDownIcon className={`w-5 h-5 transition-transform ${openServices ? 'rotate-180' : ''}`} />
-                                </button>
-                                {openServices && (
-                                    <div className="pl-4 space-y-3 border-l-2 border-[#1F2BF3]/20">
-                                        <Link href="/Services" className="block text-sm text-gray-600 dark:text-gray-400">Web Solutions</Link>
-                                        <Link href="/Services" className="block text-sm text-gray-600 dark:text-gray-400">Marketing Solutions</Link>
-                                        <Link href="/Services" className="block text-sm text-gray-600 dark:text-gray-400">Visual Solutions</Link>
-                                    </div>
-                                )}
-                            </div>
+                        {/* Background Decorative Accent */}
+                        <div className="absolute top-0 right-0 w-[40vw] h-full bg-gray-50 dark:bg-white/[0.01] -z-10" />
 
-                            <Link href="/Projects" className="block text-lg font-bold text-gray-900 dark:text-white">Projects</Link>
-                            <Link href="/ContactUs" className="block text-lg font-bold text-gray-900 dark:text-white">Contact Us</Link>
-                            
-                            <div className="pt-6 border-t border-gray-100 dark:border-white/5">
-                                <Link
-                                    href="/ContactUs"
-                                    className="w-full py-4 flex items-center justify-center text-sm font-black uppercase tracking-widest text-white bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] rounded-2xl shadow-lg"
-                                >
-                                    Start Project
-                                </Link>
+                        <div className="h-full max-w-[95rem] mx-auto px-6 lg:px-12 flex flex-col justify-center pt-20">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-20 items-center">
+                                
+                                {/* Left Side: Navigation Links */}
+                                <div className="lg:col-span-7 flex flex-col">
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-400 mb-12 lg:mb-20">Navigation</h4>
+                                    <div className="space-y-4 lg:space-y-8">
+                                        {navItems.map((item, i) => (
+                                            <motion.div
+                                                key={item.name}
+                                                custom={i}
+                                                variants={itemVariants}
+                                                className="overflow-hidden group"
+                                            >
+                                                <Link 
+                                                    href={item.href}
+                                                    onClick={() => setIsMenuOpen(false)}
+                                                    className="flex items-center gap-6 text-5xl lg:text-[8rem] font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none transition-colors relative"
+                                                >
+                                                    <span className="hidden lg:block text-sm font-black text-gray-300 dark:text-gray-800 tracking-widest">/0{i+1}</span>
+                                                    <span className="bg-gradient-to-r from-[#1F2BF3] via-white to-[#00D8C0] bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-x">
+                                                        {item.name}
+                                                    </span>
+                                                    <ArrowRight className="w-12 h-12 lg:w-24 lg:h-24 opacity-0 -translate-x-12 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 text-[#1F2BF3] dark:text-[#00D8C0]" />
+                                                </Link>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Right Side: Contact & Info (The Reference Look) */}
+                                <div className="lg:col-span-5 flex flex-col lg:pl-20 border-t lg:border-t-0 lg:border-l border-gray-100 dark:border-white/5 pt-10 lg:pt-0">
+                                    <motion.div variants={infoVariants} className="space-y-20">
+                                        {/* Contact Section */}
+                                        <div>
+                                            <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-400 mb-8">Get In Touch</h4>
+                                            <a href="mailto:contact@techweb.ma" className="text-2xl lg:text-4xl font-black text-gray-900 dark:text-white hover:text-[#1F2BF3] transition-colors block mb-4 underline decoration-[#1F2BF3] decoration-4 underline-offset-8">
+                                                contact@techweb.ma
+                                            </a>
+                                            <p className="text-xl text-gray-500 font-medium">Tangier, Morocco • +212 600 000 000</p>
+                                        </div>
+
+                                        {/* Services / Client Section as requested */}
+                                        <div className="grid grid-cols-2 gap-10">
+                                            <div>
+                                                <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-400 mb-6">Services</h4>
+                                                <ul className="space-y-3">
+                                                    {["Web Design", "Development", "Marketing", "Branding"].map((s, i) => (
+                                                        <li key={i} className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">{s}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-400 mb-6">Socials</h4>
+                                                <div className="flex gap-4">
+                                                    <a href="#" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-[#1F2BF3] hover:text-white transition-all"><Instagram className="w-4 h-4" /></a>
+                                                    <a href="#" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-[#1F2BF3] hover:text-white transition-all"><Twitter className="w-4 h-4" /></a>
+                                                    <a href="#" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-[#1F2BF3] hover:text-white transition-all"><Linkedin className="w-4 h-4" /></a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Start Project CTA in Menu */}
+                                        <Link
+                                            href="/ContactUs"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="group relative inline-flex items-center justify-center px-10 py-5 bg-white text-gray-900 rounded-full font-black uppercase tracking-widest text-xs hover:scale-105 transition-all shadow-xl overflow-hidden"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                            <span className="relative z-10 flex items-center gap-4 group-hover:text-white transition-colors duration-300">
+                                                Start A Project <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                            </span>
+                                        </Link>
+                                    </motion.div>
+                                </div>
                             </div>
+                        </div>
+
+                        {/* Bottom Bar Info */}
+                        <div className="absolute bottom-10 left-0 w-full px-6 lg:px-12 flex justify-between items-center opacity-30">
+                            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-500">© 2026 TECHWEB STUDIO</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-500">SCROLL TO TOP</p>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </header>
+
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes gradient-x {
+                    0%, 100% { background-position: 0% 50%; }
+                    50% { background-position: 100% 50%; }
+                }
+                .animate-gradient-x {
+                    animation: gradient-x 10s ease infinite;
+                }
+            `}} />
+        </>
     );
 }

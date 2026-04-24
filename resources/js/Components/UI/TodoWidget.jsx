@@ -86,10 +86,10 @@ export default function TodoWidget({ initialTodos = [] }) {
     return (
         <div className="relative">
             {/* Premium Glass Card */}
-            <div className="bg-white/70 dark:bg-gray-900/40 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/20 dark:border-white/5 shadow-2xl shadow-blue-500/5 overflow-hidden group">
+            <div className="bg-white/70 dark:bg-gray-900/40 backdrop-blur-xl rounded-[2rem] md:rounded-[2.5rem] p-5 sm:p-6 md:p-8 border border-white/20 dark:border-white/5 shadow-2xl shadow-blue-500/5 overflow-hidden group">
                 
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-6 md:mb-8">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] rounded-2xl text-white shadow-lg shadow-blue-500/20">
                             <ClipboardList className="w-6 h-6" />

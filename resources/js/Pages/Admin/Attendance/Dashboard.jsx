@@ -92,7 +92,7 @@ export default function AttendanceDashboard({ auth, attendanceData, selectedDate
                     <div className="lg:col-span-8">
                         <DashboardCard className="!p-0 overflow-hidden border-none shadow-xl">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
+                                <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                                     <thead>
                                         <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Team Member</th>

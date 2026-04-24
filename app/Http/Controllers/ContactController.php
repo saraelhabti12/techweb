@@ -106,5 +106,13 @@ class ContactController extends Controller
     return redirect()->back()->with('success', 'Message envoyé !');
 }
 
+    public function destroy($id)
+    {
+        $contact = Contact::findOrFail($id);
+        $contact->delete();
+
+        return redirect()->back()->with('success', 'Contact deleted successfully.');
+    }
+
 
 }

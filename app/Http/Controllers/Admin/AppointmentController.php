@@ -15,7 +15,10 @@ class AppointmentController extends Controller
 {
     public function index()
     {
-        $appointments = Appointment::with(['client', 'user'])->latest()->get();
+        $appointments = Appointment::where('status', '!=', 'manual')
+            ->with(['client', 'user'])
+            ->latest()
+            ->get();
 
         return Inertia::render('Admin/Appointments/Index', [
             'appointments' => AppointmentResource::collection($appointments)->resolve(),
@@ -26,12 +29,27 @@ class AppointmentController extends Controller
     {
         $validated = $request->validate([
             'status' => 'required|in:accepted,rejected',
+            'end_date' => 'nullable|date',
+            'type' => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
-        $appointment->update($validated);
+        $updateData = ['status' => $validated['status']];
+        if (isset($validated['end_date'])) $updateData['end_date'] = $validated['end_date'];
+        if (isset($validated['type'])) $updateData['type'] = $validated['type'];
+        if (isset($validated['notes'])) $updateData['notes'] = $validated['notes'];
+
+        $appointment->update($updateData);
 
         // If accepted, add to schedules (Calendar)
         if ($validated['status'] === 'accepted') {
+            // Set a default end_date if none exists (e.g., 1 hour after start)
+            if (!$appointment->end_date) {
+                $appointment->update([
+                    'end_date' => (clone $appointment->appointment_date)->addHour(),
+                ]);
+            }
+
             Activity::log('Appointment Accepted', "Accepted appointment for: {$appointment->client->name}");
             Schedule::updateOrCreate(
                 ['title' => 'Appointment: ' . $appointment->client->name],
@@ -52,26 +70,40 @@ class AppointmentController extends Controller
 
     public function calendar()
     {
-        $appointments = Appointment::where('status', 'accepted')
+        $events = Appointment::where(function($query) {
+                $query->where('status', 'accepted')
+                      ->orWhere('status', 'manual');
+            })
             ->with(['client', 'user'])
             ->get()
-            ->map(function ($appointment) {
-                return [
-                    'id' => $appointment->id,
-                    'title' => $appointment->client->name . ' (Visit)',
-                    'start' => $appointment->appointment_date->toIso8601String(),
-                    'extendedProps' => [
-                        'member' => $appointment->user->name,
-                        'client_phone' => $appointment->client->phone,
-                        'notes' => $appointment->notes,
-                    ],
-                    'backgroundColor' => '#7c3aed', // Purple
-                    'borderColor' => '#6d28d9',
-                ];
-            });
+            ->map(fn($apt) => $apt->toCalendarEvent());
 
         return Inertia::render('Admin/Appointments/Calendar', [
-            'events' => $appointments,
+            'events' => $events,
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'type' => 'required|string|in:client_meeting,internal_meeting,lunch_break,busy_outside,personal_event',
+            'date' => 'required|date',
+            'start_time' => 'required',
+            'end_time' => 'required',
+            'notes' => 'nullable|string',
+        ]);
+
+        Appointment::create([
+            'title' => $validated['title'],
+            'type' => $validated['type'],
+            'appointment_date' => $validated['date'] . ' ' . $validated['start_time'],
+            'end_date' => $validated['date'] . ' ' . $validated['end_time'],
+            'notes' => $validated['notes'],
+            'status' => 'manual',
+            'user_id' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Event created successfully.');
     }
 }

@@ -5,7 +5,7 @@ export default function DashboardCard({ children, className = "", noHover = fals
         <motion.div
             whileHover={noHover ? {} : { y: -8, scale: 1.01 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className={`bg-white/70 dark:bg-gray-900/40 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/40 dark:border-white/5 p-8 relative overflow-hidden group ${
+            className={`bg-white/70 dark:bg-gray-900/40 backdrop-blur-xl rounded-[2rem] md:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/40 dark:border-white/5 p-5 sm:p-6 md:p-8 relative overflow-hidden group ${
                 !noHover ? 'hover:shadow-[0_30px_70px_rgba(31,43,243,0.1)] transition-all duration-500' : ''
             } ${className}`}
         >

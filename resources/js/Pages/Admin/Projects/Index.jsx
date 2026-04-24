@@ -23,32 +23,10 @@ import DashboardButton from '@/Components/UI/DashboardButton';
 import DashboardPage from '@/Components/UI/DashboardPage';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, filters = {} }) {
+import AdvancedFilterBar from '@/Components/Shared/AdvancedFilterBar';
+
+export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, filters = {}, filterOptions }) {
     const [currentTab, setCurrentTab] = useState('active'); // 'active' or 'inactive'
-    const [dateFilters, setDateFilters] = useState({
-        year: filters.year || '',
-        month: filters.month || '',
-        day: filters.day || ''
-    });
-    const [searchTerm, setSearchTerm] = useState(filters.search || '');
-
-    const handleFilterChange = (filterType, value) => {
-        const newFilters = { ...dateFilters, [filterType]: value };
-        setDateFilters(newFilters);
-        const params = { ...newFilters, search: searchTerm };
-        router.get(route('admin.projects.index'), params, { preserveState: true, preserveScroll: true });
-    };
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-        router.get(route('admin.projects.index'), { ...dateFilters, search: searchTerm }, { preserveState: true, preserveScroll: true });
-    };
-
-    const clearFilters = () => {
-        setDateFilters({ year: '', month: '', day: '' });
-        setSearchTerm('');
-        router.get(route('admin.projects.index'), {}, { preserveState: true, preserveScroll: true });
-    };
 
     const updateStatus = (projectId, status) => {
         router.post(route('admin.projects.updateStatus', projectId), { status }, {
@@ -78,38 +56,15 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                 {/* Search & Filters */}
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
                     <div className="lg:col-span-3">
-                        <DashboardCard className="!p-0 overflow-hidden !bg-white/80 dark:!bg-gray-900/80 backdrop-blur-xl border border-white/20 dark:border-gray-800 shadow-2xl shadow-blue-500/5">
-                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/40">
-                                <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
-                                    <div className="flex-1 relative group">
-                                        <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#1F2BF3] transition-colors" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search projects, clients or categories..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm focus:ring-2 focus:ring-[#1F2BF3] focus:border-transparent dark:text-white transition-all"
-                                        />
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <select 
-                                            value={dateFilters.year} 
-                                            onChange={(e) => handleFilterChange('year', e.target.value)}
-                                            className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-[#1F2BF3] shadow-sm"
-                                        >
-                                            <option value="">Year</option>
-                                            {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-                                        </select>
-                                        <DashboardButton variant="secondary" onClick={clearFilters} className="!px-6 !rounded-2xl border border-gray-100 dark:border-gray-700">
-                                            Reset
-                                        </DashboardButton>
-                                    </div>
-                                </form>
-                            </div>
-                        </DashboardCard>
+                        <AdvancedFilterBar 
+                            route="admin.projects.index"
+                            filters={filters}
+                            filterOptions={filterOptions}
+                            placeholder="Search projects, clients or categories..."
+                        />
                     </div>
 
-                    <div className="flex items-center justify-center p-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-2xl backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-inner">
+                    <div className="flex items-center justify-center p-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-2xl backdrop-blur-md border border-gray-200 dark:border-gray-700 shadow-inner h-fit mt-4">
                         <button 
                             onClick={() => setCurrentTab('active')}
                             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${currentTab === 'active' ? 'bg-white dark:bg-gray-700 text-[#1F2BF3] shadow-lg shadow-blue-500/10 ring-1 ring-blue-500/20' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
@@ -132,7 +87,7 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                 {/* Projects Grid/Table */}
                 <DashboardCard className="!p-0 overflow-hidden !bg-transparent !border-none !shadow-none">
                     <div className="overflow-x-auto rounded-3xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900/60 backdrop-blur-sm shadow-xl">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                             <thead>
                                 <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Project & Client</th>
@@ -313,8 +268,8 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                                                     </div>
                                                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">No {currentTab} projects found</h3>
                                                     <p className="text-sm text-gray-500">Try adjusting your search or filters to find what you're looking for.</p>
-                                                    {searchTerm && (
-                                                        <DashboardButton variant="secondary" onClick={clearFilters} className="mt-6">
+                                                    {filters.search && (
+                                                        <DashboardButton variant="secondary" onClick={() => router.get(route('admin.projects.index'))} className="mt-6">
                                                             Clear Search
                                                         </DashboardButton>
                                                     )}

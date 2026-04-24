@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Member\ClientController;
 use App\Http\Controllers\Member\AppointmentController;
 use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
+use App\Http\Controllers\SharedFileController;
 use App\Models\Blog;
 use App\Models\Template;
 
@@ -72,8 +73,15 @@ Route::middleware(['auth', 'role:admin,project_manager'])->prefix('admin')->name
     Route::post('projects/{project}/status', [ProjectController::class, 'updateStatus'])->name('projects.updateStatus');
     Route::resource('tasks', TaskController::class);
     
+    // Shared Files
+    Route::get('/shared-files', [SharedFileController::class, 'adminIndex'])->name('shared-files.index');
+    Route::post('/shared-files', [SharedFileController::class, 'store'])->name('shared-files.store');
+    Route::delete('/shared-files/{sharedFile}', [SharedFileController::class, 'destroy'])->name('shared-files.destroy');
+    Route::get('/shared-files/{sharedFile}/download', [SharedFileController::class, 'download'])->name('shared-files.download');
+
     // Appointments
     Route::get('/appointments', [AdminAppointmentController::class, 'index'])->name('appointments.index');
+    Route::post('/appointments', [AdminAppointmentController::class, 'store'])->name('appointments.store');
     Route::post('/appointments/{appointment}/status', [AdminAppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
     Route::get('/appointments/calendar', [AdminAppointmentController::class, 'calendar'])->name('appointments.calendar');
 
@@ -88,6 +96,7 @@ Route::middleware(['auth', 'role:admin,project_manager'])->prefix('admin')->name
     Route::resource('quotations', QuotationController::class);
     Route::post('quotations/{quotation}/duplicate', [QuotationController::class, 'duplicate'])->name('quotations.duplicate');
     Route::post('quotations/{quotation}/send-email', [QuotationController::class, 'sendEmail'])->name('quotations.send-email');
+    Route::get('quotations/{quotation}/download-pdf', [QuotationController::class, 'downloadPdf'])->name('quotations.download-pdf');
     Route::post('quotations/{quotation}/convert-to-invoice', [QuotationController::class, 'convertToInvoice'])->name('quotations.convert-to-invoice');
 
     Route::resource('invoices', InvoiceController::class);
@@ -102,6 +111,7 @@ Route::middleware(['auth', 'role:admin,project_manager'])->prefix('admin')->name
     Route::get('/customers/{id}', [ContactController::class, 'show'])->name('customers.show');
     Route::post('/customers/{id}/mark-read', [ContactController::class, 'markRead'])->name('customers.markRead');
     Route::post('/customers/send-reply', [ContactController::class, 'sendReply'])->name('customers.sendReply');
+    Route::delete('/customers/{id}', [ContactController::class, 'destroy'])->name('customers.destroy');
 
 
 
@@ -142,6 +152,10 @@ Route::middleware(['auth', 'role:admin,project_manager'])->prefix('admin')->name
 Route::middleware(['auth', 'role:member'])->prefix('member')->name('member.')->group(function () {
     Route::get('/dashboard', [MemberController::class, 'dashboard'])->name('dashboard');
 
+    // Shared Files
+    Route::get('/shared-files', [SharedFileController::class, 'memberIndex'])->name('shared-files.index');
+    Route::get('/shared-files/{sharedFile}/download', [SharedFileController::class, 'download'])->name('shared-files.download');
+
     // CRM
     Route::resource('clients', ClientController::class);
     
@@ -172,9 +186,10 @@ Route::middleware(['auth', 'role:member'])->prefix('member')->name('member.')->g
     Route::get('/teamhub/{activity}', [\App\Http\Controllers\Member\TeamHubController::class, 'show'])->name('teamhub.show');
     Route::delete('/teamhub/chat/{message}', [TeamHubController::class, 'destroyMessage'])->name('teamhub.chat.delete');
     Route::post('/teamhub/chat/{admin}/mark-as-read', [TeamHubController::class, 'markAsRead'])->name('teamhub.chat.markAsRead');
-    Route::get('/unread-count', [\App\Http\Controllers\Member\TeamHubController::class, 'unreadCount'])->name('unreadCount');
+    Route::get('unread-count', [\App\Http\Controllers\Member\TeamHubController::class, 'unreadCount'])->name('unreadCount');
     Route::get('invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download-pdf');
-});
+    Route::get('quotations/{quotation}/download-pdf', [QuotationController::class, 'downloadPdf'])->name('quotations.download-pdf');
+    });
 
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');

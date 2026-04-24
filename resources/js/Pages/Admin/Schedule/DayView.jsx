@@ -65,7 +65,7 @@ export default function DayView({ schedules, selectedDate, auth }) {
                         </div>
 
                         <div className="overflow-x-auto -mx-8">
-                            <table className="w-full text-left border-collapse">
+                            <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                                 <thead>
                                     <tr className="border-b border-gray-100 dark:border-gray-800/50">
                                         <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Event / Title</th>

@@ -32,6 +32,7 @@ class ClientResource extends JsonResource
             'blacklist_reason' => $this->blacklist_reason,
             'contact_method' => $this->contact_method,
             'contact_date' => $this->contact_date,
+            'is_in_contacts' => $this->contacts()->exists(),
             'user' => new UserResource($this->whenLoaded('user')),
             'files' => $this->files, // Or create a ClientFileResource if needed
             'created_at' => $this->created_at,

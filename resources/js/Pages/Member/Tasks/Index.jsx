@@ -7,7 +7,9 @@ import StatusBadge from '@/Components/Shared/StatusBadge';
 import { motion } from 'framer-motion';
 import { ClipboardList, Play, CheckCircle, Pause, AlertCircle } from 'lucide-react';
 
-export default function TasksIndex({ auth, tasks }) {
+import AdvancedFilterBar from '@/Components/Shared/AdvancedFilterBar';
+
+export default function TasksIndex({ auth, tasks, filters = {}, filterOptions }) {
     return (
         <MemberLayout auth={auth}>
             <Head title="My Tasks" />
@@ -16,6 +18,13 @@ export default function TasksIndex({ auth, tasks }) {
                 title="My Tasks"
                 description="View and update the progress of tasks assigned to you."
             >
+                <AdvancedFilterBar 
+                    route="member.tasks.index"
+                    filters={filters}
+                    filterOptions={filterOptions}
+                    placeholder="Search my tasks..."
+                />
+
                 <div className="grid grid-cols-1 gap-4">
                     {tasks.length === 0 ? (
                         <div className="p-12 text-center bg-gray-50 dark:bg-gray-800/20 rounded-2xl border-2 border-dashed border-gray-100 dark:border-gray-800">

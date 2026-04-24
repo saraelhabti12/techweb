@@ -30,10 +30,16 @@ class AppointmentController extends Controller
     public function create(Request $request)
     {
         $clients = Auth::user()->clients()->where('is_blacklisted', false)->get();
+        
+        $adminEvents = Appointment::whereIn('status', ['accepted', 'manual'])
+            ->with(['client', 'user'])
+            ->get()
+            ->map(fn($apt) => $apt->toCalendarEvent());
 
         return Inertia::render('Member/Appointments/Create', [
             'clients' => ClientResource::collection($clients)->resolve(),
             'client_id' => $request->query('client_id'),
+            'adminEvents' => $adminEvents,
         ]);
     }
 

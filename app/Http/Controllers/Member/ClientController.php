@@ -85,7 +85,13 @@ class ClientController extends Controller
 
     public function addToContacts(Client $client)
     {
+        // Prevent duplicate contacts for the same client
+        if (\App\Models\Contact::where('client_id', $client->id)->exists()) {
+            return back()->with('error', 'Client is already in contacts.');
+        }
+
         \App\Models\Contact::create([
+            'client_id' => $client->id,
             'full_name' => $client->name,
             'contact_number' => $client->phone,
             'company_name' => $client->company_name,

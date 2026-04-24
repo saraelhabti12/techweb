@@ -95,7 +95,7 @@ export default function AdminLayout({ auth, children, title = '' }) {
             <motion.aside
                 initial={false}
                 animate={{ width: sidebarOpen ? 280 : 88 }}
-                className={`hidden lg:flex flex-col bg-white dark:bg-[#0A0A0A] border-r border-gray-200 dark:border-gray-800 transition-all duration-300 z-30 shadow-xl overflow-hidden`}
+                className={`hidden md:flex flex-col bg-white dark:bg-[#0A0A0A] border-r border-gray-200 dark:border-gray-800 transition-all duration-300 z-30 shadow-xl overflow-hidden`}
             >
                 {/* Logo Section */}
                 <div className="h-20 flex items-center px-6 border-b border-gray-100 dark:border-gray-800/50">
@@ -196,6 +196,14 @@ export default function AdminLayout({ auth, children, title = '' }) {
                         ]}
                     />
 
+                    <NavItem 
+                        href={route('admin.shared-files.index')} 
+                        icon={<FolderIcon className="w-5 h-5" />} 
+                        label="Shared Files" 
+                        active={route().current('admin.shared-files.*')}
+                        sidebarOpen={sidebarOpen}
+                    />
+
                     <div className="pt-4 pb-2">
                         <div className={`text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-4 mb-2 ${!sidebarOpen && 'text-center px-0'}`}>
                             {sidebarOpen ? 'Content Management' : 'CMS'}
@@ -269,7 +277,7 @@ export default function AdminLayout({ auth, children, title = '' }) {
             </motion.aside>
 
             {/* Mobile Header */}
-            <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-[#0A0A0A] border-b border-gray-200 dark:border-gray-800 z-40 px-4 flex items-center justify-between">
+            <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-[#0A0A0A] border-b border-gray-200 dark:border-gray-800 z-40 px-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <ApplicationLogo className="h-8 w-auto" />
                 </div>
@@ -279,9 +287,9 @@ export default function AdminLayout({ auth, children, title = '' }) {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden pt-16 lg:pt-0">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden pt-16 md:pt-0">
                 {/* Topbar Desktop */}
-                <header className="hidden lg:flex h-20 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-8 items-center justify-between sticky top-0 z-20">
+                <header className="hidden md:flex h-20 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-8 items-center justify-between sticky top-0 z-20">
                     <button onClick={toggleSidebar} className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:text-[#1F2BF3] transition-colors border border-gray-100 dark:border-gray-800">
                         {sidebarOpen ? <XMarkIcon className="w-5 h-5" /> : <Bars3Icon className="w-5 h-5" />}
                     </button>
@@ -362,10 +370,90 @@ export default function AdminLayout({ auth, children, title = '' }) {
                                     <XMarkIcon className="w-6 h-6 dark:text-white" />
                                 </button>
                             </div>
-                            <div className="flex-1 overflow-y-auto p-4">
-                                {/* Duplicate nav here for mobile if needed, or extract to component */}
-                                <NavItem href={route('admin.dashboard')} icon={<ChartBarIcon className="w-5 h-5" />} label="Dashboard" active={route().current('admin.dashboard')} sidebarOpen={true} />
-                                
+                            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                                <NavItem 
+                                    href={route('admin.dashboard')} 
+                                    icon={<ChartBarIcon className="w-5 h-5" />} 
+                                    label="Dashboard" 
+                                    active={route().current('admin.dashboard')}
+                                    sidebarOpen={true}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                />
+
+                                <NavGroup 
+                                    label="Projects" 
+                                    icon={<FolderIcon className="w-5 h-5" />} 
+                                    isOpen={openMenus.projects} 
+                                    onClick={() => toggleMenu('projects')}
+                                    sidebarOpen={true}
+                                    active={route().current('admin.projects.*')}
+                                    links={[
+                                        { label: 'All Projects', href: route('admin.projects.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                        { label: 'Add Project', href: route('admin.projects.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                    ]}
+                                    onLinkClick={() => setMobileMenuOpen(false)}
+                                />
+
+                                <NavGroup 
+                                    label="Tasks" 
+                                    icon={<DocumentTextIcon className="w-5 h-5" />} 
+                                    isOpen={openMenus.tasks} 
+                                    onClick={() => toggleMenu('tasks')}
+                                    sidebarOpen={true}
+                                    active={route().current('admin.tasks.*') || route().current('admin.progress.*')}
+                                    links={[
+                                        { label: 'All Tasks', href: route('admin.tasks.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                        { label: 'Add Task', href: route('admin.tasks.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                        { label: 'Progress Updates', href: route('admin.progress.index'), icon: <DocumentTextIcon className="w-4 h-4" /> },
+                                    ]}
+                                    onLinkClick={() => setMobileMenuOpen(false)}
+                                />
+
+                                <NavGroup 
+                                    label="Appointments" 
+                                    icon={<CalendarIcon className="w-5 h-5" />} 
+                                    isOpen={openMenus.appointments} 
+                                    onClick={() => toggleMenu('appointments')}
+                                    sidebarOpen={true}
+                                    active={route().current('admin.appointments.*')}
+                                    links={[
+                                        { label: 'Requests', href: route('admin.appointments.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                        { label: 'Calendar', href: route('admin.appointments.calendar'), icon: <CalendarIcon className="w-4 h-4" /> },
+                                    ]}
+                                    onLinkClick={() => setMobileMenuOpen(false)}
+                                />
+
+                                <NavGroup 
+                                    label="Members" 
+                                    icon={<UsersIcon className="w-5 h-5" />} 
+                                    isOpen={openMenus.members} 
+                                    onClick={() => toggleMenu('members')}
+                                    sidebarOpen={true}
+                                    active={route().current('admin.members.*')}
+                                    links={[
+                                        { label: 'All Members', href: route('admin.members.index'), icon: <UsersIcon className="w-4 h-4" /> },
+                                        { label: 'Add Member', href: route('admin.members.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                        { label: 'Attendance', href: route('admin.members.attendance'), icon: <CalendarIcon className="w-4 h-4" /> },
+                                    ]}
+                                    onLinkClick={() => setMobileMenuOpen(false)}
+                                />
+
+                                <NavGroup 
+                                    label="Customers" 
+                                    icon={<UserIcon className="w-5 h-5" />} 
+                                    isOpen={openMenus.contacts} 
+                                    onClick={() => toggleMenu('contacts')}
+                                    sidebarOpen={true}
+                                    active={route().current('admin.customers.*') || route().current('admin.clients.*')}
+                                    links={[
+                                        { label: 'All Contacts', href: route('admin.customers.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                        { label: 'All Clients', href: route('admin.clients.index'), icon: <UsersIcon className="w-4 h-4" /> },
+                                        { label: 'Add Client', href: route('admin.clients.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                        { label: 'Blocked Clients', href: route('admin.clients.blacklist'), icon: <ShieldExclamationIcon className="w-4 h-4" /> },
+                                    ]}
+                                    onLinkClick={() => setMobileMenuOpen(false)}
+                                />
+
                                 <NavGroup 
                                     label="Financial" 
                                     icon={<DocumentTextIcon className="w-5 h-5" />} 
@@ -374,11 +462,72 @@ export default function AdminLayout({ auth, children, title = '' }) {
                                     sidebarOpen={true}
                                     active={route().current('admin.quotations.*') || route().current('admin.invoices.*')}
                                     links={[
-                                        { label: 'Quotations', href: route('admin.quotations.index') },
-                                        { label: 'Invoices', href: route('admin.invoices.index') },
+                                        { label: 'Quotations', href: route('admin.quotations.index'), icon: <DocumentTextIcon className="w-4 h-4" /> },
+                                        { label: 'Invoices', href: route('admin.invoices.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
                                     ]}
+                                    onLinkClick={() => setMobileMenuOpen(false)}
                                 />
-                                {/* ... more items */}
+
+                                <div className="pt-4 pb-2">
+                                    <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-4 mb-2">
+                                        Content Management
+                                    </div>
+                                </div>
+
+                                <NavGroup 
+                                    label="Categories" 
+                                    icon={<TagIcon className="w-5 h-5" />} 
+                                    isOpen={openMenus.categories} 
+                                    onClick={() => toggleMenu('categories')}
+                                    sidebarOpen={true}
+                                    active={route().current('admin.categories.*')}
+                                    links={[
+                                        { label: 'All Categories', href: route('admin.categories.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                    ]}
+                                    onLinkClick={() => setMobileMenuOpen(false)}
+                                />
+
+                                <NavGroup 
+                                    label="Blogs" 
+                                    icon={<DocumentTextIcon className="w-5 h-5" />} 
+                                    isOpen={openMenus.blogs} 
+                                    onClick={() => toggleMenu('blogs')}
+                                    sidebarOpen={true}
+                                    active={route().current('admin.blogs.*')}
+                                    links={[
+                                        { label: 'All Blogs', href: route('admin.blogs.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                        { label: 'Create Blog', href: route('admin.blogs.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                    ]}
+                                    onLinkClick={() => setMobileMenuOpen(false)}
+                                />
+
+                                <NavGroup 
+                                    label="Templates" 
+                                    icon={<TagIcon className="w-5 h-5" />} 
+                                    isOpen={openMenus.templates} 
+                                    onClick={() => toggleMenu('templates')}
+                                    sidebarOpen={true}
+                                    active={route().current('admin.templates.*')}
+                                    links={[
+                                        { label: 'All Templates', href: route('admin.templates.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                        { label: 'Add Template', href: route('admin.templates.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                    ]}
+                                    onLinkClick={() => setMobileMenuOpen(false)}
+                                />
+
+                                <NavGroup 
+                                    label="Team Hub" 
+                                    icon={<ChatBubbleLeftRightIcon className="w-5 h-5" />} 
+                                    isOpen={openMenus.teamhub} 
+                                    onClick={() => toggleMenu('teamhub')}
+                                    sidebarOpen={true}
+                                    active={route().current('admin.teamhub.*')}
+                                    links={[
+                                        { label: 'Activities', href: route('admin.teamhub.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                        { label: 'Chat', href: route('chat.index'), icon: <ChatBubbleLeftRightIcon className="w-4 h-4" /> },
+                                    ]}
+                                    onLinkClick={() => setMobileMenuOpen(false)}
+                                />
                             </div>
                         </motion.aside>
                     </>
@@ -388,10 +537,11 @@ export default function AdminLayout({ auth, children, title = '' }) {
     );
 }
 
-function NavItem({ href, icon, label, active, sidebarOpen }) {
+function NavItem({ href, icon, label, active, sidebarOpen, onClick }) {
     return (
         <Link
             href={href}
+            onClick={onClick}
             className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${
                 active 
                 ? 'bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] text-white shadow-lg shadow-blue-500/25' 
@@ -413,7 +563,7 @@ function NavItem({ href, icon, label, active, sidebarOpen }) {
     );
 }
 
-function NavGroup({ label, icon, isOpen, onClick, sidebarOpen, links, active }) {
+function NavGroup({ label, icon, isOpen, onClick, sidebarOpen, links, active, onLinkClick }) {
     return (
         <div className="space-y-1">
             <button
@@ -449,6 +599,7 @@ function NavGroup({ label, icon, isOpen, onClick, sidebarOpen, links, active }) 
                                 <Link
                                     key={idx}
                                     href={link.href}
+                                    onClick={onLinkClick}
                                     className={`flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-xl transition-all hover:translate-x-1 ${
                                         active ? 'text-gray-700 dark:text-gray-200 hover:text-[#1F2BF3]' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                                     }`}
@@ -464,3 +615,4 @@ function NavGroup({ label, icon, isOpen, onClick, sidebarOpen, links, active }) 
         </div>
     );
 }
+

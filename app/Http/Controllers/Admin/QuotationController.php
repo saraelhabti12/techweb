@@ -210,4 +210,11 @@ class QuotationController extends Controller
         // Mail::to($quotation->client->email)->send(new QuotationMail($quotation));
         return redirect()->back()->with('success', 'Quotation email sent.');
     }
+
+    public function downloadPdf(Quotation $quotation)
+    {
+        $quotation->load('client', 'items');
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.quotations.pdf', compact('quotation'));
+        return $pdf->download('quotation-' . $quotation->quotation_number . '.pdf');
+    }
 }

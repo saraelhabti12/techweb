@@ -14,8 +14,12 @@ use Inertia\Inertia;
 
 
 
+use App\Traits\AdvancedFilterTrait;
+
 class TaskController extends Controller
 {
+    use AdvancedFilterTrait;
+
     // public function index()
     // {
     //     $tasks = Task::with('project', 'user')->get();
@@ -24,13 +28,17 @@ class TaskController extends Controller
 
     public function index(Request $request)
     {
-        $search = $request->get('search');
+        $filters = $request->only(['year', 'month', 'day', 'week', 'period', 'search']);
         
         // Build query
         $query = Task::with(['project', 'user', 'files', 'members']);
         
+        // Apply advanced filters
+        $this->applyAdvancedFilters($query, $filters);
+        
         // Search filter
-        if ($search) {
+        if ($request->filled('search')) {
+            $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%")
@@ -43,13 +51,12 @@ class TaskController extends Controller
             });
         }
         
-        $tasks = $query->get();
+        $tasks = $query->latest()->get();
 
         return inertia('Admin/Tasks/Index', [
             'tasks' => $tasks,
-            'filters' => [
-                'search' => $search,
-            ]
+            'filters' => $filters,
+            'filterOptions' => $this->getFilterOptions()
         ]);
     }
 
@@ -324,22 +331,41 @@ class TaskController extends Controller
         ]);
     }
 
-    public function tasksIndex()
+    public function tasksIndex(Request $request)
     {
         $user = Auth::user();
-        $tasks = Task::with(['project.client', 'files', 'members'])
+        $filters = $request->only(['year', 'month', 'day', 'week', 'period', 'search']);
+
+        $query = Task::with(['project.client', 'files', 'members'])
             ->withCount('progressUpdates')
             ->where(function($query) use ($user) {
                 $query->where('assigned_to', $user->id)
                       ->orWhereHas('members', function($q) use ($user) {
                           $q->where('users.id', $user->id);
                       });
-            })
-            ->latest()
-            ->get();
+            });
+
+        // Apply advanced filters
+        $this->applyAdvancedFilters($query, $filters);
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('project', function($projectQuery) use ($search) {
+                      $projectQuery->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $tasks = $query->latest()->get();
 
         return inertia('Member/Tasks/Index', [
             'tasks' => $tasks,
+            'filters' => $filters,
+            'filterOptions' => $this->getFilterOptions()
         ]);
     }
 

@@ -27,7 +27,7 @@ export default function MyAttendance({ auth, attendance }) {
         >
             <DashboardCard className="!p-0 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                         <thead>
                             <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
                                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Activity Type</th>

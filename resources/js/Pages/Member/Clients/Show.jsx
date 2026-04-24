@@ -202,10 +202,58 @@ export default function Show({ auth, client, quotations = [], invoices = [], fin
                             )}
                         </DashboardCard>
 
+                        <DashboardCard title="Client Quotations">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
+                                    <thead>
+                                        <tr className="border-b border-gray-100 dark:border-gray-800">
+                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Number</th>
+                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Date</th>
+                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Total</th>
+                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Status</th>
+                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
+                                        {quotations && quotations.length > 0 ? quotations.map((quotation) => (
+                                            <tr key={quotation.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                                                <td className="px-4 py-3 font-mono text-xs font-bold">{quotation.quotation_number}</td>
+                                                <td className="px-4 py-3 text-xs text-gray-500">{new Date(quotation.date).toLocaleDateString()}</td>
+                                                <td className="px-4 py-3 text-xs font-bold">{quotation.total} DH</td>
+                                                <td className="px-4 py-3">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                                                        quotation.status === 'accepted' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
+                                                    }`}>
+                                                        {quotation.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <a 
+                                                        href={route('quotations.download-pdf', quotation.id)}
+                                                        className="p-1.5 inline-flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
+                                                        title="Download Devis"
+                                                        target="_blank"
+                                                    >
+                                                        <Download className="w-3.5 h-3.5" />
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan="5" className="px-4 py-8 text-center text-gray-400 text-xs italic">
+                                                    No quotations issued yet.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </DashboardCard>
+
                         {/* Invoices List */}
                         <DashboardCard title="Client Invoices">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
+                                <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                                     <thead>
                                         <tr className="border-b border-gray-100 dark:border-gray-800">
                                             <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Number</th>
@@ -230,7 +278,7 @@ export default function Show({ auth, client, quotations = [], invoices = [], fin
                                                 </td>
                                                 <td className="px-4 py-3 text-right">
                                                     <a 
-                                                        href={route(isAdmin ? 'admin.invoices.download-pdf' : 'member.invoices.download-pdf', invoice.id)}
+                                                        href={route('invoices.download-pdf', invoice.id)}
                                                         className="p-1.5 inline-flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
                                                         title="Download Invoice"
                                                         target="_blank"
