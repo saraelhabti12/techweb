@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Category;
 use App\Models\Client;
+use App\Models\User;
 use App\Models\Activity;
+use App\Models\Commercial;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -23,7 +25,7 @@ class ProjectController extends Controller
         $filters = $request->only(['year', 'month', 'day', 'week', 'period', 'search']);
         
         // Build base query with necessary relationships
-        $query = Project::with(['category', 'members', 'client']);
+        $query = Project::with(['category', 'members', 'client', 'projectManager']);
         
         // Apply advanced filters
         $this->applyAdvancedFilters($query, $filters);
@@ -59,7 +61,10 @@ class ProjectController extends Controller
     {
         $categories = Category::all();
         $clients = Client::where('is_blacklisted', false)->get(); 
-        return inertia('Admin/Projects/Create', compact('categories', 'clients')); 
+        $users = User::all();
+        $creators = \App\Models\Creator::where('active', true)->get();
+        $commercials = Commercial::where('status', 'active')->get();
+        return inertia('Admin/Projects/Create', compact('categories', 'clients', 'users', 'creators', 'commercials')); 
     }
 
     public function store(Request $request)
@@ -73,6 +78,19 @@ class ProjectController extends Controller
             'end_date' => 'nullable|date',
             'status' => 'required|in:active,completed,paused,cancelled,archived',
             'client_id' => 'required_if:project_type,Client Project|nullable|exists:clients,id',
+            'project_manager_id' => 'nullable|exists:users,id',
+            'team_members' => 'nullable|array',
+            'team_members.*' => 'exists:users,id',
+            'creators' => 'nullable|array',
+            'creators.*' => 'exists:creators,id',
+            'commercial_type' => 'required|in:internal,external',
+            'commercial_ids' => 'nullable|array',
+            'commercial_ids.*' => 'exists:commercials,id',
+            'commercial_name' => 'required_if:commercial_type,external|nullable|string|max:255',
+            'commercial_phone' => 'nullable|string|max:255',
+            'commercial_email' => 'nullable|email|max:255',
+            'commercial_commission' => 'nullable|numeric|min:0',
+            'commercial_notes' => 'nullable|string',
         ]);
 
         if ($validatedData['project_type'] === 'Client Project' && $request->filled('client_id')) {
@@ -89,7 +107,29 @@ class ProjectController extends Controller
             $validatedData['client_id'] = null;
         }
 
+        if ($validatedData['commercial_type'] === 'internal') {
+            $validatedData['commercial_name'] = null;
+            $validatedData['commercial_phone'] = null;
+            $validatedData['commercial_email'] = null;
+        } else {
+            // If external, we clear the internal array/sync
+            $validatedData['commercial_ids'] = [];
+        }
+
         $project = Project::create($validatedData);
+
+        if ($request->has('team_members')) {
+            $project->members()->sync($request->team_members);
+        }
+
+        if ($request->has('creators')) {
+            $project->creators()->sync($request->creators);
+        }
+
+        if ($request->has('commercial_ids') && $validatedData['commercial_type'] === 'internal') {
+            $project->commercials()->sync($request->commercial_ids);
+        }
+
         Activity::log('Project Created', "Created project: {$project->name}");
 
         return redirect()->route('admin.projects.index');
@@ -97,9 +137,13 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
+        $project->load(['members', 'creators']);
         $categories = Category::all();
         $clients = Client::where('is_blacklisted', false)->get();
-        return inertia('Admin/Projects/Edit', compact('project', 'categories', 'clients'));
+        $users = User::all();
+        $creators = \App\Models\Creator::where('active', true)->get();
+        $commercials = Commercial::all();
+        return inertia('Admin/Projects/Edit', compact('project', 'categories', 'clients', 'users', 'creators', 'commercials'));
     }
 
     public function update(Request $request, Project $project)
@@ -113,6 +157,18 @@ class ProjectController extends Controller
             'end_date' => 'nullable|date',
             'status' => 'required|in:active,completed,paused,cancelled,archived',
             'client_id' => 'required_if:project_type,Client Project|nullable|exists:clients,id',
+            'project_manager_id' => 'nullable|exists:users,id',
+            'team_members' => 'nullable|array',
+            'team_members.*' => 'exists:users,id',
+            'creators' => 'nullable|array',
+            'creators.*' => 'exists:creators,id',
+            'commercial_type' => 'required|in:internal,external',
+            'commercial_id' => 'required_if:commercial_type,internal|nullable|exists:commercials,id',
+            'commercial_name' => 'required_if:commercial_type,external|nullable|string|max:255',
+            'commercial_phone' => 'nullable|string|max:255',
+            'commercial_email' => 'nullable|email|max:255',
+            'commercial_commission' => 'nullable|numeric|min:0',
+            'commercial_notes' => 'nullable|string',
         ]);
 
         if ($validatedData['project_type'] === 'Client Project' && $request->filled('client_id')) {
@@ -135,7 +191,23 @@ class ProjectController extends Controller
             $validatedData['client_logo'] = null;
         }
 
+        if ($validatedData['commercial_type'] === 'internal') {
+            $validatedData['commercial_name'] = null;
+            $validatedData['commercial_phone'] = null;
+            $validatedData['commercial_email'] = null;
+        } else {
+            $validatedData['commercial_id'] = null;
+        }
+
         $project->update($validatedData);
+
+        if ($request->has('team_members')) {
+            $project->members()->sync($request->team_members);
+        }
+
+        if ($request->has('creators')) {
+            $project->creators()->sync($request->creators);
+        }
 
         return redirect()->route('admin.projects.index');
     }
@@ -168,6 +240,8 @@ class ProjectController extends Controller
             'tasks.user',      
             'tasks.members',
             'tasks.files',  
+            'projectManager',
+            'commercialInternal'
         ]);
 
         return inertia('Admin/Projects/Show', compact('project'));

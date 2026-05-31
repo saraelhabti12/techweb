@@ -5,18 +5,37 @@ import DashboardPage from '@/Components/UI/DashboardPage';
 import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+
+import { useConfirm } from '@/Contexts/ConfirmContext';
 
 export default function Index({ blogs, auth }) {
+    const { t } = useTranslation();
+    const confirm = useConfirm();
+
+    const handleDelete = async (id) => {
+        const isConfirmed = await confirm({
+            title: t('delete_blog_title', { defaultValue: 'Supprimer un article' }),
+            message: t('delete_blog_confirm', { defaultValue: 'Êtes-vous sûr de vouloir supprimer cet article ?' }),
+            confirmText: t('delete', { defaultValue: 'Supprimer' }),
+            variant: 'danger'
+        });
+
+        if (isConfirmed) {
+            router.delete(route('admin.blogs.destroy', id));
+        }
+    };
+
     return (
         <AdminLayout auth={auth}>
             <DashboardPage 
-                title="Blog Management"
-                description="Create, edit, and manage your platform's articles and news."
+                title={t('blog_management')}
+                description={t('manage_blog_desc')}
                 actions={
                     <Link href={route('admin.blogs.create')}>
                         <DashboardButton className="flex items-center gap-2">
                             <PlusIcon className="w-5 h-5" />
-                            Create Article
+                            {t('create_article')}
                         </DashboardButton>
                     </Link>
                 }
@@ -25,7 +44,7 @@ export default function Index({ blogs, auth }) {
                     {blogs.length === 0 ? (
                         <div className="col-span-full py-20 text-center bg-gray-50 dark:bg-gray-800/20 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800">
                             <DocumentTextIcon className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-                            <p className="text-gray-400 font-medium italic">No articles found. Start by creating your first blog post!</p>
+                            <p className="text-gray-400 font-medium italic">{t('no_articles_found')}</p>
                         </div>
                     ) : (
                         blogs.map((blog) => (
@@ -45,7 +64,7 @@ export default function Index({ blogs, auth }) {
                                     )}
                                     <div className="absolute top-4 left-4">
                                         <span className="px-3 py-1 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-lg text-[10px] font-black uppercase tracking-widest text-[#1F2BF3] shadow-sm">
-                                            {blog.category?.name || 'Article'}
+                                            {blog.category?.name || t('article')}
                                         </span>
                                     </div>
                                 </div>
@@ -58,7 +77,7 @@ export default function Index({ blogs, auth }) {
                                     </div>
                                     
                                     <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 mb-6 leading-relaxed">
-                                        {blog.excerpt || 'No description provided for this article.'}
+                                        {blog.excerpt || t('no_description_provided')}
                                     </p>
 
                                     <div className="mt-auto pt-6 border-t border-gray-50 dark:border-gray-800 flex items-center justify-between">
@@ -75,7 +94,7 @@ export default function Index({ blogs, auth }) {
                                             </Link>
                                         </div>
                                         <button 
-                                            onClick={() => confirm("Delete this article?") && router.delete(route('admin.blogs.destroy', blog.id))}
+                                            onClick={() => handleDelete(blog.id)}
                                             className="p-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-600 hover:text-white transition-all"
                                         >
                                             <TrashIcon className="w-4 h-4" />

@@ -25,4 +25,10 @@
   transform: scale(1.2);
 }
 
+@media (min-width: 1024px) {
+  html, body, a, button, input, select, textarea, [role="button"], .cursor-pointer {
+    cursor: none !important;
+  }
+}
+
 

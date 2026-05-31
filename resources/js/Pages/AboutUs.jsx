@@ -1,18 +1,17 @@
 import MainLayout from '@/Layouts/MainLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, EffectCreative } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
+import ProjectRequestForm from '@/Components/ProjectRequestForm';
 import { 
     Star, 
     ChevronLeft, 
     ChevronRight, 
     Target, 
-    Eye, 
-    Heart, 
     Zap, 
     ArrowRight,
     CheckCircle2,
@@ -21,7 +20,7 @@ import {
     Briefcase
 } from "lucide-react";
 
-export default function About() {
+export default function About({ creators = [] }) {
     const images = [
         "/images/project2.jpg",
         "/images/weare2.jpg",
@@ -62,20 +61,6 @@ export default function About() {
         { label: "Awards Won", val: "60", icon: <Trophy className="w-6 h-6" /> }
     ];
 
-    const { data, setData, post, processing, reset, errors } = useForm({
-        full_name: '',
-        contact_number: '',
-        company_name: '',
-        email: '',
-        services: [],
-        message: '',
-    });
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        post(route('contact.store'), { onSuccess: () => reset() });
-    };
-
     return (
         <MainLayout>
             <Head title="About Us | TechWeb Innovation & Design" />
@@ -84,8 +69,8 @@ export default function About() {
                 
                 {/* Background Ambient Glows */}
                 <div className="absolute top-0 left-0 w-full h-screen overflow-hidden pointer-events-none z-0">
-                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#1F2BF3]/10 blur-[120px] rounded-full dark:opacity-40 opacity-20 animate-pulse" />
-                    <div className="absolute bottom-[10%] right-[-5%] w-[35%] h-[35%] bg-[#00D8C0]/10 blur-[120px] rounded-full dark:opacity-30 opacity-15" />
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#1F2BF3]/10 blur-[80px] rounded-full dark:opacity-40 opacity-20 animate-pulse" />
+                    <div className="absolute bottom-[10%] right-[-5%] w-[35%] h-[35%] bg-[#00D8C0]/10 blur-[80px] rounded-full dark:opacity-30 opacity-15" />
                 </div>
 
                 {/* HERO / MISSION SECTION */}
@@ -147,7 +132,7 @@ export default function About() {
                 {/* SHOWCASE SECTION */}
                 <section className="relative py-32 px-6 sm:px-12 lg:px-24 bg-gray-50/50 dark:bg-[#080808] overflow-hidden">
                     {/* Decorative Background Elements */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#1F2BF3]/5 blur-[120px] rounded-full pointer-events-none" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#1F2BF3]/5 blur-[80px] rounded-full pointer-events-none" />
                     
                     <div className="max-w-7xl mx-auto relative z-10">
                         <motion.div 
@@ -409,49 +394,7 @@ export default function About() {
                         <div className="relative">
                             <div className="absolute inset-0 bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] rounded-[3rem] blur-3xl opacity-10" />
                             <div className="relative glass-morphism rounded-[3rem] p-10 border border-white/20 dark:border-white/5 shadow-2xl backdrop-blur-2xl bg-white/40 dark:bg-black/40">
-                                <form onSubmit={handleSubmit} className="space-y-6">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Full Name</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                value={data.full_name}
-                                                onChange={(e) => setData('full_name', e.target.value)}
-                                                className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none"
-                                                placeholder="John Doe"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Email Address</label>
-                                            <input
-                                                type="email"
-                                                required
-                                                value={data.email}
-                                                onChange={(e) => setData('email', e.target.value)}
-                                                className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none"
-                                                placeholder="example@email.com"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Message</label>
-                                        <textarea
-                                            rows="4"
-                                            value={data.message}
-                                            onChange={(e) => setData('message', e.target.value)}
-                                            className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none resize-none"
-                                            placeholder="Describe your project..."
-                                        />
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="w-full py-5 bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
-                                    >
-                                        {processing ? 'Sending...' : 'Transmit Inquiry'}
-                                    </button>
-                                </form>
+                                <ProjectRequestForm creators={creators} />
                             </div>
                         </div>
                     </div>

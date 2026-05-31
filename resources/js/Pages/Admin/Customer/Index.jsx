@@ -7,8 +7,10 @@ import DashboardButton from '@/Components/UI/DashboardButton';
 import DashboardPage from '@/Components/UI/DashboardPage';
 import DashboardInput from '@/Components/UI/DashboardInput';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export default function Index({ messages, unreadCount, auth, filters = {} }) {
+    const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const handleSearch = (e) => {
         e.preventDefault();
@@ -29,8 +31,8 @@ export default function Index({ messages, unreadCount, auth, filters = {} }) {
     return (
         <AdminLayout auth={auth}>
             <DashboardPage 
-                title="Customer Messages (CRM)"
-                description={`Manage and respond to all incoming customer inquiries. You have ${unreadCount} unread message(s).`}
+                title={t('customer_messages_crm')}
+                description={t('manage_inquiries_desc', { count: unreadCount })}
             >
                 {/* Search & Filters */}
                 <DashboardCard className="!p-0 overflow-hidden">
@@ -39,18 +41,18 @@ export default function Index({ messages, unreadCount, auth, filters = {} }) {
                             <div className="flex-1">
                                 <DashboardInput
                                     icon={MagnifyingGlassIcon}
-                                    placeholder="Search by name, email, company, or message content..."
+                                    placeholder={t('search_messages_placeholder')}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                             </div>
                             <div className="flex gap-2">
                                 <DashboardButton type="submit" variant="primary" className="!px-6">
-                                    Search
+                                    {t('search')}
                                 </DashboardButton>
                                 {searchTerm && (
                                     <DashboardButton type="button" variant="secondary" onClick={clearSearch} className="!px-6">
-                                        Reset
+                                        {t('reset')}
                                     </DashboardButton>
                                 )}
                             </div>
@@ -62,7 +64,7 @@ export default function Index({ messages, unreadCount, auth, filters = {} }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {messages.length === 0 ? (
                         <div className="col-span-full py-12 text-center bg-gray-50 dark:bg-gray-800/20 rounded-2xl border-2 border-dashed border-gray-100 dark:border-gray-800">
-                            <p className="text-gray-400 font-medium italic">No customer messages found.</p>
+                            <p className="text-gray-400 font-medium italic">{t('no_messages_found')}</p>
                         </div>
                     ) : (
                         messages.map(msg => (
@@ -104,11 +106,11 @@ export default function Index({ messages, unreadCount, auth, filters = {} }) {
                                             ? 'bg-blue-50 text-[#1F2BF3] dark:bg-blue-900/20' 
                                             : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
                                     }`}>
-                                        {msg.is_read ? 'Read' : 'New'}
+                                        {msg.is_read ? t('read') : t('new')}
                                     </span>
                                     <Link href={(msg && msg.id && route().has('admin.customers.show')) ? route('admin.customers.show', msg.id) : '#'}>
                                         <button className="flex items-center gap-1.5 text-xs font-bold text-gray-400 group-hover:text-[#1F2BF3] transition-colors">
-                                            View Details <EyeIcon className="w-3.5 h-3.5" />
+                                            {t('view_details')} <EyeIcon className="w-3.5 h-3.5" />
                                         </button>
                                     </Link>
                                 </div>

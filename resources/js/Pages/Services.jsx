@@ -75,8 +75,8 @@ export default function Services() {
                 
                 {/* Background Ambient Glows */}
                 <div className="absolute top-0 left-0 w-full h-screen overflow-hidden pointer-events-none z-0">
-                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#1F2BF3]/10 blur-[120px] rounded-full dark:opacity-40 opacity-20 animate-pulse" />
-                    <div className="absolute bottom-[10%] right-[-5%] w-[35%] h-[35%] bg-[#00D8C0]/10 blur-[120px] rounded-full dark:opacity-30 opacity-15" />
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#1F2BF3]/10 blur-[80px] rounded-full dark:opacity-40 opacity-20 animate-pulse" />
+                    <div className="absolute bottom-[10%] right-[-5%] w-[35%] h-[35%] bg-[#00D8C0]/10 blur-[80px] rounded-full dark:opacity-30 opacity-15" />
                 </div>
 
                 {/* HERO SECTION */}

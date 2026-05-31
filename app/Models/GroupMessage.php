@@ -13,7 +13,17 @@ class GroupMessage extends Model
         'group_id',
         'user_id',
         'message',
+        'type',
+        'file_path',
+        'file_name',
     ];
+
+    protected $appends = ['file_url'];
+
+    public function getFileUrlAttribute()
+    {
+        return $this->file_path ? asset('storage/' . $this->file_path) : null;
+    }
 
     public function group()
     {

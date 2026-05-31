@@ -2,10 +2,13 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
+    const { t } = useTranslation();
     const user = usePage().props.auth.user;
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
@@ -23,7 +26,8 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </Link>
                             </div>
                         </div>
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
+                        <div className="hidden sm:ms-6 sm:flex sm:items-center gap-4">
+                            <LanguageSwitcher />
                             <div className="relative ms-3">
                                 <Dropdown>
                                     <Dropdown.Trigger>
@@ -132,7 +136,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         <div className="mt-3 space-y-1">
                             {route().has('profile.edit') && (
                                 <ResponsiveNavLink href={route('profile.edit')}>
-                                    Profile
+                                    {t('profile')}
                                 </ResponsiveNavLink>
                             )}
                             <ResponsiveNavLink
@@ -140,7 +144,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 href={route('logout')}
                                 as="button"
                             >
-                                Log Out
+                                {t('logout')}
                             </ResponsiveNavLink>
                         </div>
                     </div>

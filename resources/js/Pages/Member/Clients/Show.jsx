@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import MemberLayout from '@/Layouts/MemberLayout';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
@@ -21,13 +21,28 @@ import {
     Linkedin,
     Twitter,
     Youtube,
-    Play
+    Play,
+    Search,
+    Filter,
+    ArrowUpRight,
+    Clock,
+    Layout as LayoutIcon
 } from 'lucide-react';
+import AiSummary from '@/Components/AiSummary';
+import ProjectDetailModal from '@/Components/Admin/ProjectDetailModal';
 
-export default function Show({ auth, client, quotations = [], invoices = [], financials = {} }) {
+export default function Show({ auth, client, quotations = [], invoices = [], financials = {}, projects = [], appointments = [] }) {
     const isAdmin = auth.user.role === 'admin' || auth.user.role === 'project_manager';
-    const Layout = isAdmin ? AdminLayout : MemberLayout;
+    const PageLayout = isAdmin ? AdminLayout : MemberLayout;
     const editRoute = isAdmin ? 'admin.clients.edit' : 'member.clients.edit';
+
+    const [selectedProject, setSelectedProject] = useState(null);
+    const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+    const [projectFilter, setProjectFilter] = useState({
+        status: 'all',
+        type: 'all',
+        search: ''
+    });
 
     const statusColors = {
         interested: 'bg-green-50 text-green-700 border-green-100',
@@ -37,8 +52,22 @@ export default function Show({ auth, client, quotations = [], invoices = [], fin
         client: 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold',
     };
 
+    const handleViewProject = (project) => {
+        setSelectedProject(project);
+        setIsProjectModalOpen(true);
+    };
+
+    const filteredProjects = useMemo(() => {
+        return projects.filter(project => {
+            const matchesStatus = projectFilter.status === 'all' || project.status === projectFilter.status;
+            const matchesType = projectFilter.type === 'all' || project.project_type === projectFilter.type;
+            const matchesSearch = project.name.toLowerCase().includes(projectFilter.search.toLowerCase());
+            return matchesStatus && matchesType && matchesSearch;
+        });
+    }, [projects, projectFilter]);
+
     return (
-        <Layout auth={auth}>
+        <PageLayout auth={auth}>
             <Head title={`Client: ${client.name}`} />
 
             <DashboardPage 
@@ -106,7 +135,7 @@ export default function Show({ auth, client, quotations = [], invoices = [], fin
                                                 {client.social_links.map((link, index) => {
                                                     const Icon = {
                                                         instagram: Instagram,
-                                                        tiktok: Play, // Tiktok often uses Play or generic Music icon if not available
+                                                        tiktok: Play, 
                                                         youtube: Youtube,
                                                         facebook: Facebook,
                                                         linkedin: Linkedin,
@@ -149,6 +178,8 @@ export default function Show({ auth, client, quotations = [], invoices = [], fin
 
                     {/* Right Column: Details & Docs */}
                     <div className="lg:col-span-2 space-y-6">
+                        <AiSummary client={client} />
+
                         <DashboardCard title="Professional Dossier">
                             <div className="space-y-6">
                                 <div>
@@ -202,115 +233,18 @@ export default function Show({ auth, client, quotations = [], invoices = [], fin
                             )}
                         </DashboardCard>
 
-                        <DashboardCard title="Client Quotations">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
-                                    <thead>
-                                        <tr className="border-b border-gray-100 dark:border-gray-800">
-                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Number</th>
-                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Date</th>
-                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Total</th>
-                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Status</th>
-                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400 text-right">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                                        {quotations && quotations.length > 0 ? quotations.map((quotation) => (
-                                            <tr key={quotation.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                                                <td className="px-4 py-3 font-mono text-xs font-bold">{quotation.quotation_number}</td>
-                                                <td className="px-4 py-3 text-xs text-gray-500">{new Date(quotation.date).toLocaleDateString()}</td>
-                                                <td className="px-4 py-3 text-xs font-bold">{quotation.total} DH</td>
-                                                <td className="px-4 py-3">
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                                                        quotation.status === 'accepted' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
-                                                    }`}>
-                                                        {quotation.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
-                                                    <a 
-                                                        href={route('quotations.download-pdf', quotation.id)}
-                                                        className="p-1.5 inline-flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
-                                                        title="Download Devis"
-                                                        target="_blank"
-                                                    >
-                                                        <Download className="w-3.5 h-3.5" />
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        )) : (
-                                            <tr>
-                                                <td colSpan="5" className="px-4 py-8 text-center text-gray-400 text-xs italic">
-                                                    No quotations issued yet.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </DashboardCard>
-
-                        {/* Invoices List */}
-                        <DashboardCard title="Client Invoices">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
-                                    <thead>
-                                        <tr className="border-b border-gray-100 dark:border-gray-800">
-                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Number</th>
-                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Date</th>
-                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Total</th>
-                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400">Status</th>
-                                            <th className="px-4 py-3 text-[10px] font-black uppercase text-gray-400 text-right">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                                        {invoices && invoices.length > 0 ? invoices.map((invoice) => (
-                                            <tr key={invoice.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                                                <td className="px-4 py-3 font-mono text-xs font-bold">{invoice.invoice_number}</td>
-                                                <td className="px-4 py-3 text-xs text-gray-500">{new Date(invoice.date).toLocaleDateString()}</td>
-                                                <td className="px-4 py-3 text-xs font-bold">{invoice.total} DH</td>
-                                                <td className="px-4 py-3">
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                                                        invoice.status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                                                    }`}>
-                                                        {invoice.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
-                                                    <a 
-                                                        href={route('invoices.download-pdf', invoice.id)}
-                                                        className="p-1.5 inline-flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
-                                                        title="Download Invoice"
-                                                        target="_blank"
-                                                    >
-                                                        <Download className="w-3.5 h-3.5" />
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        )) : (
-                                            <tr>
-                                                <td colSpan="5" className="px-4 py-8 text-center text-gray-400 text-xs italic">
-                                                    No invoices issued yet.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </DashboardCard>
-
-                        {/* Financial History */}
+                        {/* Financialpulse Section */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                             <DashboardCard title="Financial Pulse">
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="p-4 bg-gray-50 dark:bg-gray-800/30 rounded-2xl">
                                             <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Total Revenue</p>
-                                            <p className="text-xl font-black text-emerald-600">{financials.total_revenue || 0}€</p>
+                                            <p className="text-xl font-black text-emerald-600">{financials.total_revenue || 0}DH</p>
                                         </div>
                                         <div className="p-4 bg-gray-50 dark:bg-gray-800/30 rounded-2xl">
                                             <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Unpaid Amount</p>
-                                            <p className="text-xl font-black text-rose-600">{financials.unpaid_amount || 0}€</p>
+                                            <p className="text-xl font-black text-rose-600">{financials.unpaid_amount || 0}DH</p>
                                         </div>
                                         <div className="p-4 bg-gray-50 dark:bg-gray-800/30 rounded-2xl">
                                             <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Accepted Devis</p>
@@ -329,7 +263,7 @@ export default function Show({ auth, client, quotations = [], invoices = [], fin
                                     {financials.payment_history && financials.payment_history.length > 0 ? financials.payment_history.map(payment => (
                                         <div key={payment.id} className="flex justify-between items-center p-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm">
                                             <div>
-                                                <p className="text-xs font-bold text-gray-900 dark:text-white">{payment.amount}€ - {payment.payment_method}</p>
+                                                <p className="text-xs font-bold text-gray-900 dark:text-white">{payment.amount}DH - {payment.payment_method}</p>
                                                 <p className="text-[10px] text-gray-400 font-bold uppercase">{new Date(payment.payment_date).toLocaleDateString()}</p>
                                             </div>
                                             <div className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded">SUCCESS</div>
@@ -340,9 +274,146 @@ export default function Show({ auth, client, quotations = [], invoices = [], fin
                                 </div>
                             </DashboardCard>
                         </div>
+
+                        {/* Projects Tracking Section */}
+                        <DashboardCard title="Project Lifecycle Tracking">
+                            {/* Filtering Bar */}
+                            <div className="flex flex-col md:flex-row gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800/20 rounded-2xl border border-gray-100 dark:border-gray-800">
+                                <div className="flex-1 relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input 
+                                        type="text"
+                                        placeholder="Search projects..."
+                                        className="w-full pl-10 pr-4 py-2 text-sm bg-white dark:bg-gray-900 border-none rounded-xl focus:ring-2 focus:ring-[#1F2BF3] transition-all"
+                                        value={projectFilter.search}
+                                        onChange={e => setProjectFilter(prev => ({ ...prev, search: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="flex gap-2">
+                                    <select 
+                                        className="text-xs font-bold bg-white dark:bg-gray-900 border-none rounded-xl focus:ring-2 focus:ring-[#1F2BF3]"
+                                        value={projectFilter.status}
+                                        onChange={e => setProjectFilter(prev => ({ ...prev, status: e.target.value }))}
+                                    >
+                                        <option value="all">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="paused">Paused</option>
+                                        <option value="pending">Pending</option>
+                                    </select>
+                                    <select 
+                                        className="text-xs font-bold bg-white dark:bg-gray-900 border-none rounded-xl focus:ring-2 focus:ring-[#1F2BF3]"
+                                        value={projectFilter.type}
+                                        onChange={e => setProjectFilter(prev => ({ ...prev, type: e.target.value }))}
+                                    >
+                                        <option value="all">All Types</option>
+                                        <option value="Client Project">Client Project</option>
+                                        <option value="Internal (Techweb)">Internal</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {filteredProjects && filteredProjects.length > 0 ? filteredProjects.map(project => (
+                                    <div key={project.id} className="group relative p-5 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 hover:border-[#1F2BF3]/30 transition-all shadow-sm hover:shadow-xl hover:shadow-blue-500/5">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="space-y-1">
+                                                <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3] text-[8px] font-black uppercase rounded tracking-widest border border-blue-100 dark:border-blue-800">
+                                                    {project.category?.name || 'Category'}
+                                                </span>
+                                                <h5 className="text-base font-black text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors leading-tight">{project.name}</h5>
+                                            </div>
+                                            <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter ${
+                                                project.status === 'active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gray-50 text-gray-500 border border-gray-100'
+                                            }`}>
+                                                {project.status}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center text-[10px] font-bold">
+                                                <span className="text-gray-400 uppercase tracking-widest">Global Progress</span>
+                                                <span className="text-[#1F2BF3]">{project.progress}%</span>
+                                            </div>
+                                            <div className="h-1.5 w-full bg-gray-50 dark:bg-gray-800 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] rounded-full transition-all duration-1000"
+                                                    style={{ width: `${project.progress}%` }}
+                                                />
+                                            </div>
+                                            
+                                            <div className="flex items-center justify-between pt-2 border-t border-gray-50 dark:border-gray-800">
+                                                <div className="flex -space-x-2">
+                                                    {project.members?.slice(0, 3).map((m, i) => (
+                                                        <div key={i} className="w-7 h-7 rounded-lg border-2 border-white dark:border-gray-950 bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[8px] font-bold overflow-hidden shadow-sm" title={m.name}>
+                                                            {m.avatar ? <img src={`/storage/${m.avatar}`} className="w-full h-full object-cover" /> : m.name.charAt(0)}
+                                                        </div>
+                                                    ))}
+                                                    {project.members?.length > 3 && (
+                                                        <div className="w-7 h-7 rounded-lg border-2 border-white dark:border-gray-950 bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-[8px] font-black text-[#1F2BF3]">
+                                                            +{project.members.length - 3}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                
+                                                <DashboardButton 
+                                                    variant="secondary" 
+                                                    className="!py-1.5 !px-3 !text-[10px] flex items-center gap-2 group/btn"
+                                                    onClick={() => handleViewProject(project)}
+                                                >
+                                                    Details <ArrowUpRight className="w-3 h-3 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                                                </DashboardButton>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="col-span-full py-20 text-center border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-[2.5rem]">
+                                        <LayoutIcon className="w-12 h-12 mx-auto text-gray-200 mb-4" />
+                                        <p className="text-gray-400 font-bold uppercase tracking-widest text-xs italic">No matching projects found</p>
+                                    </div>
+                                )}
+                            </div>
+                        </DashboardCard>
+
+                        <DashboardCard title="Upcoming Appointments">
+                            <div className="space-y-4">
+                                {appointments && appointments.length > 0 ? appointments.map(app => (
+                                    <div key={app.id} className="p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex items-center justify-between group hover:border-[#1F2BF3]/30 transition-all">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3] flex items-center justify-center">
+                                                <Calendar className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <h5 className="font-bold text-gray-900 dark:text-white leading-tight group-hover:text-[#1F2BF3] transition-colors">{app.title}</h5>
+                                                <div className="flex items-center gap-3 mt-1">
+                                                    <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
+                                                        <Clock className="w-3 h-3" /> {new Date(app.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
+                                                        <Calendar className="w-3 h-3" /> {new Date(app.appointment_date).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3] text-[9px] font-black uppercase rounded-lg tracking-widest">{app.status}</span>
+                                    </div>
+                                )) : (
+                                    <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/10 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800">
+                                        <Calendar className="w-10 h-10 mx-auto text-gray-200 mb-2" />
+                                        <p className="text-gray-400 text-sm font-medium italic">No scheduled appointments.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </DashboardCard>
                     </div>
                 </div>
+
+                <ProjectDetailModal 
+                    show={isProjectModalOpen} 
+                    onClose={() => setIsProjectModalOpen(false)}
+                    project={selectedProject}
+                />
             </DashboardPage>
-        </Layout>
+        </PageLayout>
     );
 }

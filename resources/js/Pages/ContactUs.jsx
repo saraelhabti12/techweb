@@ -1,26 +1,14 @@
 import MainLayout from '@/Layouts/MainLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Send, CheckCircle2, MessageSquare, Globe, Clock } from "lucide-react";
+import { Mail, Phone, MapPin, Globe, Clock, MessageSquare } from "lucide-react";
+import ProjectRequestForm from '@/Components/ProjectRequestForm';
+import PremiumBackground from '@/Components/UI/PremiumBackground';
 
-export default function ContactUs() {
-    const { data, setData, post, processing, reset, errors } = useForm({
-        full_name: '',
-        contact_number: '',
-        company_name: '',
-        email: '',
-        services: [],
-        message: '',
-    });
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        post(route('contact.store'), { onSuccess: () => reset() });
-    };
-
+export default function ContactUs({ creators = [] }) {
     const contactInfo = [
         { icon: <Mail className="w-6 h-6" />, label: "Email Support", val: "techweb.ma@gmail.com", desc: "Available 24/7 for inquiries." },
-        { icon: <Phone className="w-6 h-6" />, label: "Call Directly", val: "+212 631 475 047", desc: "Mon-Fri from 9am to 6pm." },
+        { icon: <Phone className="w-6 h-6" />, label: "Call Directly", val: "+212 607 060 769", desc: "Mon-Fri from 9am to 6pm." },
         { icon: <MapPin className="w-6 h-6" />, label: "Visit Studios", val: "Tangier, Morocco", desc: "Innovating from the heart of the north." },
         { icon: <Clock className="w-6 h-6" />, label: "Response Time", val: "< 12 Hours", desc: "Our experts respond rapidly." }
     ];
@@ -109,99 +97,7 @@ export default function ContactUs() {
                                     <h3 className="text-2xl font-black text-gray-900 dark:text-white">Direct Inquiry</h3>
                                 </div>
 
-                                <form onSubmit={handleSubmit} className="space-y-6">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Full Name</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                value={data.full_name}
-                                                onChange={(e) => setData('full_name', e.target.value)}
-                                                className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none"
-                                                placeholder="John Doe"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Contact Number</label>
-                                            <input
-                                                type="tel"
-                                                required
-                                                value={data.contact_number}
-                                                onChange={(e) => setData('contact_number', e.target.value)}
-                                                className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none"
-                                                placeholder="+212 600 000 000"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Email Address</label>
-                                            <input
-                                                type="email"
-                                                required
-                                                value={data.email}
-                                                onChange={(e) => setData('email', e.target.value)}
-                                                className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none"
-                                                placeholder="example@email.com"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Company Name</label>
-                                            <input
-                                                type="text"
-                                                value={data.company_name}
-                                                onChange={(e) => setData('company_name', e.target.value)}
-                                                className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none"
-                                                placeholder="Your Company"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Choose Services</label>
-                                        <div className="grid grid-cols-2 gap-3 p-4 bg-gray-50/50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-white/5">
-                                            {["Website Creation","E-commerce","Photography","SEO & Marketing","Graphic Design","Advertising"].map((service) => (
-                                                <label key={service} className="flex items-center gap-2 cursor-pointer group/label">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={data.services.includes(service)}
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setData('services', [...data.services, service]);
-                                                            } else {
-                                                                setData('services', data.services.filter(s => s !== service));
-                                                            }
-                                                        }}
-                                                        className="w-4 h-4 rounded border-gray-300 text-[#1F2BF3] focus:ring-[#1F2BF3] bg-white dark:bg-gray-800"
-                                                    />
-                                                    <span className="text-xs font-bold text-gray-600 dark:text-gray-400 group-hover/label:text-[#1F2BF3] transition-colors">{service}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Project Message</label>
-                                        <textarea
-                                            rows="4"
-                                            value={data.message}
-                                            onChange={(e) => setData('message', e.target.value)}
-                                            className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none resize-none"
-                                            placeholder="Describe your project or goals..."
-                                        />
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="w-full py-5 bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
-                                    >
-                                        <Send className="w-5 h-5" />
-                                        {processing ? 'Transmitting...' : 'Send Message'}
-                                    </button>
-                                </form>
+                                <ProjectRequestForm creators={creators} />
                             </div>
                         </div>
                     </div>

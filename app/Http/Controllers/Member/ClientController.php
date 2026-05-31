@@ -149,10 +149,23 @@ class ClientController extends Controller
 
         $client->load(['user', 'files', 'projects.category', 'appointments.user', 'quotations', 'invoices.payments']);
 
+        // Load detailed projects with all relationships needed for the detail view
+        $detailedProjects = $client->projects()
+            ->with([
+                'category',
+                'members',
+                'creators',
+                'projectManager',
+                'commercialInternal',
+                'tasks.user',
+                'tasks.members'
+            ])
+            ->latest()
+            ->get();
+
         return Inertia::render('Member/Clients/Show', [
             'client' => (new ClientResource($client))->resolve(),
-            // Manual injection of projects and appointments since resource might not have them
-            'projects' => $client->projects,
+            'projects' => $detailedProjects,
             'appointments' => $client->appointments,
             'quotations' => $client->quotations,
             'invoices' => $client->invoices,

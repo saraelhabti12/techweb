@@ -6,7 +6,7 @@ import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
 import { EnvelopeIcon, PhoneIcon, BuildingOfficeIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 
-export default function Show({ message, auth }) {
+export default function Show({ message, selectedCreators = [], auth }) {
     const [replyOpen, setReplyOpen] = useState(false);
 
     return (
@@ -85,6 +85,31 @@ export default function Show({ message, auth }) {
                                         </span>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {message.needs_creator && (
+                            <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
+                                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Requested Creators</span>
+                                {selectedCreators.length > 0 ? (
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                        {selectedCreators.map((creator) => (
+                                            <div key={creator.id} className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md">
+                                                <img src={`/storage/${creator.profile_photo}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={creator.display_name} />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3">
+                                                    <p className="text-[10px] font-black text-white uppercase tracking-widest truncate">{creator.display_name}</p>
+                                                    <p className="text-[8px] font-bold text-gray-300 uppercase tracking-tighter">{creator.city}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-900/30 rounded-2xl">
+                                        <p className="text-xs font-bold text-yellow-700 dark:text-yellow-400 uppercase tracking-widest">
+                                            Client requested creator assistance but haven't selected specific ones yet.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </DashboardCard>

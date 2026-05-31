@@ -9,8 +9,10 @@ import DashboardPage from '@/Components/UI/DashboardPage';
 import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
 import { motion } from 'framer-motion';
+import { useConfirm } from '@/Contexts/ConfirmContext';
 
 export default function Index({ auth, invoices }) {
+    const confirm = useConfirm();
     const statusColors = {
         unpaid: 'bg-red-100 text-red-700 border-red-200',
         partial: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -18,14 +20,28 @@ export default function Index({ auth, invoices }) {
         late: 'bg-purple-100 text-purple-700 border-purple-200',
     };
 
-    const handleDelete = (id) => {
-        if (confirm('Are you sure you want to delete this invoice?')) {
+    const handleDelete = async (id) => {
+        const isConfirmed = await confirm({
+            title: 'Delete Invoice',
+            message: 'Are you sure you want to delete this invoice? This action cannot be undone.',
+            confirmText: 'Delete Invoice',
+            variant: 'danger'
+        });
+
+        if (isConfirmed) {
             router.delete(route('admin.invoices.destroy', id));
         }
     };
 
-    const handleMarkPaid = (id) => {
-        if (confirm('Mark this invoice as fully paid?')) {
+    const handleMarkPaid = async (id) => {
+        const isConfirmed = await confirm({
+            title: 'Mark as Paid',
+            message: 'Are you sure you want to mark this invoice as fully paid?',
+            confirmText: 'Mark Paid',
+            variant: 'primary'
+        });
+
+        if (isConfirmed) {
             router.post(route('admin.invoices.mark-paid', id));
         }
     };

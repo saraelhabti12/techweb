@@ -13,9 +13,13 @@ import {
     ChevronLeftIcon,
     MagnifyingGlassIcon,
     InformationCircleIcon,
-    UsersIcon
+    UsersIcon,
+    ArrowDownTrayIcon,
+    PhotoIcon,
+    DocumentIcon
 } from '@heroicons/react/24/outline';
 import DashboardButton from '@/Components/UI/DashboardButton';
+import EmojiChatInput from '@/Components/UI/EmojiChatInput';
 
 export default function Groups({ auth, groups: initialGroups, allUsers }) {
     const [selectedGroup, setSelectedGroup] = useState(null);
@@ -29,8 +33,10 @@ export default function Groups({ auth, groups: initialGroups, allUsers }) {
     const [isMobileView, setIsMobileView] = useState(false);
     const messagesEndRef = useRef(null);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const scrollToBottom = (behavior = "smooth") => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior, block: 'nearest' });
+        }
     };
 
     useEffect(() => {
@@ -59,7 +65,7 @@ export default function Groups({ auth, groups: initialGroups, allUsers }) {
     const fetchMessages = async (groupId) => {
         try {
             const response = await axios.get(route('groups.messages', groupId));
-            if (response.data.length !== messages.length) {
+            if (JSON.stringify(response.data) !== JSON.stringify(messages)) {
                 setMessages(response.data);
             }
         } catch (error) {
@@ -73,16 +79,23 @@ export default function Groups({ auth, groups: initialGroups, allUsers }) {
         await fetchMessages(group.id);
     };
 
-    const sendMessage = async (e) => {
-        e.preventDefault();
-        if (!newMessage.trim() || !selectedGroup) return;
+    const sendMessage = async (file = null) => {
+        if (!newMessage.trim() && !file) return;
 
-        const messageText = newMessage;
+        const formData = new FormData();
+        formData.append('message', newMessage);
+        if (file) {
+            formData.append('file', file);
+            formData.append('type', file.type.startsWith('image/') ? 'image' : 'file');
+        } else {
+            formData.append('type', 'text');
+        }
+
         setNewMessage('');
 
         try {
-            const response = await axios.post(route('groups.sendMessage', selectedGroup.id), {
-                message: messageText
+            const response = await axios.post(route('groups.sendMessage', selectedGroup.id), formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
             setMessages(prev => [...prev, response.data]);
         } catch (error) {
@@ -116,12 +129,12 @@ export default function Groups({ auth, groups: initialGroups, allUsers }) {
         );
     };
 
-    const Layout = auth.user.role === 'admin' || auth.user.role === 'project_manager' 
+    const PageLayout = auth.user.role === 'admin' || auth.user.role === 'project_manager' 
         ? AdminLayout 
         : MemberLayout;
 
     return (
-        <Layout auth={auth}>
+        <PageLayout auth={auth} mainClassName="overflow-hidden" contentClassName="p-0">
             <Head title="Group Chat" />
 
             <div className="flex h-[calc(100vh-80px)] overflow-hidden bg-gray-50 dark:bg-black">
@@ -249,13 +262,49 @@ export default function Groups({ auth, groups: initialGroups, allUsers }) {
                                                     )}
                                                     <div className={`flex flex-col gap-1.5 max-w-[85%] md:max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
                                                         <div
-                                                            className={`px-6 py-4 rounded-3xl shadow-sm text-sm font-bold leading-relaxed ${
+                                                            className={`rounded-3xl shadow-sm text-sm font-bold leading-relaxed overflow-hidden ${
                                                                 isMe
                                                                     ? 'bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] text-white rounded-br-none shadow-blue-500/20'
                                                                     : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none border border-gray-100 dark:border-gray-800'
                                                             }`}
                                                         >
-                                                            {msg.message}
+                                                            {msg.type === 'image' && (
+                                                                <div className="relative group">
+                                                                    <img src={msg.file_url} alt="Shared" className="max-w-full h-auto max-h-80 object-cover cursor-pointer hover:opacity-90 transition-opacity" />
+                                                                    <a 
+                                                                        href={msg.file_url} 
+                                                                        download={msg.file_name}
+                                                                        className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                    >
+                                                                        <ArrowDownTrayIcon className="w-8 h-8 text-white" />
+                                                                    </a>
+                                                                </div>
+                                                            )}
+                                                            
+                                                            {msg.type === 'file' && (
+                                                                <div className={`p-4 flex items-center gap-3 ${isMe ? 'bg-black/10' : 'bg-gray-50 dark:bg-gray-900/50'}`}>
+                                                                    <div className="p-2 rounded-xl bg-white dark:bg-gray-800 text-[#1F2BF3]">
+                                                                        <DocumentIcon className="w-6 h-6" />
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="truncate text-sm font-bold">{msg.file_name}</p>
+                                                                        <p className={`text-[10px] font-black uppercase tracking-widest ${isMe ? 'text-white/70' : 'text-gray-400'}`}>File Attachment</p>
+                                                                    </div>
+                                                                    <a 
+                                                                        href={msg.file_url} 
+                                                                        download={msg.file_name}
+                                                                        className={`p-2 rounded-lg hover:bg-black/5 transition-colors ${isMe ? 'text-white' : 'text-gray-400'}`}
+                                                                    >
+                                                                        <ArrowDownTrayIcon className="w-5 h-5" />
+                                                                    </a>
+                                                                </div>
+                                                            )}
+
+                                                            {(msg.type === 'text' || (msg.type !== 'text' && msg.message !== msg.file_name)) && (
+                                                                <div className="px-6 py-4">
+                                                                    {msg.message}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <span className="text-[9px] font-black uppercase tracking-tighter text-gray-400 px-1">
                                                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -271,28 +320,12 @@ export default function Groups({ auth, groups: initialGroups, allUsers }) {
 
                             {/* Message Input */}
                             <div className="p-6 bg-white dark:bg-black border-t border-gray-100 dark:border-gray-800">
-                                <form onSubmit={sendMessage} className="flex items-end gap-3 relative group">
-                                    <textarea
-                                        rows="1"
-                                        value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
-                                                e.preventDefault();
-                                                sendMessage(e);
-                                            }
-                                        }}
-                                        placeholder={`Message #${selectedGroup.name.toLowerCase().replace(/\s/g, '-')}`}
-                                        className="w-full bg-gray-50 dark:bg-gray-800 border-none text-gray-900 dark:text-white rounded-2xl px-6 py-4 pr-16 focus:ring-2 focus:ring-[#1F2BF3] shadow-inner resize-none min-h-[60px] max-h-32 custom-scrollbar font-bold text-sm transition-all"
-                                    />
-                                    <button
-                                        type="submit"
-                                        disabled={!newMessage.trim()}
-                                        className="absolute right-2.5 bottom-2.5 p-3 rounded-xl bg-[#1F2BF3] text-white shadow-xl shadow-blue-500/30 hover:scale-105 disabled:opacity-50 disabled:scale-100 disabled:shadow-none transition-all active:scale-95"
-                                    >
-                                        <PaperAirplaneIcon className="w-5 h-5 -rotate-45" />
-                                    </button>
-                                </form>
+                                <EmojiChatInput 
+                                    value={newMessage}
+                                    onChange={setNewMessage}
+                                    onSend={sendMessage}
+                                    placeholder={`Message #${selectedGroup.name.toLowerCase().replace(/\s/g, '-')}`}
+                                />
                             </div>
                         </>
                     ) : (
@@ -400,6 +433,6 @@ export default function Groups({ auth, groups: initialGroups, allUsers }) {
                     </div>
                 )}
             </AnimatePresence>
-        </Layout>
+        </PageLayout>
     );
 }

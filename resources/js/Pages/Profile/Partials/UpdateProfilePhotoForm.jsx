@@ -14,7 +14,11 @@ export default function UpdateProfilePhotoForm({ className = '' }) {
     const uploadPhoto = (e) => {
         e.preventDefault();
         
-        post(route('profile.avatar'), {
+        const avatarRoute = user.role === 'admin' || user.role === 'project_manager'
+            ? route('admin.profile.avatar')
+            : route('member.profile.avatar');
+
+        post(avatarRoute, {
             preserveScroll: true,
             onSuccess: () => {
                 reset();

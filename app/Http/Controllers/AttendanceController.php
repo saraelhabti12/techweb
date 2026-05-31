@@ -61,7 +61,7 @@ class AttendanceController extends Controller
             ->exists();
             
         if ($alreadyMarked) {
-            return response()->json(['error' => 'Already marked present today'], 403);
+            return response()->json(['info' => 'Already marked present today'], 200);
         }
 
         $token = Str::random(40);

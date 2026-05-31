@@ -51,6 +51,54 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
+    public function edit(Request $request): Response
+    {
+        return Inertia::render('Profile/Edit', [
+            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'status' => session('status'),
+        ]);
+    }
+
+    /**
+     * Update the user's profile information.
+     */
+    public function update(ProfileUpdateRequest $request): RedirectResponse
+    {
+        $request->user()->fill($request->validated());
+
+        if ($request->user()->isDirty('email')) {
+            $request->user()->email_verified_at = null;
+        }
+
+        $request->user()->save();
+
+        return back()->with('success', 'Profile updated successfully.');
+    }
+
+    /**
+     * Delete the user's account.
+     */
+    public function destroy(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = $request->user();
+
+        Auth::logout();
+
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return Redirect::to('/');
+    }
+
+    /**
+     * Display the user's profile form (Legacy Admin).
+     */
     public function editAdmin(Request $request): Response
     {
         return Inertia::render('Admin/Profile', [
@@ -60,7 +108,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the user's profile information.
+     * Update the user's profile information (Legacy Admin).
      */
     public function updateAdmin(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -76,7 +124,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Delete the user's account (Legacy Admin).
      */
     public function destroyAdmin(Request $request): RedirectResponse
     {

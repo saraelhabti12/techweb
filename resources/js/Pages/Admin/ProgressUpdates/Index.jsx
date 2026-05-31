@@ -5,6 +5,7 @@ import DashboardPage from '@/Components/UI/DashboardPage';
 import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
     LinkIcon, 
     ArrowDownTrayIcon, 
@@ -14,16 +15,17 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function Index({ auth, progressUpdates }) {
+    const { t } = useTranslation();
     return (
         <AdminLayout auth={auth}>
             <DashboardPage 
-                title="Member Progress Updates"
-                description="Monitor the latest work logs, link shares, and file uploads from your team members."
+                title={t('member_progress_updates')}
+                description={t('monitor_logs_desc')}
             >
                 {progressUpdates.length === 0 ? (
                     <div className="py-20 text-center bg-gray-50 dark:bg-gray-800/20 rounded-3xl border-2 border-dashed border-gray-100 dark:border-gray-800">
                         <ClipboardDocumentCheckIcon className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-                        <p className="text-gray-400 font-medium italic">No progress updates have been recorded yet.</p>
+                        <p className="text-gray-400 font-medium italic">{t('no_progress_updates')}</p>
                     </div>
                 ) : (
                     <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -59,7 +61,7 @@ export default function Index({ auth, progressUpdates }) {
                                                 {progress.type}
                                             </span>
                                             <span className="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-widest rounded-lg">
-                                                Task ID: #{progress.task_id}
+                                                {t('task_id', { id: progress.task_id })}
                                             </span>
                                         </div>
                                     </div>
@@ -71,7 +73,7 @@ export default function Index({ auth, progressUpdates }) {
                                                 <ClipboardDocumentCheckIcon className="w-4 h-4 text-[#1F2BF3]" />
                                             </div>
                                             <h4 className="font-bold text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors leading-snug">
-                                                {progress.task?.title || 'General Update'}
+                                                {progress.task?.title || t('general_update')}
                                             </h4>
                                         </div>
 
@@ -93,7 +95,7 @@ export default function Index({ auth, progressUpdates }) {
                                                     className="flex items-center gap-3 p-3 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 transition-all border border-blue-100/50"
                                                 >
                                                     <LinkIcon className="w-5 h-5 shrink-0" />
-                                                    <span className="text-xs font-black uppercase tracking-widest truncate">Review External Link</span>
+                                                    <span className="text-xs font-black uppercase tracking-widest truncate">{t('review_external_link')}</span>
                                                 </a>
                                             )}
 
@@ -104,7 +106,7 @@ export default function Index({ auth, progressUpdates }) {
                                                     className="flex items-center gap-3 p-3 rounded-xl bg-[#00D8C0]/10 dark:bg-[#00D8C0]/5 text-[#00D8C0] hover:bg-[#00D8C0]/20 transition-all border border-[#00D8C0]/20"
                                                 >
                                                     <ArrowDownTrayIcon className="w-5 h-5 shrink-0" />
-                                                    <span className="text-xs font-black uppercase tracking-widest truncate">Download Asset File</span>
+                                                    <span className="text-xs font-black uppercase tracking-widest truncate">{t('download_asset_file')}</span>
                                                 </a>
                                             )}
                                         </div>

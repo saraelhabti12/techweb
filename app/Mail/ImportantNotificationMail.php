@@ -24,7 +24,7 @@ class ImportantNotificationMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.important-notification',
+            view: 'emails.important-notification',
         );
     }
 }

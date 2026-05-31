@@ -9,6 +9,7 @@ import {
 import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
 import DashboardInput from '@/Components/UI/DashboardInput';
+import { useTranslation } from 'react-i18next';
 
 export default function AdvancedFilterBar({ 
   route: routeName, 
@@ -16,6 +17,7 @@ export default function AdvancedFilterBar({
   filterOptions = { years: [], months: [], daysOfWeek: [], periods: [] },
   placeholder = "Search..."
 }) {
+    const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [localFilters, setLocalFilters] = useState({
         period: filters.period || 'all',
@@ -92,7 +94,7 @@ export default function AdvancedFilterBar({
                             </select>
 
                             <DashboardButton type="submit" variant="primary" className="!px-8 !rounded-2xl">
-                                Filter
+                                {t('filter_button')}
                             </DashboardButton>
                             
                             <DashboardButton type="button" variant="secondary" onClick={clearFilters} className="!px-6 !rounded-2xl border border-gray-100 dark:border-gray-700">
@@ -105,51 +107,51 @@ export default function AdvancedFilterBar({
                 {/* Advanced Row */}
                 <div className="p-4 flex flex-wrap gap-4 bg-white/40 dark:bg-gray-900/20">
                     <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Year</span>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">{t('year_label')}</span>
                         <select 
                             value={localFilters.year} 
                             onChange={(e) => handleFilterChange('year', e.target.value)}
                             className="bg-white/50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-[#1F2BF3] shadow-sm"
                         >
-                            <option value="all">Any Year</option>
+                            <option value="all">{t('any_year')}</option>
                             {filterOptions.years.map(y => <option key={y} value={y}>{y}</option>)}
                         </select>
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Month</span>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">{t('month_label')}</span>
                         <select 
                             value={localFilters.month} 
                             onChange={(e) => handleFilterChange('month', e.target.value)}
                             className="bg-white/50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-[#1F2BF3] shadow-sm"
                         >
-                            <option value="all">Any Month</option>
+                            <option value="all">{t('any_month')}</option>
                             {filterOptions.months.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                         </select>
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Day of Week</span>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">{t('day_of_week_label')}</span>
                         <select 
                             value={localFilters.day} 
                             onChange={(e) => handleFilterChange('day', e.target.value)}
                             className="bg-white/50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-[#1F2BF3] shadow-sm"
                         >
-                            <option value="all">Any Day</option>
+                            <option value="all">{t('any_day')}</option>
                             {filterOptions.daysOfWeek.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                         </select>
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Week of Year</span>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">{t('week_of_year_label')}</span>
                         <select 
                             value={localFilters.week} 
                             onChange={(e) => handleFilterChange('week', e.target.value)}
                             className="bg-white/50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-[#1F2BF3] shadow-sm"
                         >
-                            <option value="all">Any Week</option>
+                            <option value="all">{t('any_week')}</option>
                             {Array.from({length: 53}, (_, i) => i + 1).map(w => (
-                                <option key={w} value={w}>Week {w}</option>
+                                <option key={w} value={w}>{t('week_n', { n: w })}</option>
                             ))}
                         </select>
                     </div>

@@ -19,7 +19,11 @@ export default function UpdateProfileInformation({
     const submit = (e) => {
         e.preventDefault();
 
-        patch(route('admin.profile.update'));
+        const updateRoute = user.role === 'admin' || user.role === 'project_manager' 
+            ? route('admin.profile.update') 
+            : route('member.profile.update');
+
+        patch(updateRoute);
     };
 
     const labelClass = "block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5";

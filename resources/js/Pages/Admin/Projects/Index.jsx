@@ -15,18 +15,36 @@ import {
   ArchiveBoxIcon,
   ArrowPathIcon,
   UserGroupIcon,
-  ArrowRightCircleIcon
+  ArrowRightCircleIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import { Menu, Transition } from '@headlessui/react';
 import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
 import DashboardPage from '@/Components/UI/DashboardPage';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/Contexts/ConfirmContext';
 
 import AdvancedFilterBar from '@/Components/Shared/AdvancedFilterBar';
 
 export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, filters = {}, filterOptions }) {
+    const { t } = useTranslation();
+    const confirm = useConfirm();
     const [currentTab, setCurrentTab] = useState('active'); // 'active' or 'inactive'
+
+    const handleDelete = async (id) => {
+        const isConfirmed = await confirm({
+            title: t('delete_project_title', { defaultValue: 'Supprimer un projet' }),
+            message: t('delete_project_confirm', { defaultValue: 'Êtes-vous sûr de vouloir supprimer ce projet ? Tous les fichiers et tâches associés seront également supprimés.' }),
+            confirmText: t('delete', { defaultValue: 'Supprimer' }),
+            variant: 'danger'
+        });
+
+        if (isConfirmed) {
+            router.delete(route('admin.projects.destroy', id));
+        }
+    };
 
     const updateStatus = (projectId, status) => {
         router.post(route('admin.projects.updateStatus', projectId), { status }, {
@@ -42,13 +60,13 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
     return (
         <AdminLayout auth={auth}>
             <DashboardPage 
-                title="Projects Management"
-                description="Monitor and manage your project portfolio with precision."
+                title={t('projects_management')}
+                description={t('projects_management_desc')}
                 actions={
                     <Link href={route('admin.projects.create')}>
                         <DashboardButton className="flex items-center gap-2 !bg-[#1F2BF3] hover:!bg-[#151db1] !shadow-blue-500/20">
                             <PlusIcon className="w-5 h-5" />
-                            New Project
+                            {t('add_project')}
                         </DashboardButton>
                     </Link>
                 }
@@ -60,7 +78,7 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                             route="admin.projects.index"
                             filters={filters}
                             filterOptions={filterOptions}
-                            placeholder="Search projects, clients or categories..."
+                            placeholder={t('search_projects_placeholder')}
                         />
                     </div>
 
@@ -70,7 +88,7 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${currentTab === 'active' ? 'bg-white dark:bg-gray-700 text-[#1F2BF3] shadow-lg shadow-blue-500/10 ring-1 ring-blue-500/20' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                         >
                             <span className={`w-2 h-2 rounded-full ${currentTab === 'active' ? 'bg-[#1F2BF3] animate-pulse' : 'bg-gray-400'}`}></span>
-                            Active
+                            {t('active')}
                             <span className="ml-1 px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-[10px] rounded-full">{activeProjects.length}</span>
                         </button>
                         <button 
@@ -78,7 +96,7 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${currentTab === 'inactive' ? 'bg-white dark:bg-gray-700 text-[#1F2BF3] shadow-lg shadow-blue-500/10 ring-1 ring-blue-500/20' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                         >
                             <span className={`w-2 h-2 rounded-full ${currentTab === 'inactive' ? 'bg-[#1F2BF3] animate-pulse' : 'bg-gray-400'}`}></span>
-                            Inactive
+                            {t('inactive')}
                             <span className="ml-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-[10px] rounded-full">{inactiveProjects.length}</span>
                         </button>
                     </div>
@@ -90,12 +108,12 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                         <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                             <thead>
                                 <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
-                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Project & Client</th>
-                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Progress</th>
-                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Team</th>
-                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Deadline</th>
-                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">{t('project_client')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">{t('progress')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">{t('team')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">{t('status')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">{t('deadline')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">{t('actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
@@ -121,8 +139,19 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                                                             )}
                                                         </div>
                                                         <div>
-                                                            <div className="font-bold text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors leading-tight">
-                                                                {project.name}
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="font-bold text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors leading-tight">
+                                                                    {project.name}
+                                                                </div>
+                                                                {project.project_manager && (
+                                                                    <div 
+                                                                        className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-[#1F2BF3] text-[8px] font-black uppercase tracking-tighter border border-blue-100 dark:border-blue-900/50"
+                                                                        title={`Manager: ${project.project_manager.name}`}
+                                                                    >
+                                                                        <ShieldCheckIcon className="w-2.5 h-2.5" />
+                                                                        PM: {project.project_manager.name.split(' ')[0]}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                             <div className="text-xs text-gray-400 mt-1 flex items-center gap-1.5">
                                                                 <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
@@ -178,7 +207,7 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                                                 <td className="px-8 py-6">
                                                     <div className="flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 w-fit px-3 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700">
                                                         <CalendarIcon className="w-4 h-4 text-[#1F2BF3]" />
-                                                        {project.end_date ? new Date(project.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No limit'}
+                                                        {project.end_date ? new Date(project.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : t('no_limit')}
                                                     </div>
                                                 </td>
                                                 <td className="px-8 py-6">
@@ -202,35 +231,35 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                                                                         <Menu.Item>
                                                                             {({ active }) => (
                                                                                 <button onClick={() => updateStatus(project.id, 'active')} className={`${active ? 'bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3]' : 'text-gray-700 dark:text-gray-300'} flex w-full items-center px-4 py-2.5 text-xs font-bold gap-3`}>
-                                                                                    <ArrowPathIcon className="w-4 h-4 text-emerald-500" /> Reactivate
+                                                                                    <ArrowPathIcon className="w-4 h-4 text-emerald-500" /> {t('reactivate')}
                                                                                 </button>
                                                                             )}
                                                                         </Menu.Item>
                                                                         <Menu.Item>
                                                                             {({ active }) => (
                                                                                 <button onClick={() => updateStatus(project.id, 'completed')} className={`${active ? 'bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3]' : 'text-gray-700 dark:text-gray-300'} flex w-full items-center px-4 py-2.5 text-xs font-bold gap-3 border-t border-gray-50 dark:border-gray-700`}>
-                                                                                    <CheckCircleIcon className="w-4 h-4 text-blue-500" /> Mark Completed
+                                                                                    <CheckCircleIcon className="w-4 h-4 text-blue-500" /> {t('mark_completed')}
                                                                                 </button>
                                                                             )}
                                                                         </Menu.Item>
                                                                         <Menu.Item>
                                                                             {({ active }) => (
                                                                                 <button onClick={() => updateStatus(project.id, 'paused')} className={`${active ? 'bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3]' : 'text-gray-700 dark:text-gray-300'} flex w-full items-center px-4 py-2.5 text-xs font-bold gap-3`}>
-                                                                                    <PauseIcon className="w-4 h-4 text-amber-500" /> Pause Project
+                                                                                    <PauseIcon className="w-4 h-4 text-amber-500" /> {t('pause_project')}
                                                                                 </button>
                                                                             )}
                                                                         </Menu.Item>
                                                                         <Menu.Item>
                                                                             {({ active }) => (
                                                                                 <button onClick={() => updateStatus(project.id, 'cancelled')} className={`${active ? 'bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3]' : 'text-gray-700 dark:text-gray-300'} flex w-full items-center px-4 py-2.5 text-xs font-bold gap-3`}>
-                                                                                    <XCircleIcon className="w-4 h-4 text-red-500" /> Cancel Project
+                                                                                    <XCircleIcon className="w-4 h-4 text-red-500" /> {t('cancel_project')}
                                                                                 </button>
                                                                             )}
                                                                         </Menu.Item>
                                                                         <Menu.Item>
                                                                             {({ active }) => (
                                                                                 <button onClick={() => updateStatus(project.id, 'archived')} className={`${active ? 'bg-blue-50 dark:bg-blue-900/20 text-[#1F2BF3]' : 'text-gray-700 dark:text-gray-300'} flex w-full items-center px-4 py-2.5 text-xs font-bold gap-3`}>
-                                                                                    <ArchiveBoxIcon className="w-4 h-4 text-gray-500" /> Archive Project
+                                                                                    <ArchiveBoxIcon className="w-4 h-4 text-gray-500" /> {t('archive_project')}
                                                                                 </button>
                                                                             )}
                                                                         </Menu.Item>
@@ -250,7 +279,7 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                                                             </button>
                                                         </Link>
                                                         <button 
-                                                            onClick={() => confirm("Are you sure you want to delete this project? This action cannot be undone.") && router.delete(route('admin.projects.destroy', project.id))}
+                                                            onClick={() => handleDelete(project.id)}
                                                             className="p-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100 dark:border-red-900/50"
                                                         >
                                                             <TrashIcon className="w-4 h-4" />
@@ -266,11 +295,11 @@ export default function ProjectsIndex({ auth, activeProjects, inactiveProjects, 
                                                     <div className="w-20 h-20 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center mb-4">
                                                         <MagnifyingGlassIcon className="w-10 h-10 text-gray-300" />
                                                     </div>
-                                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">No {currentTab} projects found</h3>
-                                                    <p className="text-sm text-gray-500">Try adjusting your search or filters to find what you're looking for.</p>
+                                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('no_projects_found', { status: currentTab })}</h3>
+                                                    <p className="text-sm text-gray-500">{t('adjust_filters_desc')}</p>
                                                     {filters.search && (
                                                         <DashboardButton variant="secondary" onClick={() => router.get(route('admin.projects.index'))} className="mt-6">
-                                                            Clear Search
+                                                            {t('clear_search')}
                                                         </DashboardButton>
                                                     )}
                                                 </div>

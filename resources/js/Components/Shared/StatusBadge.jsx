@@ -7,11 +7,10 @@ export default function StatusBadge({ status }) {
         cancelled: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800',
         archived: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600',
         
-        // Task Statuses (backward compatibility or separate task badge if needed)
+        // Task Statuses (backward compatibility or separate task badge if needed)      
         todo: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
         in_progress: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-        completed: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400',
-        blocked: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
+        blocked: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',        
         done: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400',
 
         // Old Project Statuses

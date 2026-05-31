@@ -83,7 +83,7 @@ class TeamHubController extends Controller
     public function chat()
 {
     $member = Auth::user();
-    $admins = User::where('role', 'admin')->get();
+    $admins = User::where('role', 'admin')->get()->unique('name')->values();
 
     $unreadCounts = [];
     foreach ($admins as $admin) {

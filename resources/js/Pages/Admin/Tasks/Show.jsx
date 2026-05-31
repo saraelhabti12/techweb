@@ -1,4 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
+import AiTaskAdvisor from '@/Components/AiTaskAdvisor';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeftIcon, CalendarDaysIcon, CheckCircleIcon, UserGroupIcon, DocumentArrowDownIcon, FolderOpenIcon, BuildingOfficeIcon, EnvelopeIcon, PhoneIcon } from '@heroicons/react/24/outline';
 import DashboardPage from '@/Components/UI/DashboardPage';
@@ -111,6 +112,8 @@ export default function Show({ task, auth }) {
                                 </div>
                             </div>
                         </DashboardCard>
+
+                        <AiTaskAdvisor task={task} />
 
                         {/* Files Section */}
                         <DashboardCard title="Task Attachments">

@@ -1,5 +1,6 @@
 import React from 'react';
 import MemberLayout from '@/Layouts/MemberLayout';
+import AiTaskAdvisor from '@/Components/AiTaskAdvisor';
 import { Head, useForm, Link, router } from '@inertiajs/react';
 import { ArrowLeft, Calendar, Briefcase, User, FileText, Link as LinkIcon, Plus, CheckCircle2, Clock, Download, Navigation, AlertCircle, TrendingUp } from 'lucide-react';
 import DashboardPage from '@/Components/UI/DashboardPage';
@@ -121,6 +122,8 @@ export default function TaskProgress({ auth, task }) {
                                 </div>
                             )}
                         </DashboardCard>
+
+                        <AiTaskAdvisor task={task} />
 
                         <div className="space-y-6">
                             <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter ml-2 flex items-center gap-3">

@@ -6,9 +6,20 @@ import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
 import { motion } from 'framer-motion';
 
-export default function Index({ categories, auth }) {
-    const handleDelete = (id) => {
-        if (confirm("Are you sure you want to delete this category?")) {
+import { useConfirm } from '@/Contexts/ConfirmContext';
+
+export default function Index({ auth, categories }) {
+    const confirm = useConfirm();
+
+    const handleDelete = async (id) => {
+        const isConfirmed = await confirm({
+            title: 'Delete Category',
+            message: 'Are you sure you want to delete this category?',
+            confirmText: 'Delete',
+            variant: 'danger'
+        });
+
+        if (isConfirmed) {
             router.delete(route('admin.categories.destroy', id));
         }
     };

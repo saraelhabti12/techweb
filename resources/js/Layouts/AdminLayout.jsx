@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import NotificationDropdown from '@/Components/NotificationDropdown';
 import HistoryDropdown from '@/Components/HistoryDropdown';
 import DarkModeToggle from '@/Components/DarkModeToggle';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
+import ProfileDropdown from '@/Components/Admin/ProfileDropdown';
 import {
     HomeIcon,
     FolderIcon,
@@ -22,18 +25,77 @@ import {
     ChatBubbleLeftRightIcon,
     Bars3Icon,
     XMarkIcon,
-    ShieldExclamationIcon
+    ShieldExclamationIcon,
+    ArrowTrendingDownIcon,
+    ArrowTrendingUpIcon,
+    BriefcaseIcon
 } from '@heroicons/react/24/outline';
 
 import Avatar from '@/Components/UI/Avatar';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import axios from 'axios';
+import { 
+    XMarkIcon as X, 
+    CheckCircleIcon as CheckCircle2, 
+    ExclamationTriangleIcon as AlertCircle 
+} from '@heroicons/react/24/outline';
 
-export default function AdminLayout({ auth, children, title = '' }) {
-    const { unreadChatCount = 0 } = usePage().props;
+export default function AdminLayout({ auth, children, title = '', mainClassName = "", contentClassName = "" }) {
+    const { t } = useTranslation();
+    const { auth: sharedAuth, unreadChatCount = 0, flash } = usePage().props;
+    // Use the most complete auth object available
+    const userAuth = auth || sharedAuth;
+
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState({ type: '', text: '' });
     
+    useEffect(() => {
+        if (flash?.success) {
+            setToastMessage({ type: 'success', text: flash.success });
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 5000);
+        } else if (flash?.error) {
+            setToastMessage({ type: 'error', text: flash.error });
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 5000);
+        }
+    }, [flash]);
+
+    const [openMenus, setOpenMenus] = useState({
+        projects: false,
+        tasks: false,
+        appointments: false,
+        members: false,
+        contacts: false,
+        financial: false,
+        categories: false,
+        blogs: false,
+        templates: false,
+        teamhub: false,
+        creators: false,
+        commercials: false
+    });
+
+    const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+    const toggleMenu = (menu) => {
+        setOpenMenus(prev => ({
+            ...prev,
+            [menu]: !prev[menu]
+        }));
+    };
+
+    const hasPermission = (permission) => {
+        const user = userAuth?.user;
+        if (!user) return false;
+        if (user.role === 'admin') return true;
+        
+        const userPermissions = user.permissions || [];
+        const permsArray = Array.isArray(userPermissions) ? userPermissions : Object.values(userPermissions);
+        return permsArray.some(p => typeof p === 'string' && p.toLowerCase() === permission.toLowerCase());
+    };
+
     // Heartbeat logic
     useEffect(() => {
         const heartbeat = () => {
@@ -48,302 +110,344 @@ export default function AdminLayout({ auth, children, title = '' }) {
 
         return () => clearInterval(interval);
     }, []);
-    
-    const [openMenus, setOpenMenus] = useState({
-        projects: false,
-        tasks: false,
-        members: false,
-        categories: false,
-        blogs: false,
-        contacts: false,
-        templates: false,
-        schedule: false,
-        teamhub: false,
-        appointments: false,
-        financial: false,
-    });
-
-    useEffect(() => {
-        setOpenMenus(prev => ({
-            ...prev,
-            projects: route().current('admin.projects.*'),
-            tasks: route().current('admin.tasks.*') || route().current('admin.progress.*'),
-            members: route().current('admin.members.*'),
-            contacts: route().current('admin.customers.*') || route().current('admin.clients.*'),
-            financial: route().current('admin.quotations.*') || route().current('admin.invoices.*'),
-            appointments: route().current('admin.appointments.*'),
-            categories: route().current('admin.categories.*'),
-            blogs: route().current('admin.blogs.*'),
-            templates: route().current('admin.templates.*'),
-            schedule: route().current('admin.schedule.*'),
-            teamhub: route().current('admin.teamhub.*'),
-        }));
-    }, []);
-
-    const toggleMenu = (menu) => {
-        setOpenMenus((prev) => ({
-            ...prev,
-            [menu]: !prev[menu],
-        }));
-    };
-
-    const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
     return (
-        <div className="flex h-screen bg-[#F8FAFC] dark:bg-black font-sans transition-colors duration-500">
-            {/* Sidebar Desktop */}
-            <motion.aside
-                initial={false}
-                animate={{ width: sidebarOpen ? 280 : 88 }}
-                className={`hidden md:flex flex-col bg-white dark:bg-[#0A0A0A] border-r border-gray-200 dark:border-gray-800 transition-all duration-300 z-30 shadow-xl overflow-hidden`}
-            >
-                {/* Logo Section */}
-                <div className="h-20 flex items-center px-6 border-b border-gray-100 dark:border-gray-800/50">
-                    <Link href="/admin/dashboard" className="flex items-center gap-3 overflow-hidden">
-                        <ApplicationLogo className="h-10 w-auto" />
-                    </Link>
-                </div>
+        <div className="h-screen bg-[#F8FAFC] dark:bg-black font-sans flex flex-col transition-colors duration-500 overflow-hidden">
+            {/* Toast Notification */}
+            <AnimatePresence>
+                {showToast && (
+                    <motion.div 
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 100 }}
+                        className={`fixed top-6 right-6 z-[100] flex items-center p-4 rounded-2xl shadow-2xl backdrop-blur-md border ${
+                        toastMessage.type === 'success' 
+                            ? 'bg-green-50/90 dark:bg-green-900/20 text-green-800 dark:text-green-300 border-green-100 dark:border-green-800' 
+                            : 'bg-red-50/90 dark:bg-red-900/20 text-red-800 dark:text-red-300 border-red-100 dark:border-red-800'
+                    }`}>
+                        {toastMessage.type === 'success' ? <CheckCircle2 className="w-5 h-5 mr-3" /> : <AlertCircle className="w-5 h-5 mr-3" />}
+                        <span className="font-bold mr-8">{toastMessage.text}</span>
+                        <button onClick={() => setShowToast(false)} className="ml-auto p-1.5 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                            <X className="w-4 h-4" />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                {/* Nav Links */}
-                <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
-                    <NavItem 
-                        href={route('admin.dashboard')} 
-                        icon={<ChartBarIcon className="w-5 h-5" />} 
-                        label="Dashboard" 
-                        active={route().current('admin.dashboard')}
-                        sidebarOpen={sidebarOpen}
-                    />
-
-                    <NavGroup 
-                        label="Projects" 
-                        icon={<FolderIcon className="w-5 h-5" />} 
-                        isOpen={openMenus.projects} 
-                        onClick={() => toggleMenu('projects')}
-                        sidebarOpen={sidebarOpen}
-                        active={route().current('admin.projects.*')}
-                        links={[
-                            { label: 'All Projects', href: route('admin.projects.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                            { label: 'Add Project', href: route('admin.projects.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                        ]}
-                    />
-
-                    <NavGroup 
-                        label="Tasks" 
-                        icon={<DocumentTextIcon className="w-5 h-5" />} 
-                        isOpen={openMenus.tasks} 
-                        onClick={() => toggleMenu('tasks')}
-                        sidebarOpen={sidebarOpen}
-                        active={route().current('admin.tasks.*') || route().current('admin.progress.*')}
-                        links={[
-                            { label: 'All Tasks', href: route('admin.tasks.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                            { label: 'Add Task', href: route('admin.tasks.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                            { label: 'Progress Updates', href: route('admin.progress.index'), icon: <DocumentTextIcon className="w-4 h-4" /> },
-                        ]}
-                    />
-
-                    <NavGroup 
-                        label="Appointments" 
-                        icon={<CalendarIcon className="w-5 h-5" />} 
-                        isOpen={openMenus.appointments} 
-                        onClick={() => toggleMenu('appointments')}
-                        sidebarOpen={sidebarOpen}
-                        active={route().current('admin.appointments.*')}
-                        links={[
-                            { label: 'Requests', href: route('admin.appointments.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                            { label: 'Calendar', href: route('admin.appointments.calendar'), icon: <CalendarIcon className="w-4 h-4" /> },
-                        ]}
-                    />
-
-                    <NavGroup 
-                        label="Members" 
-                        icon={<UsersIcon className="w-5 h-5" />} 
-                        isOpen={openMenus.members} 
-                        onClick={() => toggleMenu('members')}
-                        sidebarOpen={sidebarOpen}
-                        active={route().current('admin.members.*')}
-                        links={[
-                            { label: 'All Members', href: route('admin.members.index'), icon: <UsersIcon className="w-4 h-4" /> },
-                            { label: 'Add Member', href: route('admin.members.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                            { label: 'Attendance', href: route('admin.members.attendance'), icon: <CalendarIcon className="w-4 h-4" /> },
-                        ]}
-                    />
-
-                    <NavGroup 
-                        label="Customers" 
-                        icon={<UserIcon className="w-5 h-5" />} 
-                        isOpen={openMenus.contacts} 
-                        onClick={() => toggleMenu('contacts')}
-                        sidebarOpen={sidebarOpen}
-                        active={route().current('admin.customers.*') || route().current('admin.clients.*')}
-                        links={[
-                            { label: 'All Contacts', href: route('admin.customers.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                            { label: 'All Clients', href: route('admin.clients.index'), icon: <UsersIcon className="w-4 h-4" /> },
-                            { label: 'Add Client', href: route('admin.clients.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                            { label: 'Blocked Clients', href: route('admin.clients.blacklist'), icon: <ShieldExclamationIcon className="w-4 h-4" /> },
-                        ]}
-                    />
-
-                    <NavGroup 
-                        label="Financial" 
-                        icon={<DocumentTextIcon className="w-5 h-5" />} 
-                        isOpen={openMenus.financial}
-                        onClick={() => toggleMenu('financial')}
-                        sidebarOpen={sidebarOpen}
-                        active={route().current('admin.quotations.*') || route().current('admin.invoices.*')}
-                        links={[
-                            { label: 'Quotations', href: route('admin.quotations.index'), icon: <DocumentTextIcon className="w-4 h-4" /> },
-                            { label: 'Invoices', href: route('admin.invoices.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                        ]}
-                    />
-
-                    <NavItem 
-                        href={route('admin.shared-files.index')} 
-                        icon={<FolderIcon className="w-5 h-5" />} 
-                        label="Shared Files" 
-                        active={route().current('admin.shared-files.*')}
-                        sidebarOpen={sidebarOpen}
-                    />
-
-                    <div className="pt-4 pb-2">
-                        <div className={`text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-4 mb-2 ${!sidebarOpen && 'text-center px-0'}`}>
-                            {sidebarOpen ? 'Content Management' : 'CMS'}
-                        </div>
-                    </div>
-
-                    <NavGroup 
-                        label="Categories" 
-                        icon={<TagIcon className="w-5 h-5" />} 
-                        isOpen={openMenus.categories} 
-                        onClick={() => toggleMenu('categories')}
-                        sidebarOpen={sidebarOpen}
-                        active={route().current('admin.categories.*')}
-                        links={[
-                            { label: 'All Categories', href: route('admin.categories.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                        ]}
-                    />
-
-                    <NavGroup 
-                        label="Blogs" 
-                        icon={<DocumentTextIcon className="w-5 h-5" />} 
-                        isOpen={openMenus.blogs} 
-                        onClick={() => toggleMenu('blogs')}
-                        sidebarOpen={sidebarOpen}
-                        active={route().current('admin.blogs.*')}
-                        links={[
-                            { label: 'All Blogs', href: route('admin.blogs.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                            { label: 'Create Blog', href: route('admin.blogs.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                        ]}
-                    />
-
-                    <NavGroup 
-                        label="Templates" 
-                        icon={<TagIcon className="w-5 h-5" />} 
-                        isOpen={openMenus.templates} 
-                        onClick={() => toggleMenu('templates')}
-                        sidebarOpen={sidebarOpen}
-                        active={route().current('admin.templates.*')}
-                        links={[
-                            { label: 'All Templates', href: route('admin.templates.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                            { label: 'Add Template', href: route('admin.templates.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                        ]}
-                    />
-
-                    <NavGroup 
-                        label="Team Hub" 
-                        icon={<ChatBubbleLeftRightIcon className="w-5 h-5" />} 
-                        isOpen={openMenus.teamhub} 
-                        onClick={() => toggleMenu('teamhub')}
-                        sidebarOpen={sidebarOpen}
-                        active={route().current('admin.teamhub.*')}
-                        links={[
-                            { label: 'Activities', href: route('admin.teamhub.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                            { label: 'Chat', href: route('chat.index'), icon: <ChatBubbleLeftRightIcon className="w-4 h-4" /> },
-                        ]}
-                    />
-                </nav>
-
-                {/* Sidebar Footer */}
-                <div className="p-4 border-t border-gray-100 dark:border-gray-800">
-                    <Link
-                        href={route('logout')}
-                        method="post"
-                        as="button"
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
+            {/* Top Navigation Bar */}
+            <header className="h-20 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-6 lg:px-8 flex items-center justify-between z-40 shrink-0 sticky top-0">
+                <div className="flex items-center gap-4">
+                    {/* Desktop Sidebar Toggle */}
+                    <button 
+                        onClick={toggleSidebar} 
+                        className="hidden md:flex p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:text-[#1F2BF3] transition-colors border border-gray-100 dark:border-gray-800 mr-2"
                     >
-                        <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                        {sidebarOpen && <span>Logout</span>}
-                    </Link>
-                </div>
-            </motion.aside>
-
-            {/* Mobile Header */}
-            <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-[#0A0A0A] border-b border-gray-200 dark:border-gray-800 z-40 px-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <ApplicationLogo className="h-8 w-auto" />
-                </div>
-                <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 text-gray-600 dark:text-gray-400">
-                    {mobileMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
-                </button>
-            </div>
-
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden pt-16 md:pt-0">
-                {/* Topbar Desktop */}
-                <header className="hidden md:flex h-20 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-8 items-center justify-between sticky top-0 z-20">
-                    <button onClick={toggleSidebar} className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:text-[#1F2BF3] transition-colors border border-gray-100 dark:border-gray-800">
                         {sidebarOpen ? <XMarkIcon className="w-5 h-5" /> : <Bars3Icon className="w-5 h-5" />}
                     </button>
+                    
+                    {/* Mobile Menu Button */}
+                    <button 
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+                        className="md:hidden p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:text-[#1F2BF3] transition-colors border border-gray-100 dark:border-gray-800 mr-2"
+                    >
+                        {mobileMenuOpen ? <XMarkIcon className="w-5 h-5" /> : <Bars3Icon className="w-5 h-5" />}
+                    </button>
 
-                    <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-2 pr-6 border-r border-gray-100 dark:border-gray-800">
-                             <Link
+                    <Link href="/" className="flex items-center gap-3 group">
+                        <ApplicationLogo className="h-10 w-auto group-hover:scale-110 transition-transform" />
+                    </Link>
+                </div>
+
+                <div className="flex items-center gap-3 lg:gap-6">
+                    <div className="flex items-center gap-2 pr-4 border-r border-gray-100 dark:border-gray-800">
+                         {hasPermission('view chat') && (
+                            <Link
                                 href={route('chat.index')}
-                                className="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-[#1F2BF3] transition-all relative"
+                                className="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-[#1F2BF3] transition-all relative group"
+                                title="Chat"
                             >
-                                <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                                <ChatBubbleLeftRightIcon className="h-5 w-5 group-hover:scale-110 transition-transform" />
                                 {unreadChatCount > 0 && (
                                     <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center text-[10px] font-bold text-white bg-red-500 rounded-full border-2 border-white dark:border-gray-950">
                                         {unreadChatCount}
                                     </span>
                                 )}
                             </Link>
-                            <HistoryDropdown />
-                            <NotificationDropdown />
-                            <DarkModeToggle />
-                        </div>
+                         )}
+                        {hasPermission('view history') && <HistoryDropdown />}
+                        {hasPermission('view notifications') && <NotificationDropdown />}
+                        <LanguageSwitcher />
+                        <DarkModeToggle />
+                    </div>
 
-                        <Link href={route('admin.profile')} className="flex items-center gap-3 p-1.5 pr-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all border border-transparent hover:border-gray-100 dark:hover:border-gray-800 group">
-                            <div className="relative">
-                                <Avatar user={auth?.user} size="md" className="border border-gray-100 dark:border-gray-800 shadow-sm" />
-                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-950 rounded-full"></div>
-                            </div>
-                            <div className="text-left hidden xl:block">
-                                <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#1F2BF3] transition-colors">{auth?.user?.name}</p>
-                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{auth?.user?.role}</p>
-                            </div>
+                    <ProfileDropdown 
+                        user={userAuth?.user} 
+                        profileRoute={route('admin.profile')} 
+                        logoutRoute={route('logout')} 
+                    />
+                </div>
+            </header>
+
+            <div className="flex flex-1 overflow-hidden">
+                {/* Sidebar Desktop */}
+                <motion.aside
+                    initial={false}
+                    animate={{ width: sidebarOpen ? 280 : 88 }}
+                    className={`hidden md:flex flex-col bg-white dark:bg-[#0A0A0A] border-r border-gray-200 dark:border-gray-800 transition-all duration-300 z-30 shadow-xl overflow-hidden h-full`}
+                >
+                    {/* Nav Links */}
+                    <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+                        {hasPermission('view dashboard') && (
+                            <NavItem 
+                                href={route('admin.dashboard')} 
+                                icon={<ChartBarIcon className="w-5 h-5" />} 
+                                label={t('dashboard')} 
+                                active={route().current('admin.dashboard')}
+                                sidebarOpen={sidebarOpen}
+                            />
+                        )}
+
+                        {hasPermission('view roles') && (
+                            <NavItem 
+                                href={route('admin.roles.index')} 
+                                icon={<ShieldExclamationIcon className="w-5 h-5" />} 
+                                label={t('roles_permissions')} 
+                                active={route().current('admin.roles.*')}
+                                sidebarOpen={sidebarOpen}
+                            />
+                        )}
+
+                        {hasPermission('view projects') && (
+                            <NavGroup 
+                                label={t('projects')} 
+                                icon={<FolderIcon className="w-5 h-5" />} 
+                                isOpen={openMenus.projects} 
+                                onClick={() => toggleMenu('projects')}
+                                sidebarOpen={sidebarOpen}
+                                active={route().current('admin.projects.*')}
+                                links={[
+                                    { label: t('all_projects'), href: route('admin.projects.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                    hasPermission('create projects') && { label: t('add_project'), href: route('admin.projects.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                ].filter(Boolean)}
+                            />
+                        )}
+
+                        {hasPermission('view tasks') && (
+                            <NavGroup 
+                                label={t('tasks')} 
+                                icon={<DocumentTextIcon className="w-5 h-5" />} 
+                                isOpen={openMenus.tasks} 
+                                onClick={() => toggleMenu('tasks')}
+                                sidebarOpen={sidebarOpen}
+                                active={route().current('admin.tasks.*') || route().current('admin.progress.*')}
+                                links={[
+                                    { label: t('all_tasks'), href: route('admin.tasks.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                    hasPermission('create tasks') && { label: t('add_task'), href: route('admin.tasks.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                    { label: t('progress_updates'), href: route('admin.progress.index'), icon: <DocumentTextIcon className="w-4 h-4" /> },
+                                ].filter(Boolean)}
+                            />
+                        )}
+
+                        {hasPermission('view appointments') && (
+                            <NavGroup 
+                                label={t('appointments')} 
+                                icon={<CalendarIcon className="w-5 h-5" />} 
+                                isOpen={openMenus.appointments} 
+                                onClick={() => toggleMenu('appointments')}
+                                sidebarOpen={sidebarOpen}
+                                active={route().current('admin.appointments.*')}
+                                links={[
+                                    { label: t('requests'), href: route('admin.appointments.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                    hasPermission('view calendar') && { label: t('calendar'), href: route('admin.appointments.calendar'), icon: <CalendarIcon className="w-4 h-4" /> },
+                                ].filter(Boolean)}
+                            />
+                        )}
+
+                        {hasPermission('view members') && (
+                            <NavGroup 
+                                label={t('members')} 
+                                icon={<UsersIcon className="w-5 h-5" />} 
+                                isOpen={openMenus.members} 
+                                onClick={() => toggleMenu('members')}
+                                sidebarOpen={sidebarOpen}
+                                active={route().current('admin.members.*') || route().current('admin.leaves.*')}
+                                links={[
+                                    { label: t('all_members'), href: route('admin.members.index'), icon: <UsersIcon className="w-4 h-4" /> },
+                                    hasPermission('create members') && { label: t('add_member'), href: route('admin.members.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                    hasPermission('view attendance') && { label: t('attendance'), href: route('admin.members.attendance'), icon: <CalendarIcon className="w-4 h-4" /> },
+                                    { label: t('leave_requests'), href: route('admin.leaves.index'), icon: <CalendarIcon className="w-4 h-4" /> },
+                                ].filter(Boolean)}
+                            />
+                        )}
+
+                        {(hasPermission('view clients') || hasPermission('view contacts') || hasPermission('view commercials')) && (
+                            <NavGroup 
+                                label={t('customers')} 
+                                icon={<UserIcon className="w-5 h-5" />} 
+                                isOpen={openMenus.contacts} 
+                                onClick={() => toggleMenu('contacts')}
+                                sidebarOpen={sidebarOpen}
+                                active={route().current('admin.customers.*') || route().current('admin.clients.*') || route().current('admin.commercials.*')}
+                                links={[
+                                    hasPermission('view contacts') && { label: t('all_contacts'), href: route('admin.customers.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                    hasPermission('view clients') && { label: t('all_clients'), href: route('admin.clients.index'), icon: <UsersIcon className="w-4 h-4" /> },
+                                    hasPermission('create clients') && { label: t('add_client'), href: route('admin.clients.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                    hasPermission('view commercials') && { label: t('commercials'), href: route('admin.commercials.index'), icon: <BriefcaseIcon className="w-4 h-4" /> },
+                                    hasPermission('edit clients') && { label: t('blocked_clients'), href: route('admin.clients.blacklist'), icon: <ShieldExclamationIcon className="w-4 h-4" /> },
+                                ].filter(Boolean)}
+                            />
+                        )}
+
+                        {(hasPermission('view finance') || hasPermission('view invoices') || hasPermission('view quotes')) && (
+                            <NavGroup 
+                                label={t('financial')} 
+                                icon={<DocumentTextIcon className="w-5 h-5" />} 
+                                isOpen={openMenus.financial}
+                                onClick={() => toggleMenu('financial')}
+                                sidebarOpen={sidebarOpen}
+                                active={route().current('admin.quotations.*') || route().current('admin.invoices.*') || route().current('admin.finance.*') || route().current('admin.expenses.*') || route().current('admin.salaries.*') || route().current('admin.incomes.*')}
+                                links={[
+                                    hasPermission('view finance') && { label: t('charges_tracking'), href: route('admin.finance.dashboard'), icon: <ChartBarIcon className="w-4 h-4" /> },
+                                    hasPermission('view quotes') && { label: t('quotations'), href: route('admin.quotations.index'), icon: <DocumentTextIcon className="w-4 h-4" /> },
+                                    hasPermission('view invoices') && { label: t('invoices'), href: route('admin.invoices.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                    hasPermission('edit finance') && { label: t('expenses'), href: route('admin.expenses.index'), icon: <ArrowTrendingDownIcon className="w-4 h-4" /> },
+                                    hasPermission('edit finance') && { label: t('incomes'), href: route('admin.incomes.index'), icon: <ArrowTrendingUpIcon className="w-4 h-4" /> },
+                                    hasPermission('edit finance') && { label: t('salaries'), href: route('admin.salaries.index'), icon: <UsersIcon className="w-4 h-4" /> },
+                                    hasPermission('edit finance') && { label: t('exp_categories'), href: route('admin.expense-categories.index'), icon: <TagIcon className="w-4 h-4" /> },
+                                ].filter(Boolean)}
+                            />
+                        )}
+
+                        <NavItem 
+                            href={route('admin.shared-files.index')} 
+                            icon={<FolderIcon className="w-5 h-5" />} 
+                            label={t('shared_files')} 
+                            active={route().current('admin.shared-files.*')}
+                            sidebarOpen={sidebarOpen}
+                        />
+
+                        {(hasPermission('view categories') || hasPermission('view blogs') || hasPermission('view templates') || hasPermission('view teamhub')) && (
+                            <>
+                                <div className="pt-4 pb-2">
+                                    <div className={`text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-4 mb-2 ${!sidebarOpen && 'text-center px-0'}`}>
+                                        {sidebarOpen ? t('content_management') : 'CMS'}
+                                    </div>
+                                </div>
+
+                                {hasPermission('view categories') && (
+                                    <NavGroup 
+                                        label={t('categories')} 
+                                        icon={<TagIcon className="w-5 h-5" />} 
+                                        isOpen={openMenus.categories} 
+                                        onClick={() => toggleMenu('categories')}
+                                        sidebarOpen={sidebarOpen}
+                                        active={route().current('admin.categories.*')}
+                                        links={[
+                                            { label: t('all_categories'), href: route('admin.categories.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                        ]}
+                                    />
+                                )}
+
+                                {hasPermission('view blogs') && (
+                                    <NavGroup 
+                                        label={t('blogs')} 
+                                        icon={<DocumentTextIcon className="w-5 h-5" />} 
+                                        isOpen={openMenus.blogs} 
+                                        onClick={() => toggleMenu('blogs')}
+                                        sidebarOpen={sidebarOpen}
+                                        active={route().current('admin.blogs.*')}
+                                        links={[
+                                            { label: t('all_blogs'), href: route('admin.blogs.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                            hasPermission('create blogs') && { label: t('create_blog'), href: route('admin.blogs.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                        ].filter(Boolean)}
+                                    />
+                                )}
+
+                                {hasPermission('view templates') && (
+                                    <NavGroup 
+                                        label={t('templates')} 
+                                        icon={<TagIcon className="w-5 h-5" />} 
+                                        isOpen={openMenus.templates} 
+                                        onClick={() => toggleMenu('templates')}
+                                        sidebarOpen={sidebarOpen}
+                                        active={route().current('admin.templates.*')}
+                                        links={[
+                                            { label: t('all_templates'), href: route('admin.templates.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                            hasPermission('create templates') && { label: t('add_template'), href: route('admin.templates.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                        ].filter(Boolean)}
+                                    />
+                                )}
+
+                                {hasPermission('view creators') && (
+                                    <NavGroup 
+                                        label={t('creators')} 
+                                        icon={<UsersIcon className="w-5 h-5" />} 
+                                        isOpen={openMenus.creators} 
+                                        onClick={() => toggleMenu('creators')}
+                                        sidebarOpen={sidebarOpen}
+                                        active={route().current('admin.creators.*')}
+                                        links={[
+                                            { label: t('all_creators'), href: route('admin.creators.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                            hasPermission('create creators') && { label: t('add_creator'), href: route('admin.creators.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                        ].filter(Boolean)}
+                                    />
+                                )}
+
+                                {hasPermission('view teamhub') && (
+                                    <NavGroup 
+                                        label={t('team_hub')} 
+                                        icon={<ChatBubbleLeftRightIcon className="w-5 h-5" />} 
+                                        isOpen={openMenus.teamhub} 
+                                        onClick={() => toggleMenu('teamhub')}
+                                        sidebarOpen={sidebarOpen}
+                                        active={route().current('admin.teamhub.*')}
+                                        links={[
+                                            { label: t('activities'), href: route('admin.teamhub.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                            hasPermission('view chat') && { label: t('chat'), href: route('chat.index'), icon: <ChatBubbleLeftRightIcon className="w-4 h-4" /> },
+                                        ].filter(Boolean)}
+                                    />
+                                )}
+                            </>
+                        )}
+                    </nav>
+
+                    {/* Sidebar Footer */}
+                    <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+                        <Link
+                            href={route('logout')}
+                            method="post"
+                            as="button"
+                            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
+                        >
+                            <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                            {sidebarOpen && <span>{t('logout')}</span>}
                         </Link>
                     </div>
-                </header>
+                </motion.aside>
 
-                {/* Main Content Scrollable */}
-                <main className="flex-1 overflow-y-auto scroll-smooth bg-gray-50 dark:bg-black relative">
-                    {/* Ambient Background Glows */}
-                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                {/* Main Content Wrapper */}
+                <main className={`flex-1 min-w-0 h-full ${mainClassName} bg-gray-50 dark:bg-black relative overflow-hidden`}>
+                    {/* Ambient Background Glows (Static) */}
+                    <div className="absolute inset-0 pointer-events-none z-0">
                         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#1F2BF3]/5 blur-[120px] rounded-full dark:opacity-20 opacity-10 animate-pulse" />
                         <div className="absolute bottom-[10%] right-[-5%] w-[35%] h-[35%] bg-[#00D8C0]/5 blur-[120px] rounded-full dark:opacity-15 opacity-5" />
                     </div>
 
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={route().current()}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            {children}
-                        </motion.div>
-                    </AnimatePresence>
+                    {/* Scrollable Content Area */}
+                    <div className="h-full overflow-y-auto custom-scrollbar relative z-10">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={route().current()}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.3 }}
+                                className={contentClassName}
+                            >
+                                {children}
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
                 </main>
             </div>
 
@@ -356,178 +460,229 @@ export default function AdminLayout({ auth, children, title = '' }) {
                             animate={{ opacity: 1 }} 
                             exit={{ opacity: 0 }}
                             onClick={() => setMobileMenuOpen(false)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden"
                         />
                         <motion.aside 
                             initial={{ x: '-100%' }} 
                             animate={{ x: 0 }} 
                             exit={{ x: '-100%' }}
-                            className="fixed top-0 left-0 bottom-0 w-80 bg-white dark:bg-[#0A0A0A] z-50 lg:hidden shadow-2xl flex flex-col"
+                            className="fixed top-0 left-0 bottom-0 w-80 bg-white dark:bg-[#0A0A0A] z-50 md:hidden shadow-2xl flex flex-col"
                         >
                             <div className="h-20 flex items-center justify-between px-6 border-b dark:border-gray-800">
-                                <ApplicationLogo className="h-10 w-auto" />
+                                <Link href="/">
+                                    <ApplicationLogo className="h-10 w-auto" />
+                                </Link>
                                 <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-xl bg-gray-50 dark:bg-gray-900">
                                     <XMarkIcon className="w-6 h-6 dark:text-white" />
                                 </button>
                             </div>
                             <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                                <NavItem 
-                                    href={route('admin.dashboard')} 
-                                    icon={<ChartBarIcon className="w-5 h-5" />} 
-                                    label="Dashboard" 
-                                    active={route().current('admin.dashboard')}
-                                    sidebarOpen={true}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                />
+                                {hasPermission('view dashboard') && (
+                                    <NavItem 
+                                        href={route('admin.dashboard')} 
+                                        icon={<ChartBarIcon className="w-5 h-5" />} 
+                                        label={t('dashboard')} 
+                                        active={route().current('admin.dashboard')}
+                                        sidebarOpen={true}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    />
+                                )}
 
-                                <NavGroup 
-                                    label="Projects" 
-                                    icon={<FolderIcon className="w-5 h-5" />} 
-                                    isOpen={openMenus.projects} 
-                                    onClick={() => toggleMenu('projects')}
-                                    sidebarOpen={true}
-                                    active={route().current('admin.projects.*')}
-                                    links={[
-                                        { label: 'All Projects', href: route('admin.projects.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                                        { label: 'Add Project', href: route('admin.projects.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                                    ]}
-                                    onLinkClick={() => setMobileMenuOpen(false)}
-                                />
+                                {hasPermission('view projects') && (
+                                    <NavGroup 
+                                        label={t('projects')} 
+                                        icon={<FolderIcon className="w-5 h-5" />} 
+                                        isOpen={openMenus.projects} 
+                                        onClick={() => toggleMenu('projects')}
+                                        sidebarOpen={true}
+                                        active={route().current('admin.projects.*')}
+                                        links={[
+                                            { label: t('all_projects'), href: route('admin.projects.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                            hasPermission('create projects') && { label: t('add_project'), href: route('admin.projects.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                        ].filter(Boolean)}
+                                        onLinkClick={() => setMobileMenuOpen(false)}
+                                    />
+                                )}
 
-                                <NavGroup 
-                                    label="Tasks" 
-                                    icon={<DocumentTextIcon className="w-5 h-5" />} 
-                                    isOpen={openMenus.tasks} 
-                                    onClick={() => toggleMenu('tasks')}
-                                    sidebarOpen={true}
-                                    active={route().current('admin.tasks.*') || route().current('admin.progress.*')}
-                                    links={[
-                                        { label: 'All Tasks', href: route('admin.tasks.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                                        { label: 'Add Task', href: route('admin.tasks.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                                        { label: 'Progress Updates', href: route('admin.progress.index'), icon: <DocumentTextIcon className="w-4 h-4" /> },
-                                    ]}
-                                    onLinkClick={() => setMobileMenuOpen(false)}
-                                />
+                                {hasPermission('view tasks') && (
+                                    <NavGroup 
+                                        label={t('tasks')} 
+                                        icon={<DocumentTextIcon className="w-5 h-5" />} 
+                                        isOpen={openMenus.tasks} 
+                                        onClick={() => toggleMenu('tasks')}
+                                        sidebarOpen={true}
+                                        active={route().current('admin.tasks.*') || route().current('admin.progress.*')}
+                                        links={[
+                                            { label: t('all_tasks'), href: route('admin.tasks.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                            hasPermission('create tasks') && { label: t('add_task'), href: route('admin.tasks.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                            { label: t('progress_updates'), href: route('admin.progress.index'), icon: <DocumentTextIcon className="w-4 h-4" /> },
+                                        ].filter(Boolean)}
+                                        onLinkClick={() => setMobileMenuOpen(false)}
+                                    />
+                                )}
 
-                                <NavGroup 
-                                    label="Appointments" 
-                                    icon={<CalendarIcon className="w-5 h-5" />} 
-                                    isOpen={openMenus.appointments} 
-                                    onClick={() => toggleMenu('appointments')}
-                                    sidebarOpen={true}
-                                    active={route().current('admin.appointments.*')}
-                                    links={[
-                                        { label: 'Requests', href: route('admin.appointments.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                                        { label: 'Calendar', href: route('admin.appointments.calendar'), icon: <CalendarIcon className="w-4 h-4" /> },
-                                    ]}
-                                    onLinkClick={() => setMobileMenuOpen(false)}
-                                />
+                                {hasPermission('view appointments') && (
+                                    <NavGroup 
+                                        label={t('appointments')} 
+                                        icon={<CalendarIcon className="w-5 h-5" />} 
+                                        isOpen={openMenus.appointments} 
+                                        onClick={() => toggleMenu('appointments')}
+                                        sidebarOpen={true}
+                                        active={route().current('admin.appointments.*')}
+                                        links={[
+                                            { label: t('requests'), href: route('admin.appointments.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                            hasPermission('view calendar') && { label: t('calendar'), href: route('admin.appointments.calendar'), icon: <CalendarIcon className="w-4 h-4" /> },
+                                        ].filter(Boolean)}
+                                        onLinkClick={() => setMobileMenuOpen(false)}
+                                    />
+                                )}
 
-                                <NavGroup 
-                                    label="Members" 
-                                    icon={<UsersIcon className="w-5 h-5" />} 
-                                    isOpen={openMenus.members} 
-                                    onClick={() => toggleMenu('members')}
-                                    sidebarOpen={true}
-                                    active={route().current('admin.members.*')}
-                                    links={[
-                                        { label: 'All Members', href: route('admin.members.index'), icon: <UsersIcon className="w-4 h-4" /> },
-                                        { label: 'Add Member', href: route('admin.members.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                                        { label: 'Attendance', href: route('admin.members.attendance'), icon: <CalendarIcon className="w-4 h-4" /> },
-                                    ]}
-                                    onLinkClick={() => setMobileMenuOpen(false)}
-                                />
+                                {hasPermission('view members') && (
+                                    <NavGroup 
+                                        label={t('members')} 
+                                        icon={<UsersIcon className="w-5 h-5" />} 
+                                        isOpen={openMenus.members} 
+                                        onClick={() => toggleMenu('members')}
+                                        sidebarOpen={true}
+                                        active={route().current('admin.members.*') || route().current('admin.roles.*')}
+                                        links={[
+                                            { label: t('all_members'), href: route('admin.members.index'), icon: <UsersIcon className="w-4 h-4" /> },
+                                            hasPermission('create members') && { label: t('add_member'), href: route('admin.members.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                            hasPermission('view attendance') && { label: t('attendance'), href: route('admin.members.attendance'), icon: <CalendarIcon className="w-4 h-4" /> },
+                                            hasPermission('view roles') && { label: t('roles_permissions'), href: route('admin.roles.index'), icon: <ShieldExclamationIcon className="w-4 h-4" /> },
+                                        ].filter(Boolean)}
+                                        onLinkClick={() => setMobileMenuOpen(false)}
+                                    />
+                                )}
 
-                                <NavGroup 
-                                    label="Customers" 
-                                    icon={<UserIcon className="w-5 h-5" />} 
-                                    isOpen={openMenus.contacts} 
-                                    onClick={() => toggleMenu('contacts')}
-                                    sidebarOpen={true}
-                                    active={route().current('admin.customers.*') || route().current('admin.clients.*')}
-                                    links={[
-                                        { label: 'All Contacts', href: route('admin.customers.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                                        { label: 'All Clients', href: route('admin.clients.index'), icon: <UsersIcon className="w-4 h-4" /> },
-                                        { label: 'Add Client', href: route('admin.clients.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                                        { label: 'Blocked Clients', href: route('admin.clients.blacklist'), icon: <ShieldExclamationIcon className="w-4 h-4" /> },
-                                    ]}
-                                    onLinkClick={() => setMobileMenuOpen(false)}
-                                />
+                                {(hasPermission('view clients') || hasPermission('view contacts') || hasPermission('view commercials')) && (
+                                    <NavGroup 
+                                        label={t('customers')} 
+                                        icon={<UserIcon className="w-5 h-5" />} 
+                                        isOpen={openMenus.contacts} 
+                                        onClick={() => toggleMenu('contacts')}
+                                        sidebarOpen={true}
+                                        active={route().current('admin.customers.*') || route().current('admin.clients.*') || route().current('admin.commercials.*')}
+                                        links={[
+                                            hasPermission('view contacts') && { label: t('all_contacts'), href: route('admin.customers.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                            hasPermission('view clients') && { label: t('all_clients'), href: route('admin.clients.index'), icon: <UsersIcon className="w-4 h-4" /> },
+                                            hasPermission('create clients') && { label: t('add_client'), href: route('admin.clients.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                            hasPermission('view commercials') && { label: t('commercials'), href: route('admin.commercials.index'), icon: <BriefcaseIcon className="w-4 h-4" /> },
+                                            hasPermission('edit clients') && { label: t('blocked_clients'), href: route('admin.clients.blacklist'), icon: <ShieldExclamationIcon className="w-4 h-4" /> },
+                                        ].filter(Boolean)}
+                                        onLinkClick={() => setMobileMenuOpen(false)}
+                                    />
+                                )}
 
-                                <NavGroup 
-                                    label="Financial" 
-                                    icon={<DocumentTextIcon className="w-5 h-5" />} 
-                                    isOpen={openMenus.financial}
-                                    onClick={() => toggleMenu('financial')}
-                                    sidebarOpen={true}
-                                    active={route().current('admin.quotations.*') || route().current('admin.invoices.*')}
-                                    links={[
-                                        { label: 'Quotations', href: route('admin.quotations.index'), icon: <DocumentTextIcon className="w-4 h-4" /> },
-                                        { label: 'Invoices', href: route('admin.invoices.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                                    ]}
-                                    onLinkClick={() => setMobileMenuOpen(false)}
-                                />
+                                {(hasPermission('view finance') || hasPermission('view invoices') || hasPermission('view quotes')) && (
+                                    <NavGroup 
+                                        label={t('financial')} 
+                                        icon={<DocumentTextIcon className="w-5 h-5" />} 
+                                        isOpen={openMenus.financial}
+                                        onClick={() => toggleMenu('financial')}
+                                        sidebarOpen={true}
+                                        active={route().current('admin.quotations.*') || route().current('admin.invoices.*') || route().current('admin.finance.*') || route().current('admin.expenses.*') || route().current('admin.salaries.*') || route().current('admin.incomes.*')}
+                                        links={[
+                                            hasPermission('view finance') && { label: t('charges_tracking'), href: route('admin.finance.dashboard'), icon: <ChartBarIcon className="w-4 h-4" /> },
+                                            hasPermission('view quotes') && { label: t('quotations'), href: route('admin.quotations.index'), icon: <DocumentTextIcon className="w-4 h-4" /> },
+                                            hasPermission('view invoices') && { label: t('invoices'), href: route('admin.invoices.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                            hasPermission('edit finance') && { label: t('expenses'), href: route('admin.expenses.index'), icon: <ArrowTrendingDownIcon className="w-4 h-4" /> },
+                                            hasPermission('edit finance') && { label: t('incomes'), href: route('admin.incomes.index'), icon: <ArrowTrendingUpIcon className="w-4 h-4" /> },
+                                            hasPermission('edit finance') && { label: t('salaries'), href: route('admin.salaries.index'), icon: <UsersIcon className="w-4 h-4" /> },
+                                            hasPermission('edit finance') && { label: t('exp_categories'), href: route('admin.expense-categories.index'), icon: <TagIcon className="w-4 h-4" /> },
+                                        ].filter(Boolean)}
+                                        onLinkClick={() => setMobileMenuOpen(false)}
+                                    />
+                                )}
 
-                                <div className="pt-4 pb-2">
-                                    <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-4 mb-2">
-                                        Content Management
-                                    </div>
-                                </div>
+                                {(hasPermission('view categories') || hasPermission('view blogs') || hasPermission('view templates') || hasPermission('view teamhub')) && (
+                                    <>
+                                        <div className="pt-4 pb-2">
+                                            <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-4 mb-2">
+                                                {t('content_management')}
+                                            </div>
+                                        </div>
 
-                                <NavGroup 
-                                    label="Categories" 
-                                    icon={<TagIcon className="w-5 h-5" />} 
-                                    isOpen={openMenus.categories} 
-                                    onClick={() => toggleMenu('categories')}
-                                    sidebarOpen={true}
-                                    active={route().current('admin.categories.*')}
-                                    links={[
-                                        { label: 'All Categories', href: route('admin.categories.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                                    ]}
-                                    onLinkClick={() => setMobileMenuOpen(false)}
-                                />
+                                        {hasPermission('view categories') && (
+                                            <NavGroup 
+                                                label={t('categories')} 
+                                                icon={<TagIcon className="w-5 h-5" />} 
+                                                isOpen={openMenus.categories} 
+                                                onClick={() => toggleMenu('categories')}
+                                                sidebarOpen={true}
+                                                active={route().current('admin.categories.*')}
+                                                links={[
+                                                    { label: t('all_categories'), href: route('admin.categories.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                                ]}
+                                                onLinkClick={() => setMobileMenuOpen(false)}
+                                            />
+                                        )}
 
-                                <NavGroup 
-                                    label="Blogs" 
-                                    icon={<DocumentTextIcon className="w-5 h-5" />} 
-                                    isOpen={openMenus.blogs} 
-                                    onClick={() => toggleMenu('blogs')}
-                                    sidebarOpen={true}
-                                    active={route().current('admin.blogs.*')}
-                                    links={[
-                                        { label: 'All Blogs', href: route('admin.blogs.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                                        { label: 'Create Blog', href: route('admin.blogs.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                                    ]}
-                                    onLinkClick={() => setMobileMenuOpen(false)}
-                                />
+                                        {hasPermission('view blogs') && (
+                                            <NavGroup 
+                                                label={t('blogs')} 
+                                                icon={<DocumentTextIcon className="w-5 h-5" />} 
+                                                isOpen={openMenus.blogs} 
+                                                onClick={() => toggleMenu('blogs')}
+                                                sidebarOpen={true}
+                                                active={route().current('admin.blogs.*')}
+                                                links={[
+                                                    { label: t('all_blogs'), href: route('admin.blogs.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                                    hasPermission('create blogs') && { label: t('create_blog'), href: route('admin.blogs.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                                ].filter(Boolean)}
+                                                onLinkClick={() => setMobileMenuOpen(false)}
+                                            />
+                                        )}
 
-                                <NavGroup 
-                                    label="Templates" 
-                                    icon={<TagIcon className="w-5 h-5" />} 
-                                    isOpen={openMenus.templates} 
-                                    onClick={() => toggleMenu('templates')}
-                                    sidebarOpen={true}
-                                    active={route().current('admin.templates.*')}
-                                    links={[
-                                        { label: 'All Templates', href: route('admin.templates.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                                        { label: 'Add Template', href: route('admin.templates.create'), icon: <PlusIcon className="w-4 h-4" /> },
-                                    ]}
-                                    onLinkClick={() => setMobileMenuOpen(false)}
-                                />
+                                        {hasPermission('view templates') && (
+                                            <NavGroup 
+                                                label={t('templates')} 
+                                                icon={<TagIcon className="w-5 h-5" />} 
+                                                isOpen={openMenus.templates} 
+                                                onClick={() => toggleMenu('templates')}
+                                                sidebarOpen={true}
+                                                active={route().current('admin.templates.*')}
+                                                links={[
+                                                    { label: t('all_templates'), href: route('admin.templates.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                                    hasPermission('create templates') && { label: t('add_template'), href: route('admin.templates.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                                ].filter(Boolean)}
+                                                onLinkClick={() => setMobileMenuOpen(false)}
+                                            />
+                                        )}
 
-                                <NavGroup 
-                                    label="Team Hub" 
-                                    icon={<ChatBubbleLeftRightIcon className="w-5 h-5" />} 
-                                    isOpen={openMenus.teamhub} 
-                                    onClick={() => toggleMenu('teamhub')}
-                                    sidebarOpen={true}
-                                    active={route().current('admin.teamhub.*')}
-                                    links={[
-                                        { label: 'Activities', href: route('admin.teamhub.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
-                                        { label: 'Chat', href: route('chat.index'), icon: <ChatBubbleLeftRightIcon className="w-4 h-4" /> },
-                                    ]}
-                                    onLinkClick={() => setMobileMenuOpen(false)}
-                                />
+                                        {hasPermission('view creators') && (
+                                            <NavGroup 
+                                                label={t('creators')} 
+                                                icon={<UsersIcon className="w-5 h-5" />} 
+                                                isOpen={openMenus.creators} 
+                                                onClick={() => toggleMenu('creators')}
+                                                sidebarOpen={true}
+                                                active={route().current('admin.creators.*')}
+                                                links={[
+                                                    { label: t('all_creators'), href: route('admin.creators.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                                    hasPermission('create creators') && { label: t('add_creator'), href: route('admin.creators.create'), icon: <PlusIcon className="w-4 h-4" /> },
+                                                ].filter(Boolean)}
+                                                onLinkClick={() => setMobileMenuOpen(false)}
+                                            />
+                                        )}
+
+                                        {hasPermission('view teamhub') && (
+                                            <NavGroup 
+                                                label={t('team_hub')} 
+                                                icon={<ChatBubbleLeftRightIcon className="w-5 h-5" />} 
+                                                isOpen={openMenus.teamhub} 
+                                                onClick={() => toggleMenu('teamhub')}
+                                                sidebarOpen={true}
+                                                active={route().current('admin.teamhub.*')}
+                                                links={[
+                                                    { label: t('activities'), href: route('admin.teamhub.index'), icon: <ListBulletIcon className="w-4 h-4" /> },
+                                                    hasPermission('view chat') && { label: t('chat'), href: route('chat.index'), icon: <ChatBubbleLeftRightIcon className="w-4 h-4" /> },
+                                                ].filter(Boolean)}
+                                                onLinkClick={() => setMobileMenuOpen(false)}
+                                            />
+                                        )}
+                                    </>
+                                )}
                             </div>
                         </motion.aside>
                     </>
@@ -615,4 +770,3 @@ function NavGroup({ label, icon, isOpen, onClick, sidebarOpen, links, active, on
         </div>
     );
 }
-

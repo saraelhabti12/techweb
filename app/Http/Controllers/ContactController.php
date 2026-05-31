@@ -21,12 +21,18 @@ class ContactController extends Controller
             'email'          => 'required|email',
             'services'       => 'nullable|array',
             'message'        => 'nullable|string',
+            'needs_creator'  => 'boolean',
+            'selected_creators' => 'nullable|array',
         ]);
 
          $contact = Contact::create($data);
 
          // Envoi vers un email externe (Gmail par ex.)
-        Mail::to('bouchrakebdi2025@Techweb.ma')->send(new SendContactNotification($contact));
+        try {
+            Mail::to('techweb.ma@gmail.com')->send(new SendContactNotification($contact));
+        } catch (\Exception $e) {
+            // Log or ignore
+        }
 
         return redirect()->back()->with('success', 'Your message has been sent!');
     }
@@ -69,16 +75,18 @@ class ContactController extends Controller
         $message = Contact::findOrFail($id);
 
         if (!$message->is_read) {
-            // $message->is_read = true;
-            // $message->save();
             $message->update(['is_read' => true]);
         }
 
-        // $unreadCount = Contact::where('is_read', false)->count();
+        // Fetch creators if they were selected
+        $selectedCreators = [];
+        if ($message->needs_creator && $message->selected_creators) {
+            $selectedCreators = \App\Models\Creator::whereIn('id', $message->selected_creators)->get();
+        }
 
         return Inertia::render('Admin/Customer/Show', [
-            'message' => $message
-            // 'unreadCount' => $unreadCount,
+            'message' => $message,
+            'selectedCreators' => $selectedCreators
         ]);
     }
 

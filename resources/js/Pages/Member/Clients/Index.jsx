@@ -18,9 +18,12 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { useConfirm } from '@/Contexts/ConfirmContext';
+
 export default function Index({ auth, clients, filters = {} }) {
+    const confirm = useConfirm();
     const isAdmin = auth.user.role === 'admin' || auth.user.role === 'project_manager';
-    const Layout = isAdmin ? AdminLayout : MemberLayout;
+    const PageLayout = isAdmin ? AdminLayout : MemberLayout;
     const createRoute = isAdmin ? 'admin.clients.create' : 'member.clients.create';
     const editRoute = isAdmin ? 'admin.clients.edit' : 'member.clients.edit';
     const destroyRoute = isAdmin ? 'admin.clients.destroy' : 'member.clients.destroy';
@@ -39,8 +42,15 @@ export default function Index({ auth, clients, filters = {} }) {
         });
     };
 
-    const handleDelete = (id) => {
-        if (confirm('Are you sure you want to delete this client?')) {
+    const handleDelete = async (id) => {
+        const isConfirmed = await confirm({
+            title: 'Delete Client',
+            message: 'Are you sure you want to delete this client? All associated data will be permanently removed.',
+            confirmText: 'Delete Client',
+            variant: 'danger'
+        });
+
+        if (isConfirmed) {
             router.delete(route(destroyRoute, id));
         }
     };
@@ -87,7 +97,7 @@ export default function Index({ auth, clients, filters = {} }) {
     };
 
     return (
-        <Layout auth={auth}>
+        <PageLayout auth={auth}>
             <Head title="Client Management" />
 
             <DashboardPage
@@ -390,6 +400,6 @@ export default function Index({ auth, clients, filters = {} }) {
                     </div>
                 </form>
             </Modal>
-        </Layout>
+        </PageLayout>
     );
 }

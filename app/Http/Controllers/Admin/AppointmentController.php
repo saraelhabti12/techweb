@@ -80,6 +80,7 @@ class AppointmentController extends Controller
 
         return Inertia::render('Admin/Appointments/Calendar', [
             'events' => $events,
+            'clients' => \App\Models\Client::select('id', 'name')->get(),
         ]);
     }
 
@@ -92,6 +93,7 @@ class AppointmentController extends Controller
             'start_time' => 'required',
             'end_time' => 'required',
             'notes' => 'nullable|string',
+            'client_id' => 'nullable|exists:clients,id',
         ]);
 
         Appointment::create([
@@ -102,6 +104,7 @@ class AppointmentController extends Controller
             'notes' => $validated['notes'],
             'status' => 'manual',
             'user_id' => auth()->id(),
+            'client_id' => $validated['client_id'] ?? null,
         ]);
 
         return back()->with('success', 'Event created successfully.');

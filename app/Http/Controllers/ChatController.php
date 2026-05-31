@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
+
 class ChatController extends Controller
 {
     /**
@@ -18,8 +21,6 @@ class ChatController extends Controller
     {
         $authId = Auth::id();
 
-        // Fetch ALL users except the current authenticated user
-        // Order by latest interaction
         $users = User::where('id', '!=', $authId)
             ->get()
             ->map(function ($user) use ($authId) {
@@ -30,18 +31,28 @@ class ChatController extends Controller
                     $query->where('sender_id', $user->id)->where('receiver_id', $authId);
                 })->latest()->first();
 
-                $user->latest_message_time = $latestMessage ? $latestMessage->created_at : null;
+                $user->latest_message = $latestMessage ? [
+                    'content' => $latestMessage->message,
+                    'type' => $latestMessage->type,
+                    'time' => $latestMessage->created_at,
+                    'is_me' => $latestMessage->sender_id === $authId,
+                    'is_read' => $latestMessage->is_read
+                ] : null;
+
                 $user->unread_count = Message::where('sender_id', $user->id)
                     ->where('receiver_id', $authId)
                     ->where('is_read', false)
                     ->count();
                 
-                // Add online status
                 $user->is_online = $user->isOnline();
+                $user->last_seen_formatted = $user->last_seen ? $user->last_seen->diffForHumans() : 'Never';
+                $user->is_typing = Cache::has("user-typing-{$user->id}-to-{$authId}");
                 
                 return $user;
             })
-            ->sortByDesc('latest_message_time')
+            ->sortByDesc(function($user) {
+                return $user->latest_message ? $user->latest_message['time']->timestamp : 0;
+            })
             ->values();
 
         return Inertia::render('Chat/Index', [
@@ -66,7 +77,10 @@ class ChatController extends Controller
         Message::where('sender_id', $user->id)
             ->where('receiver_id', Auth::id())
             ->where('is_read', false)
-            ->update(['is_read' => true]);
+            ->update([
+                'is_read' => true,
+                'read_at' => now()
+            ]);
 
         return response()->json($messages);
     }
@@ -77,22 +91,52 @@ class ChatController extends Controller
     public function store(Request $request, User $user)
     {
         $request->validate([
-            'message' => 'required|string'
+            'message' => 'nullable|string',
+            'file' => 'nullable|file|max:10240', // 10MB
+            'type' => 'required|in:text,image,file'
         ]);
 
-        $message = Message::create([
+        $data = [
             'sender_id' => Auth::id(),
             'receiver_id' => $user->id,
             'message' => $request->message,
-            'is_read' => false
-        ]);
+            'type' => $request->type,
+            'is_read' => false,
+            'delivered_at' => now() // Assuming immediate delivery for this simple implementation
+        ];
 
-        Activity::log('Message Sent', "Sent message to: {$user->name}");
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store('chat_attachments', 'public');
+            $data['file_path'] = $path;
+            $data['file_name'] = $file->getClientOriginalName();
+            if (!$data['message']) {
+                $data['message'] = $data['file_name'];
+            }
+        }
 
-        // Send notification to the receiver
+        $message = Message::create($data);
+
+        Activity::log('Message Sent', "Sent {$request->type} to: {$user->name}");
+
         $user->notify(new \App\Notifications\MessageReceived($message));
 
         return response()->json($message);
+    }
+
+    /**
+     * Set typing status.
+     */
+    public function setTyping(Request $request, User $user)
+    {
+        $authId = Auth::id();
+        if ($request->is_typing) {
+            Cache::put("user-typing-{$authId}-to-{$user->id}", true, now()->addSeconds(5));
+        } else {
+            Cache::forget("user-typing-{$authId}-to-{$user->id}");
+        }
+
+        return response()->json(['status' => 'success']);
     }
 
     /**
@@ -103,7 +147,10 @@ class ChatController extends Controller
         Message::where('sender_id', $user->id)
             ->where('receiver_id', Auth::id())
             ->where('is_read', false)
-            ->update(['is_read' => true]);
+            ->update([
+                'is_read' => true,
+                'read_at' => now()
+            ]);
 
         return response()->json(['status' => 'success']);
     }
@@ -125,17 +172,28 @@ class ChatController extends Controller
                     $query->where('sender_id', $user->id)->where('receiver_id', $authId);
                 })->latest()->first();
 
-                $user->latest_message_time = $latestMessage ? $latestMessage->created_at : null;
+                $user->latest_message = $latestMessage ? [
+                    'content' => $latestMessage->message,
+                    'type' => $latestMessage->type,
+                    'time' => $latestMessage->created_at,
+                    'is_me' => $latestMessage->sender_id === $authId,
+                    'is_read' => $latestMessage->is_read
+                ] : null;
+
                 $user->unread_count = Message::where('sender_id', $user->id)
                     ->where('receiver_id', $authId)
                     ->where('is_read', false)
                     ->count();
 
                 $user->is_online = $user->isOnline();
+                $user->last_seen_formatted = $user->last_seen ? $user->last_seen->diffForHumans() : 'Never';
+                $user->is_typing = Cache::has("user-typing-{$user->id}-to-{$authId}");
 
                 return $user;
             })
-            ->sortByDesc('latest_message_time')
+            ->sortByDesc(function($user) {
+                return $user->latest_message ? $user->latest_message['time']->timestamp : 0;
+            })
             ->values();
 
         return response()->json($users);

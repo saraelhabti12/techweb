@@ -182,7 +182,7 @@ export default function Edit({ auth, quotation, clients }) {
                                                     </div>
                                                     <div className="col-span-2 flex items-center justify-between">
                                                         <span className="text-sm font-mono font-bold text-gray-700 dark:text-gray-300">
-                                                            {(item.quantity * item.unit_price).toFixed(2)}€
+                                                            {(item.quantity * item.unit_price).toFixed(2)} DH
                                                         </span>
                                                         {data.items.length > 1 && (
                                                             <button 
@@ -226,11 +226,11 @@ export default function Edit({ auth, quotation, clients }) {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center py-2 border-b border-gray-50 dark:border-gray-800">
                                         <span className="text-sm text-gray-500">Subtotal</span>
-                                        <span className="font-mono font-bold text-gray-900 dark:text-white">{subtotal.toFixed(2)}€</span>
+                                        <span className="font-mono font-bold text-gray-900 dark:text-white">{subtotal.toFixed(2)} DH</span>
                                     </div>
                                     
                                     <div>
-                                        <InputLabel value="Tax / VAT (€)" />
+                                        <InputLabel value="Tax / VAT (DH)" />
                                         <TextInput
                                             type="number"
                                             step="0.01"
@@ -241,7 +241,7 @@ export default function Edit({ auth, quotation, clients }) {
                                     </div>
 
                                     <div>
-                                        <InputLabel value="Discount (€)" />
+                                        <InputLabel value="Discount (DH)" />
                                         <TextInput
                                             type="number"
                                             step="0.01"
@@ -254,7 +254,7 @@ export default function Edit({ auth, quotation, clients }) {
                                     <div className="flex justify-between items-center py-4 px-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl mt-4">
                                         <span className="text-indigo-700 dark:text-indigo-400 font-bold uppercase tracking-wider text-xs">Total Amount</span>
                                         <span className="text-xl font-mono font-black text-indigo-600 dark:text-indigo-400">
-                                            {total.toFixed(2)}€
+                                            {total.toFixed(2)} DH
                                         </span>
                                     </div>
 

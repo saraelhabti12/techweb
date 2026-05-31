@@ -4,11 +4,11 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import DashboardPage from '@/Components/UI/DashboardPage';
 import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
-import { PlusIcon, History, ExternalLink, Briefcase, TrendingUp, CheckCircle, Clock, Zap } from 'lucide-react';
+import { PlusIcon, History, ExternalLink, Briefcase, TrendingUp, CheckCircle, Clock, Zap, Users, ShieldCheck, Mail, Phone, Percent, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
-export default function CreateProject({ categories, clients, auth }) {
+export default function CreateProject({ categories, clients, users, creators = [], commercials = [], auth }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         description: '',
@@ -18,7 +18,39 @@ export default function CreateProject({ categories, clients, auth }) {
         start_date: '',
         end_date: '',
         status: 'active',
+        project_manager_id: '',
+        team_members: [],
+        creators: [],
+        commercial_type: 'internal',
+        commercial_ids: [],
+        commercial_name: '',
+        commercial_phone: '',
+        commercial_email: '',
+        commercial_commission: '',
+        commercial_notes: '',
     });
+
+    const [enableCommercials, setEnableCommercials] = useState(false);
+    const [enableTeam, setEnableTeam] = useState(false);
+    const [enableCreators, setEnableCreators] = useState(false);
+
+    const toggleCommercial = (commercialId) => {
+        const newIds = [...data.commercial_ids];
+        if (newIds.includes(commercialId)) {
+            setData('commercial_ids', newIds.filter(id => id !== commercialId));
+        } else {
+            setData('commercial_ids', [...newIds, commercialId]);
+        }
+    };
+
+    const toggleCreator = (creatorId) => {
+        const newCreators = [...data.creators];
+        if (newCreators.includes(creatorId)) {
+            setData('creators', newCreators.filter(id => id !== creatorId));
+        } else {
+            setData('creators', [...newCreators, creatorId]);
+        }
+    };
 
     const [clientHistory, setClientHistory] = useState(null);
     const [loadingHistory, setLoadingHistory] = useState(false);
@@ -40,6 +72,15 @@ export default function CreateProject({ categories, clients, auth }) {
             console.error('Error fetching client history:', error);
         } finally {
             setLoadingHistory(false);
+        }
+    };
+
+    const toggleTeamMember = (userId) => {
+        const newMembers = [...data.team_members];
+        if (newMembers.includes(userId)) {
+            setData('team_members', newMembers.filter(id => id !== userId));
+        } else {
+            setData('team_members', [...newMembers, userId]);
         }
     };
 
@@ -74,153 +115,418 @@ export default function CreateProject({ categories, clients, auth }) {
                     {/* Main Form */}
                     <div className="flex-1">
                         <DashboardCard>
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label htmlFor="name" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
-                                            Project Name
-                                        </label>
-                                        <input
-                                            id="name"
-                                            type="text"
-                                            value={data.name}
-                                            onChange={(e) => setData('name', e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                            autoFocus
-                                            placeholder="e.g. Website Redesign"
-                                        />
-                                        {errors.name && <p className="mt-1 text-sm text-red-500 font-bold">{errors.name}</p>}
+                            <form onSubmit={handleSubmit} className="space-y-8">
+                                {/* Project Core */}
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+                                        <Zap className="w-4 h-4 text-[#1F2BF3]" />
+                                        <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest">Project Core</h3>
                                     </div>
-
-                                    <div>
-                                        <label htmlFor="project_type" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
-                                            Project Type
-                                        </label>
-                                        <select
-                                            id="project_type"
-                                            value={data.project_type}
-                                            onChange={(e) => setData('project_type', e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                        >
-                                            <option value="Internal (Techweb)">Internal (Techweb)</option>
-                                            <option value="Client Project">Client Project</option>
-                                        </select>
-                                        {errors.project_type && <p className="mt-1 text-sm text-red-500 font-bold">{errors.project_type}</p>}
-                                    </div>
-                                </div>
-
-                                {data.project_type === 'Client Project' && (
-                                    <div>
-                                        <label htmlFor="client_id" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
-                                            Select Client
-                                        </label>
-                                        <div className="flex gap-2">
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label htmlFor="project_type" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Project Type</label>
                                             <select
-                                                id="client_id"
-                                                value={data.client_id}
-                                                onChange={(e) => setData('client_id', e.target.value)}
-                                                className="flex-1 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                                id="project_type"
+                                                value={data.project_type}
+                                                onChange={(e) => setData('project_type', e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
                                             >
-                                                <option value="">Choose a client</option>
-                                                {clients.map((client) => (
-                                                    <option key={client.id} value={client.id}>
-                                                        {client.name} - {client.phone}
-                                                    </option>
+                                                <option value="Internal (Techweb)">Internal (Techweb)</option>
+                                                <option value="Client Project">Client Project</option>
+                                            </select>
+                                            {errors.project_type && <p className="mt-1 text-sm text-red-500 font-bold">{errors.project_type}</p>}
+                                        </div>
+
+                                        <div>
+                                            <label htmlFor="name" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Project Title</label>
+                                            <input
+                                                id="name"
+                                                type="text"
+                                                value={data.name}
+                                                onChange={(e) => setData('name', e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                                placeholder="e.g. Mobile App Development"
+                                            />
+                                            {errors.name && <p className="mt-1 text-sm text-red-500 font-bold">{errors.name}</p>}
+                                        </div>
+                                    </div>
+
+                                    {data.project_type === 'Client Project' && (
+                                        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <label htmlFor="client_id" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Client</label>
+                                            <div className="flex gap-2">
+                                                <select
+                                                    id="client_id"
+                                                    value={data.client_id}
+                                                    onChange={(e) => setData('client_id', e.target.value)}
+                                                    className="flex-1 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                                >
+                                                    <option value="">Select an existing client</option>
+                                                    {clients.map((client) => (
+                                                        <option key={client.id} value={client.id}>{client.name} {client.company_name ? `(${client.company_name})` : ''}</option>
+                                                    ))}
+                                                </select>
+                                                <Link href={route('admin.clients.create')}>
+                                                    <DashboardButton type="button" variant="secondary" className="!px-4 !h-full">
+                                                        <PlusIcon className="w-5 h-5" />
+                                                    </DashboardButton>
+                                                </Link>
+                                            </div>
+                                            {errors.client_id && <p className="mt-1 text-sm text-red-500 font-bold">{errors.client_id}</p>}
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label htmlFor="description" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Project Description</label>
+                                        <textarea
+                                            id="description"
+                                            value={data.description}
+                                            onChange={(e) => setData('description', e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                            rows={4}
+                                            placeholder="Outline the core objectives and scope of this project..."
+                                        />
+                                        {errors.description && <p className="mt-1 text-sm text-red-500 font-bold">{errors.description}</p>}
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label htmlFor="category_id" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Category</label>
+                                            <select
+                                                id="category_id"
+                                                value={data.category_id}
+                                                onChange={(e) => setData('category_id', e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                            >
+                                                <option value="">Select category</option>
+                                                {categories.map((category) => (
+                                                    <option key={category.id} value={category.id}>{category.name}</option>
                                                 ))}
                                             </select>
-                                            <Link href={route('admin.clients.create')}>
-                                                <DashboardButton type="button" variant="secondary" className="!px-4">
-                                                    <PlusIcon className="w-5 h-5" />
-                                                </DashboardButton>
-                                            </Link>
                                         </div>
-                                        {errors.client_id && <p className="mt-1 text-sm text-red-500 font-bold">{errors.client_id}</p>}
-                                    </div>
-                                )}
 
-                                <div>
-                                    <label htmlFor="description" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
-                                        Description
-                                    </label>
-                                    <textarea
-                                        id="description"
-                                        value={data.description}
-                                        onChange={(e) => setData('description', e.target.value)}
-                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                        rows={4}
-                                        placeholder="Project goals, scope, and initial notes..."
-                                    />
-                                    {errors.description && <p className="mt-1 text-sm text-red-500 font-bold">{errors.description}</p>}
+                                        <div>
+                                            <label htmlFor="status" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Initial Status</label>
+                                            <select
+                                                id="status"
+                                                value={data.status}
+                                                onChange={(e) => setData('status', e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                            >
+                                                <option value="active">Active</option>
+                                                <option value="completed">Completed</option>
+                                                <option value="paused">Paused</option>
+                                                <option value="cancelled">Cancelled</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Team & Creators Toggle Sections */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+                                        <Users className="w-4 h-4 text-[#1F2BF3]" />
+                                        <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest">Resources & Assignments</h3>
+                                    </div>
+
                                     <div>
-                                        <label htmlFor="category_id" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
-                                            Category
-                                        </label>
+                                        <label htmlFor="project_manager_id" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Lead Project Manager</label>
                                         <select
-                                            id="category_id"
-                                            value={data.category_id}
-                                            onChange={(e) => setData('category_id', e.target.value)}
+                                            id="project_manager_id"
+                                            value={data.project_manager_id}
+                                            onChange={(e) => setData('project_manager_id', e.target.value)}
                                             className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
                                         >
-                                            <option value="">Select a category</option>
-                                            {categories.map((category) => (
-                                                <option key={category.id} value={category.id}>
-                                                    {category.name}
-                                                </option>
+                                            <option value="">Select Lead Manager</option>
+                                            {users.map((user) => (
+                                                <option key={user.id} value={user.id}>{user.name}</option>
                                             ))}
                                         </select>
-                                        {errors.category_id && <p className="mt-1 text-sm text-red-500 font-bold">{errors.category_id}</p>}
                                     </div>
 
-                                    <div>
-                                        <label htmlFor="status" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
-                                            Status
+                                    {/* Team Members Section */}
+                                    <div className="space-y-3">
+                                        <label className="flex items-center gap-3 cursor-pointer group w-fit">
+                                            <div className="relative">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="sr-only"
+                                                    checked={enableTeam}
+                                                    onChange={(e) => setEnableTeam(e.target.checked)}
+                                                />
+                                                <div className={`w-10 h-5 rounded-full transition-colors ${enableTeam ? 'bg-[#1F2BF3]' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
+                                                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${enableTeam ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-[#1F2BF3] transition-colors">Assign Team Members</span>
                                         </label>
-                                        <select
-                                            id="status"
-                                            value={data.status}
-                                            onChange={(e) => setData('status', e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                        >
-                                            <option value="active">Active</option>
-                                            <option value="completed">Completed</option>
-                                            <option value="paused">Paused</option>
-                                            <option value="cancelled">Cancelled</option>
-                                            <option value="archived">Archived</option>
-                                        </select>
-                                        {errors.status && <p className="mt-1 text-sm text-red-500 font-bold">{errors.status}</p>}
+
+                                        <AnimatePresence>
+                                            {enableTeam && (
+                                                <motion.div 
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 bg-gray-50 dark:bg-gray-800/30 rounded-2xl border border-gray-100 dark:border-gray-800">
+                                                        {users.map((user) => (
+                                                            <div 
+                                                                key={user.id}
+                                                                onClick={() => toggleTeamMember(user.id)}
+                                                                className={`cursor-pointer p-3 rounded-xl border transition-all flex flex-col items-center text-center gap-2 ${
+                                                                    data.team_members.includes(user.id)
+                                                                    ? 'bg-[#1F2BF3] border-[#1F2BF3] text-white shadow-lg shadow-blue-500/20'
+                                                                    : 'bg-white dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-500 hover:border-gray-200 dark:hover:border-gray-600'
+                                                                }`}
+                                                            >
+                                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-[10px] uppercase ${data.team_members.includes(user.id) ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                                                                    {user.name.charAt(0)}
+                                                                </div>
+                                                                <span className="text-[10px] font-bold truncate w-full">{user.name}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {/* Creators Section */}
+                                    <div className="space-y-3">
+                                        <label className="flex items-center gap-3 cursor-pointer group w-fit">
+                                            <div className="relative">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="sr-only"
+                                                    checked={enableCreators}
+                                                    onChange={(e) => setEnableCreators(e.target.checked)}
+                                                />
+                                                <div className={`w-10 h-5 rounded-full transition-colors ${enableCreators ? 'bg-[#1F2BF3]' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
+                                                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${enableCreators ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-[#1F2BF3] transition-colors">Assign Creators</span>
+                                        </label>
+
+                                        <AnimatePresence>
+                                            {enableCreators && (
+                                                <motion.div 
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 bg-gray-50 dark:bg-gray-800/30 rounded-2xl border border-gray-100 dark:border-gray-800">
+                                                        {creators.map((creator) => (
+                                                            <div 
+                                                                key={creator.id}
+                                                                onClick={() => toggleCreator(creator.id)}
+                                                                className={`cursor-pointer p-3 rounded-xl border transition-all flex flex-col items-center text-center gap-2 ${
+                                                                    data.creators.includes(creator.id)
+                                                                    ? 'bg-[#1F2BF3] border-[#1F2BF3] text-white shadow-lg shadow-blue-500/20'
+                                                                    : 'bg-white dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-500 hover:border-gray-200 dark:hover:border-gray-600'
+                                                                }`}
+                                                            >
+                                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+                                                                    {creator.profile_photo ? (
+                                                                        <img src={`/storage/${creator.profile_photo}`} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center font-bold text-[10px] uppercase">
+                                                                            {creator.display_name.charAt(0)}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-[10px] font-bold truncate w-full">{creator.display_name}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label htmlFor="start_date" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
-                                            Start Date
+                                {/* Commercials Toggle Section */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800">
+                                        <div className="flex items-center gap-2">
+                                            <ShieldCheck className="w-4 h-4 text-[#1F2BF3]" />
+                                            <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest">Commercial Tracking</h3>
+                                        </div>
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-[#1F2BF3] transition-colors">Enable Commercials</span>
+                                            <div className="relative">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="sr-only"
+                                                    checked={enableCommercials}
+                                                    onChange={(e) => setEnableCommercials(e.target.checked)}
+                                                />
+                                                <div className={`w-10 h-5 rounded-full transition-colors ${enableCommercials ? 'bg-[#1F2BF3]' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
+                                                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${enableCommercials ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                                            </div>
                                         </label>
-                                        <input
-                                            id="start_date"
-                                            type="date"
-                                            value={data.start_date}
-                                            onChange={(e) => setData('start_date', e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                        />
-                                        {errors.start_date && <p className="mt-1 text-sm text-red-500 font-bold">{errors.start_date}</p>}
                                     </div>
 
-                                    <div>
-                                        <label htmlFor="end_date" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
-                                            End Date
-                                        </label>
-                                        <input
-                                            id="end_date"
-                                            type="date"
-                                            value={data.end_date}
-                                            onChange={(e) => setData('end_date', e.target.value)}
-                                            className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                        />
-                                        {errors.end_date && <p className="mt-1 text-sm text-red-500 font-bold">{errors.end_date}</p>}
+                                    <AnimatePresence>
+                                        {enableCommercials && (
+                                            <motion.div 
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="overflow-hidden space-y-6"
+                                            >
+                                                <div className="flex justify-center">
+                                                    <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setData('commercial_type', 'internal')}
+                                                            className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${
+                                                                data.commercial_type === 'internal'
+                                                                ? 'bg-white dark:bg-gray-700 text-[#1F2BF3] shadow-sm'
+                                                                : 'text-gray-400'
+                                                            }`}
+                                                        >
+                                                            Internal Team
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setData('commercial_type', 'external')}
+                                                            className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${
+                                                                data.commercial_type === 'external'
+                                                                ? 'bg-white dark:bg-gray-700 text-[#1F2BF3] shadow-sm'
+                                                                : 'text-gray-400'
+                                                            }`}
+                                                        >
+                                                            External Partner
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {data.commercial_type === 'internal' ? (
+                                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Select Internal Commercials (Multi-select)</p>
+                                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                            {commercials.map((comm) => (
+                                                                <div 
+                                                                    key={comm.id}
+                                                                    onClick={() => toggleCommercial(comm.id)}
+                                                                    className={`cursor-pointer p-3 rounded-xl border transition-all flex items-center gap-3 ${
+                                                                        data.commercial_ids.includes(comm.id)
+                                                                        ? 'bg-[#1F2BF3]/10 border-[#1F2BF3] text-[#1F2BF3]'
+                                                                        : 'bg-white dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-500 hover:border-gray-200 dark:hover:border-gray-600'
+                                                                    }`}
+                                                                >
+                                                                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[8px] uppercase ${data.commercial_ids.includes(comm.id) ? 'bg-[#1F2BF3] text-white' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                                                                        {comm.name.charAt(0)}
+                                                                    </div>
+                                                                    <span className="text-[10px] font-bold truncate">{comm.name}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        {errors.commercial_ids && <p className="mt-1 text-sm text-red-500 font-bold">{errors.commercial_ids}</p>}
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <div className="space-y-1.5">
+                                                                <label htmlFor="commercial_name" className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Full Name</label>
+                                                                <input
+                                                                    id="commercial_name"
+                                                                    type="text"
+                                                                    value={data.commercial_name}
+                                                                    onChange={(e) => setData('commercial_name', e.target.value)}
+                                                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                                                    placeholder="Commercial's Name"
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-1.5">
+                                                                <label htmlFor="commercial_phone" className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Phone</label>
+                                                                <input
+                                                                    id="commercial_phone"
+                                                                    type="text"
+                                                                    value={data.commercial_phone}
+                                                                    onChange={(e) => setData('commercial_phone', e.target.value)}
+                                                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                                                    placeholder="Phone Number"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <label htmlFor="commercial_email" className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Email Address</label>
+                                                            <input
+                                                                id="commercial_email"
+                                                                type="email"
+                                                                value={data.commercial_email}
+                                                                onChange={(e) => setData('commercial_email', e.target.value)}
+                                                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                                                placeholder="email@partner.com"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100 dark:border-gray-800/50">
+                                                    <div className="space-y-1.5">
+                                                        <label htmlFor="commercial_commission" className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Commission Rate (%)</label>
+                                                        <input
+                                                            id="commercial_commission"
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={data.commercial_commission}
+                                                            onChange={(e) => setData('commercial_commission', e.target.value)}
+                                                            className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                                            placeholder="0.00"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <label htmlFor="commercial_notes" className="block text-[10px] font-black uppercase tracking-widest text-gray-400">Agreement Notes</label>
+                                                        <textarea
+                                                            id="commercial_notes"
+                                                            value={data.commercial_notes}
+                                                            onChange={(e) => setData('commercial_notes', e.target.value)}
+                                                            className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                                            rows={2}
+                                                            placeholder="Specific terms or conditions..."
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* Timeline */}
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+                                        <Clock className="w-4 h-4 text-[#1F2BF3]" />
+                                        <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest">Timeline</h3>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label htmlFor="start_date" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Start Date</label>
+                                            <input
+                                                id="start_date"
+                                                type="date"
+                                                value={data.start_date}
+                                                onChange={(e) => setData('start_date', e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                            />
+                                            {errors.start_date && <p className="mt-1 text-sm text-red-500 font-bold">{errors.start_date}</p>}
+                                        </div>
+
+                                        <div>
+                                            <label htmlFor="end_date" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">End Date</label>
+                                            <input
+                                                id="end_date"
+                                                type="date"
+                                                value={data.end_date}
+                                                onChange={(e) => setData('end_date', e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
+                                            />
+                                            {errors.end_date && <p className="mt-1 text-sm text-red-500 font-bold">{errors.end_date}</p>}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -228,7 +534,7 @@ export default function CreateProject({ categories, clients, auth }) {
                                     <DashboardButton 
                                         type="submit" 
                                         disabled={processing} 
-                                        className="w-full md:w-auto"
+                                        className="w-full md:w-auto !px-12"
                                     >
                                         {processing ? 'Creating...' : 'Create Project'}
                                     </DashboardButton>
@@ -268,7 +574,6 @@ export default function CreateProject({ categories, clients, auth }) {
                                                 </div>
                                             ) : clientHistory ? (
                                                 <div className="space-y-6">
-                                                    {/* Summary Stats */}
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <div className="bg-white dark:bg-gray-800/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
                                                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total</p>
@@ -280,7 +585,6 @@ export default function CreateProject({ categories, clients, auth }) {
                                                         </div>
                                                     </div>
 
-                                                    {/* Projects List */}
                                                     <div className="space-y-3">
                                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Previous Projects</p>
                                                         {clientHistory.projects.length > 0 ? (
@@ -297,9 +601,7 @@ export default function CreateProject({ categories, clients, auth }) {
                                                                             <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter ${getStatusColor(proj.status)}`}>
                                                                                 {proj.status}
                                                                             </span>
-                                                                            <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter italic">
-                                                                                {proj.category}
-                                                                            </span>
+                                                                            <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter italic">{proj.category}</span>
                                                                         </div>
                                                                     </div>
                                                                 ))}
@@ -312,7 +614,6 @@ export default function CreateProject({ categories, clients, auth }) {
                                                         )}
                                                     </div>
 
-                                                    {/* Upsell Suggestion */}
                                                     {clientHistory.summary.total > 0 && (
                                                         <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
                                                             <div className="bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30">
@@ -333,7 +634,6 @@ export default function CreateProject({ categories, clients, auth }) {
                                         </div>
                                     </DashboardCard>
 
-                                    {/* Quick Insight Card */}
                                     <DashboardCard className="bg-[#1F2BF3] border-none !p-6">
                                         <div className="flex items-center gap-3 mb-4">
                                             <div className="p-2 bg-white/20 rounded-xl text-white">

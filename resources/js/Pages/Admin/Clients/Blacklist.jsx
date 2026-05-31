@@ -8,9 +8,11 @@ import DashboardPage from '@/Components/UI/DashboardPage';
 import DashboardCard from '@/Components/UI/DashboardCard';
 import DashboardButton from '@/Components/UI/DashboardButton';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useConfirm } from '@/Contexts/ConfirmContext';
 
 export default function Blacklist({ auth, clients, filters = {} }) {
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const confirm = useConfirm();
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -20,8 +22,15 @@ export default function Blacklist({ auth, clients, filters = {} }) {
         });
     };
 
-    const handleUnblock = (id) => {
-        if (confirm('Are you sure you want to unblock this client? They will be moved back to the active list.')) {
+    const handleUnblock = async (id) => {
+        const isConfirmed = await confirm({
+            title: 'Unblock Client',
+            message: 'Are you sure you want to unblock this client? They will be moved back to the active list.',
+            confirmText: 'Unblock Identity',
+            variant: 'primary'
+        });
+
+        if (isConfirmed) {
             router.post(route('admin.clients.unblock', id));
         }
     };

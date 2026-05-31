@@ -22,6 +22,8 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'role' => $this->role,
             'avatar' => $this->avatar,
+            'job_title' => $this->job_title,
+            'show_on_homepage' => $this->show_on_homepage,
             'last_seen' => $this->last_seen,
             'is_online' => $this->isOnline(),
             'last_attendance_at' => $this->last_attendance_at ? $this->last_attendance_at->format('H:i') : 'No logs today',

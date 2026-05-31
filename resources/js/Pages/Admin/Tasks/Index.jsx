@@ -14,20 +14,39 @@ import DashboardPage from '@/Components/UI/DashboardPage';
 import DashboardInput from '@/Components/UI/DashboardInput';
 import StatusBadge from '@/Components/Shared/StatusBadge';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+
+import { useConfirm } from '@/Contexts/ConfirmContext';
 
 import AdvancedFilterBar from '@/Components/Shared/AdvancedFilterBar';
 
 export default function Index({ tasks, auth, filters = {}, filterOptions }) {
+    const { t } = useTranslation();
+    const confirm = useConfirm();
+
+    const handleDelete = async (id) => {
+        const isConfirmed = await confirm({
+            title: t('delete_task_title', { defaultValue: 'Supprimer une tâche' }),
+            message: t('delete_task_confirm', { defaultValue: 'Êtes-vous sûr de vouloir supprimer cette tâche ?' }),
+            confirmText: t('delete', { defaultValue: 'Supprimer' }),
+            variant: 'danger'
+        });
+
+        if (isConfirmed) {
+            router.delete(route('admin.tasks.destroy', id));
+        }
+    };
+
     return (
         <AdminLayout auth={auth}>
             <DashboardPage 
-                title="Tasks Management"
-                description="Manage, assign, and track all tasks across your projects."
+                title={t('tasks_management')}
+                description={t('tasks_management_desc')}
                 actions={
                     <Link href={route('admin.tasks.create')}>
                         <DashboardButton className="flex items-center gap-2">
                             <PlusIcon className="w-5 h-5" />
-                            New Task
+                            {t('add_task')}
                         </DashboardButton>
                     </Link>
                 }
@@ -37,7 +56,7 @@ export default function Index({ tasks, auth, filters = {}, filterOptions }) {
                     route="admin.tasks.index"
                     filters={filters}
                     filterOptions={filterOptions}
-                    placeholder="Search tasks by title, description, project, or user..."
+                    placeholder={t('search_tasks_placeholder')}
                 />
 
                 {/* Tasks Table */}
@@ -46,11 +65,11 @@ export default function Index({ tasks, auth, filters = {}, filterOptions }) {
                         <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                             <thead>
                                 <tr className="bg-gray-50 dark:bg-gray-900/50">
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Task Title</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Project</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Assigned To</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">{t('task_title')}</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">{t('project')}</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">{t('assigned_to')}</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">{t('status')}</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">{t('actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -69,10 +88,10 @@ export default function Index({ tasks, auth, filters = {}, filterOptions }) {
                                         <td className="px-6 py-5">
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-bold text-gray-900 dark:text-white">
-                                                    {task.project?.name || 'No Project'}
+                                                    {task.project?.name || t('no_project')}
                                                 </span>
                                                 <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-0.5">
-                                                    {task.project?.client?.name || task.project?.client_name || 'Individual'}
+                                                    {task.project?.client?.name || task.project?.client_name || t('individual')}
                                                 </span>
                                             </div>
                                         </td>
@@ -83,13 +102,13 @@ export default function Index({ tasks, auth, filters = {}, filterOptions }) {
                                                         {task.user?.name?.charAt(0) || (task.members && task.members[0]?.name?.charAt(0)) || '?'}
                                                     </div>
                                                     <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[120px]">
-                                                        {task.user?.name || (task.members && task.members[0]?.name) || 'Unassigned'}
+                                                        {task.user?.name || (task.members && task.members[0]?.name) || t('unassigned')}
                                                     </span>
                                                 </div>
                                                 {task.members && task.members.length > 1 && (
                                                     <span className="mt-1 text-[9px] font-black text-[#1F2BF3] uppercase tracking-widest flex items-center gap-1">
                                                         <span className="w-1 h-1 rounded-full bg-[#1F2BF3]" />
-                                                        +{task.members.length - 1} more members
+                                                        {t('more_members', { count: task.members.length - 1 })}
                                                     </span>
                                                 )}
                                             </div>
@@ -97,7 +116,7 @@ export default function Index({ tasks, auth, filters = {}, filterOptions }) {
                                         <td className="px-6 py-5">
                                             {task.status ? <StatusBadge status={task.status} /> : (
                                                  <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-400">
-                                                    Unknown
+                                                    {t('unknown')}
                                                 </span>
                                             )}
                                         </td>
@@ -114,7 +133,7 @@ export default function Index({ tasks, auth, filters = {}, filterOptions }) {
                                                     </button>
                                                 </Link>
                                                 <button 
-                                                    onClick={() => confirm("Delete this task?") && router.delete(route('admin.tasks.destroy', task.id))}
+                                                    onClick={() => handleDelete(task.id)}
                                                     className="p-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm"
                                                 >
                                                     <TrashIcon className="w-4 h-4" />

@@ -25,7 +25,7 @@ class AppointmentRequestedMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.appointment-requested',
+            view: 'emails.appointment-requested',
         );
     }
 }

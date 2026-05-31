@@ -21,8 +21,10 @@ import {
 } from 'lucide-react';
 import TodoWidget from '@/Components/UI/TodoWidget';
 import Avatar from '@/Components/UI/Avatar';
+import { useTranslation } from 'react-i18next';
 
 export default function MemberDashboard({ auth, tasks = [], stats = { todo: 0, in_progress: 0, completed: 0, blocked: 0 }, personalTodos = [], clients = [] }) {
+    const { t } = useTranslation();
     const [qr, setQr] = useState(null);
     const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -40,13 +42,20 @@ export default function MemberDashboard({ auth, tasks = [], stats = { todo: 0, i
     const formattedTime = currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     const formattedDate = currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' });
 
+    const getGreeting = () => {
+        const hour = currentTime.getHours();
+        if (hour < 12) return t('good_morning');
+        if (hour < 18) return t('good_afternoon');
+        return t('good_evening');
+    };
+
     return (
         <MemberLayout auth={auth}>
-            <Head title="Member Dashboard" />
+            <Head title={t('dashboard')} />
 
             <DashboardPage 
-                title={`Good ${currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 18 ? 'Afternoon' : 'Evening'}, ${auth.user.name.split(' ')[0]}!`}
-                description="Ready to tackle your goals for today?"
+                title={`${getGreeting()}, ${auth.user.name.split(' ')[0]}!`}
+                description={t('ready_tackle_goals')}
                 actions={
                     <div className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-md px-4 py-2 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center gap-4 shadow-sm">
                         <div className="flex flex-col items-end">
@@ -62,32 +71,32 @@ export default function MemberDashboard({ auth, tasks = [], stats = { todo: 0, i
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     <StatCard 
-                        title="To Do" 
+                        title={t('todo')} 
                         value={stats.todo} 
                         icon={<CheckSquare className="w-6 h-6" />} 
                         gradient="from-amber-400 to-orange-500"
-                        label="Tasks Pending"
+                        label={t('tasks_pending')}
                     />
                     <StatCard 
-                        title="In Progress" 
+                        title={t('in_progress')} 
                         value={stats.in_progress} 
                         icon={<TrendingUp className="w-6 h-6" />} 
                         gradient="from-blue-500 to-indigo-600"
-                        label="Active Now"
+                        label={t('active_now')}
                     />
                     <StatCard 
-                        title="Completed" 
+                        title={t('completed')} 
                         value={stats.completed} 
                         icon={<Zap className="w-6 h-6" />} 
                         gradient="from-emerald-400 to-teal-500"
-                        label="Finished Tasks"
+                        label={t('finished_tasks')}
                     />
                     <StatCard 
-                        title="Blocked" 
+                        title={t('blocked')} 
                         value={stats.blocked} 
                         icon={<ArrowUpRight className="w-6 h-6" />} 
                         gradient="from-red-400 to-red-600"
-                        label="On Hold"
+                        label={t('on_hold')}
                     />
                 </div>
 
@@ -103,9 +112,9 @@ export default function MemberDashboard({ auth, tasks = [], stats = { todo: 0, i
                                     <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-500">
                                         <Users className="w-4 h-4" />
                                     </div>
-                                    My Clients
+                                    {t('my_clients')}
                                 </h3>
-                                <Link href="/member/clients" className="text-[10px] font-black text-[#1F2BF3] hover:underline uppercase tracking-widest">See all</Link>
+                                <Link href="/member/clients" className="text-[10px] font-black text-[#1F2BF3] hover:underline uppercase tracking-widest">{t('see_all')}</Link>
                             </div>
 
                             <div className="space-y-3">
@@ -128,7 +137,7 @@ export default function MemberDashboard({ auth, tasks = [], stats = { todo: 0, i
                                     </Link>
                                 )) : (
                                     <div className="text-center py-6">
-                                        <p className="text-gray-400 text-xs font-medium italic">No clients assigned yet.</p>
+                                        <p className="text-gray-400 text-xs font-medium italic">{t('no_clients_assigned')}</p>
                                     </div>
                                 )}
                             </div>
@@ -144,7 +153,7 @@ export default function MemberDashboard({ auth, tasks = [], stats = { todo: 0, i
                                     <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-2xl text-[#1F2BF3]">
                                         <QrCode className="w-6 h-6" />
                                     </div>
-                                    <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Smart Attendance</h3>
+                                    <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{t('smart_attendance')}</h3>
                                 </div>
 
                                 <div className="flex flex-col md:flex-row items-center gap-8 flex-1">
@@ -155,15 +164,15 @@ export default function MemberDashboard({ auth, tasks = [], stats = { todo: 0, i
                                         <div className="flex flex-col gap-2">
                                             <div className="flex items-center gap-2 text-[11px] font-black text-gray-500 uppercase tracking-wider">
                                                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                                Status: {auth.user.attendance_status}
+                                                {t('status')}: {auth.user.attendance_status}
                                                 </div>
                                                 <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                                Last: <span className="text-[#1F2BF3]">{auth.user.last_attendance_at}</span>
+                                                {t('last')}: <span className="text-[#1F2BF3]">{auth.user.last_attendance_at}</span>
                                                 </div>
                                                 </div>
                                                 <Link href="/member/attendance" className="w-full block">
                                                     <DashboardButton variant="primary" className="mt-4 w-full md:w-auto text-xs font-black uppercase tracking-widest py-3">
-                                                        View Details
+                                                        {t('view_details')}
                                                     </DashboardButton>
                                                 </Link>
                                     </div>                                
@@ -195,9 +204,9 @@ export default function MemberDashboard({ auth, tasks = [], stats = { todo: 0, i
                                     <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-500">
                                         <CheckSquare className="w-5 h-5" />
                                     </div>
-                                    Priority Tasks
+                                    {t('priority_tasks')}
                                 </h3>
-                                <Link href="/member/tasks" className="text-[10px] font-black text-[#1F2BF3] hover:underline uppercase tracking-widest">See all</Link>
+                                <Link href="/member/tasks" className="text-[10px] font-black text-[#1F2BF3] hover:underline uppercase tracking-widest">{t('see_all')}</Link>
                             </div>
 
                             <div className="space-y-3 md:space-y-4">
@@ -222,7 +231,7 @@ export default function MemberDashboard({ auth, tasks = [], stats = { todo: 0, i
                                     </Link>
                                 )) : (
                                     <div className="text-center py-12">
-                                        <p className="text-gray-400 text-xs md:text-sm font-medium italic">Your slate is clear for now!</p>
+                                        <p className="text-gray-400 text-xs md:text-sm font-medium italic">{t('clear_slate')}</p>
                                     </div>
                                 )}
                             </div>
@@ -232,11 +241,11 @@ export default function MemberDashboard({ auth, tasks = [], stats = { todo: 0, i
 
                 {/* Quick Actions Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mt-8">
-                    <QuickAction icon={<Clock />} title="Attendance" link={route('member.attendance.index')} color="bg-blue-500" />
-                    <QuickAction icon={<Users />} title="My Clients" link={route('member.clients.index')} color="bg-emerald-500" />
-                    <QuickAction icon={<LayoutDashboard />} title="My Profile" link={route('admin.profile')} color="bg-purple-500" />
-                    <QuickAction icon={<MessageSquare />} title="Chat Hub" link={route('chat.index')} color="bg-[#00D8C0]" />
-                    <QuickAction icon={<TrendingUp />} title="My Progress" link={route('member.progress.index')} color="bg-indigo-500" />
+                    <QuickAction icon={<Clock />} title={t('attendance')} link={route('member.attendance.index')} color="bg-blue-500" />
+                    <QuickAction icon={<Users />} title={t('my_clients')} link={route('member.clients.index')} color="bg-emerald-500" />
+                    <QuickAction icon={<LayoutDashboard />} title={t('my_profile')} link={route('admin.profile')} color="bg-purple-500" />
+                    <QuickAction icon={<MessageSquare />} title={t('chat_hub')} link={route('chat.index')} color="bg-[#00D8C0]" />
+                    <QuickAction icon={<TrendingUp />} title={t('my_progress')} link={route('member.progress.index')} color="bg-indigo-500" />
                 </div>
             </DashboardPage>
         </MemberLayout>

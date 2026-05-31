@@ -8,7 +8,7 @@ import DashboardButton from '@/Components/UI/DashboardButton';
 import { XMarkIcon, PhotoIcon, DocumentIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 export default function Create({ auth }) {
     const isAdmin = auth.user.role === 'admin' || auth.user.role === 'project_manager';
-    const Layout = isAdmin ? AdminLayout : MemberLayout;
+    const PageLayout = isAdmin ? AdminLayout : MemberLayout;
     const storeRoute = isAdmin ? 'admin.clients.store' : 'member.clients.store';
 
     const { data, setData, post, processing, errors, transform } = useForm({
@@ -101,7 +101,7 @@ export default function Create({ auth }) {
     console.log('Create Client Page Rendered. isAdmin:', isAdmin, 'Route:', storeRoute, 'Processing:', processing);
 
     return (
-        <Layout auth={auth}>
+        <PageLayout auth={auth}>
             <Head title="Add New Client" />
 
             <DashboardPage 
@@ -273,7 +273,7 @@ export default function Create({ auth }) {
                                         value={data.phone}
                                         onChange={e => setData('phone', e.target.value)}
                                         className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                        placeholder="+212 600..."
+                                        placeholder="0607060769"
                                         required
                                     />
                                     {errors.phone && <p className="mt-1 text-sm text-red-500 font-bold">{errors.phone}</p>}
@@ -286,7 +286,7 @@ export default function Create({ auth }) {
                                         value={data.whatsapp}
                                         onChange={e => setData('whatsapp', e.target.value)}
                                         className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
-                                        placeholder="+212 600..."
+                                        placeholder="0607060769"
                                     />
                                     {errors.whatsapp && <p className="mt-1 text-sm text-red-500 font-bold">{errors.whatsapp}</p>}
                                 </div>
@@ -427,6 +427,6 @@ export default function Create({ auth }) {
                     </form>
                 </DashboardCard>
             </DashboardPage>
-        </Layout>
+        </PageLayout>
     );
 }

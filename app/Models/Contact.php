@@ -14,10 +14,15 @@ class Contact extends Model
         'email',
         'services',
         'message',
-        'is_read'
+        'is_read',
+        'needs_creator',
+        'selected_creators',
     ];
 
     protected $casts = [
-        'services' => 'array', // pour gérer JSON automatiquement
+        'services' => 'array',
+        'is_read' => 'boolean',
+        'needs_creator' => 'boolean',
+        'selected_creators' => 'array',
     ];
 }

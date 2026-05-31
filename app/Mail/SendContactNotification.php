@@ -24,7 +24,7 @@ class SendContactNotification extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Send Contact Notification',
+            subject: 'New Project Request: ' . $this->contact->full_name,
         );
     }
 
@@ -34,7 +34,7 @@ class SendContactNotification extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.contact',
+            view: 'emails.contact',
         );
     }
 

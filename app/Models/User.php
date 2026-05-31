@@ -6,10 +6,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     protected $fillable = [
         'name',
@@ -18,6 +19,9 @@ class User extends Authenticatable
         'role', 
         'avatar', 
         'last_seen',
+        'base_salary',
+        'job_title',
+        'show_on_homepage',
     ];
 
     protected $hidden = [
@@ -31,6 +35,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'last_seen' => 'datetime',
+            'show_on_homepage' => 'boolean',
         ];
     }
 

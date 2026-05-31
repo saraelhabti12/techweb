@@ -83,7 +83,11 @@ class MemberController extends Controller
      */
     public function create()
     {
-        return inertia('Admin/Members/Create');
+        return inertia('Admin/Members/Create', [
+            'roles' => \Spatie\Permission\Models\Role::all(),
+            'permissions' => \Spatie\Permission\Models\Permission::all(),
+            'modules' => $this->getModules(),
+        ]);
     }
 
     /**
@@ -95,18 +99,32 @@ class MemberController extends Controller
             'name' => 'required|string',
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|string|in:admin,project_manager,member',
+            'role' => 'required|string|exists:roles,name',
+            'permissions' => 'array',
+            'job_title' => 'nullable|string',
+            'show_on_homepage' => 'boolean',
+            'avatar' => 'nullable|image|max:2048',
         ]);
 
-        $user = User::create([
+        $userData = [
             'name' => $request->name,
             'email' => $request->email,
             'role' => $request->role,
             'password' => Hash::make($request->password),
-        ]);
+            'job_title' => $request->job_title,
+            'show_on_homepage' => $request->show_on_homepage,
+        ];
 
-        // Optional: Send email
-        // Mail::to($user->email)->send(new SendCredentials($user, $request->password));
+        if ($request->hasFile('avatar')) {
+            $userData['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $user = User::create($userData);
+
+        $user->assignRole($request->role);
+        if ($request->has('permissions')) {
+            $user->syncPermissions($request->permissions);
+        }
 
         return redirect()->route('admin.members.index')->with('success', 'Member created successfully!');
     }
@@ -114,7 +132,10 @@ class MemberController extends Controller
     public function show($id)
     {
         $member = User::findOrFail($id);
-        return Inertia::render('Admin/Members/Show', ['member' => (new UserResource($member))->resolve()]);
+        $member->load('roles', 'permissions');
+        return Inertia::render('Admin/Members/Show', [
+            'member' => (new UserResource($member))->resolve(),
+        ]);
     }
 
     public function edit($id)
@@ -122,7 +143,42 @@ class MemberController extends Controller
         $member = User::findOrFail($id);
         return Inertia::render('Admin/Members/Edit', [
             'member' => (new UserResource($member))->resolve(),
+            'roles' => \Spatie\Permission\Models\Role::all(),
+            'permissions' => \Spatie\Permission\Models\Permission::all(),
+            'memberRoles' => $member->getRoleNames(),
+            'memberPermissions' => $member->getPermissionNames(),
+            'modules' => $this->getModules(),
         ]);
+    }
+
+    private function getModules()
+    {
+        return [
+            'Dashboard',
+            'Projects',
+            'Tasks',
+            'Clients',
+            'Members',
+            'Calendar',
+            'Appointments',
+            'Chat',
+            'Finance',
+            'Invoices',
+            'Quotations',
+            'Roles',
+            'Creators',
+            'Commercials',
+            'Expenses',
+            'Attendance',
+            'History',
+            'Contacts',
+            'Notifications',
+            'Settings',
+            'Blogs',
+            'Templates',
+            'Categories',
+            'TeamHub',
+        ];
     }
 
     public function update(Request $request, $id)
@@ -130,14 +186,38 @@ class MemberController extends Controller
         $request->validate([
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $id,
-            'role' => 'required|string|in:admin,project_manager,member',
+            'role' => 'required|string|exists:roles,name',
+            'permissions' => 'array',
+            'job_title' => 'nullable|string',
+            'show_on_homepage' => 'boolean',
+            'avatar' => 'nullable|image|max:2048',
         ]);
 
         $member = User::findOrFail($id);
         $member->name = $request->name;
         $member->email = $request->email;
         $member->role = $request->role;
+        $member->job_title = $request->job_title;
+        $member->show_on_homepage = $request->show_on_homepage;
+
+        if ($request->hasFile('avatar')) {
+            if ($member->avatar) {
+                Storage::disk('public')->delete($member->avatar);
+            }
+            $member->avatar = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        if ($request->password) {
+            $request->validate([
+                'password' => 'required|string|min:8|confirmed',
+            ]);
+            $member->password = Hash::make($request->password);
+        }
+
         $member->save();
+
+        $member->syncRoles($request->role);
+        $member->syncPermissions($request->permissions ?? []);
 
         return redirect()->route('admin.members.index')->with('success', 'Member updated successfully');
     }

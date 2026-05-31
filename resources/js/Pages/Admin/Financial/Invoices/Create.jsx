@@ -123,19 +123,19 @@ export default function Create({ auth, clients, nextNumber }) {
                                 <div className="space-y-4">
                                     <div className="flex justify-between">
                                         <span className="text-gray-500 text-sm">Subtotal</span>
-                                        <span className="font-bold">{subtotal.toFixed(2)}€</span>
+                                        <span className="font-bold">{subtotal.toFixed(2)} DH</span>
                                     </div>
                                     <div>
-                                        <InputLabel value="Tax (€)" />
+                                        <InputLabel value="Tax (DH)" />
                                         <TextInput type="number" value={data.tax} onChange={e => setData('tax', e.target.value)} className="w-full text-right" />
                                     </div>
                                     <div>
-                                        <InputLabel value="Discount (€)" />
+                                        <InputLabel value="Discount (DH)" />
                                         <TextInput type="number" value={data.discount} onChange={e => setData('discount', e.target.value)} className="w-full text-right" />
                                     </div>
                                     <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl flex justify-between items-center font-bold">
                                         <span className="text-indigo-700">Total</span>
-                                        <span className="text-xl text-indigo-600">{total.toFixed(2)}€</span>
+                                        <span className="text-xl text-indigo-600">{total.toFixed(2)} DH</span>
                                     </div>
                                     <DashboardButton type="submit" variant="primary" className="w-full justify-center" disabled={processing}>
                                         <Save className="w-5 h-5" />

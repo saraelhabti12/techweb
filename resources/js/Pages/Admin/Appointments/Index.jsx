@@ -9,10 +9,12 @@ import Modal from '@/Components/Modal';
 import DashboardInput from '@/Components/UI/DashboardInput';
 import InputError from '@/Components/InputError';
 import { motion } from 'framer-motion';
+import { useConfirm } from '@/Contexts/ConfirmContext';
 
 export default function Index({ auth, appointments }) {
     const [selectedApt, setSelectedApt] = useState(null);
     const [showApproveModal, setShowApproveModal] = useState(false);
+    const confirm = useConfirm();
 
     const { data, setData, post, processing, errors, reset } = useForm({
         status: 'accepted',
@@ -21,7 +23,7 @@ export default function Index({ auth, appointments }) {
         notes: '',
     });
 
-    const handleStatusUpdate = (id, status) => {
+    const handleStatusUpdate = async (id, status) => {
         if (status === 'accepted') {
             const apt = appointments.find(a => a.id === id);
             setSelectedApt(apt);
@@ -36,7 +38,14 @@ export default function Index({ auth, appointments }) {
             });
             setShowApproveModal(true);
         } else {
-            if (confirm(`Are you sure you want to reject this appointment?`)) {
+            const isConfirmed = await confirm({
+                title: 'Reject Appointment',
+                message: 'Are you sure you want to reject this appointment?',
+                confirmText: 'Reject',
+                variant: 'danger'
+            });
+
+            if (isConfirmed) {
                 router.post(route('admin.appointments.updateStatus', id), { status: 'rejected' });
             }
         }
@@ -162,93 +171,119 @@ export default function Index({ auth, appointments }) {
             </DashboardPage>
 
             {/* Approval Modal */}
-            <Modal show={showApproveModal} onClose={() => setShowApproveModal(false)} maxWidth="xl">
+            <Modal show={showApproveModal} onClose={() => setShowApproveModal(false)} maxWidth="2xl">
                 {selectedApt && (
-                    <form onSubmit={submitApproval} className="p-8 bg-white dark:bg-[#0A0A0A]">
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="p-3 bg-emerald-500/10 rounded-2xl">
-                                <CheckCircle className="w-6 h-6 text-emerald-500" />
+                    <form onSubmit={submitApproval} className="bg-white dark:bg-[#0A0A0A] overflow-hidden rounded-[2rem]">
+                        {/* Header with Gradient Background */}
+                        <div className="relative px-8 py-10 bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] overflow-hidden">
+                            <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
+                            <div className="relative z-10 flex items-center gap-4">
+                                <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 text-white shadow-xl">
+                                    <CheckCircle className="w-8 h-8" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-white uppercase tracking-tight leading-none mb-1">
+                                        Approve Appointment
+                                    </h2>
+                                    <p className="text-white/70 text-sm font-bold tracking-tight">Finalize details for {selectedApt.client?.name || 'Client'}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
-                                    Approve Appointment
-                                </h2>
-                                <p className="text-sm font-bold text-gray-400">Finalize details for {selectedApt.client.name}</p>
-                            </div>
+                            {/* Decorative Circles */}
+                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+                            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-black/10 rounded-full blur-3xl" />
                         </div>
 
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2 block">Date</label>
-                                    <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-[1.25rem] border border-gray-100 dark:border-white/5 text-sm font-bold text-gray-900 dark:text-white">
-                                        {new Date(selectedApt.appointment_date).toLocaleDateString()}
+                        <div className="p-8 space-y-8">
+                            {/* Requested Info Section */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <CalendarDaysIcon className="w-4 h-4 text-[#1F2BF3]" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Schedule Information</span>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2 block">Requested Date</label>
+                                        <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-[1.25rem] border border-gray-100 dark:border-white/5 text-sm font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                                            <CalendarDaysIcon className="w-5 h-5 text-[#1F2BF3]" />
+                                            {new Date(selectedApt.appointment_date).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2 block">From (Start Time)</label>
+                                        <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-[1.25rem] border border-gray-100 dark:border-white/5 text-sm font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                                            <Clock className="w-5 h-5 text-[#1F2BF3]" />
+                                            {new Date(selectedApt.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2 block">From</label>
-                                    <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-[1.25rem] border border-gray-100 dark:border-white/5 text-sm font-bold text-gray-900 dark:text-white">
-                                        {new Date(selectedApt.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </div>
-                                </div>
-                            </div>
 
-                            <DashboardInput
-                                label="To (End Time)"
-                                type="time"
-                                icon={Clock}
-                                value={data.end_time}
-                                onChange={e => setData('end_time', e.target.value)}
-                            />
-                            <InputError message={errors.end_date} />
-
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 ml-2">
-                                    Appointment Type
-                                </label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <TagIcon className="h-5 w-5 text-gray-400 group-focus-within:text-[#1F2BF3] transition-colors" />
-                                    </div>
-                                    <select
-                                        value={data.type}
-                                        onChange={e => setData('type', e.target.value)}
-                                        className="w-full bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 text-gray-900 dark:text-white rounded-[1.25rem] shadow-sm focus:ring-4 focus:ring-[#1F2BF3]/10 focus:border-[#1F2BF3] transition-all duration-300 pl-11 py-4 text-sm font-bold appearance-none"
-                                    >
-                                        {eventTypes.map(type => (
-                                            <option key={type.id} value={type.id}>{type.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <InputError message={errors.type} />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 ml-2">
-                                    Internal Notes
-                                </label>
-                                <textarea
-                                    value={data.notes}
-                                    onChange={e => setData('notes', e.target.value)}
-                                    className="w-full bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 text-gray-900 dark:text-white rounded-[1.25rem] shadow-sm focus:ring-4 focus:ring-[#1F2BF3]/10 focus:border-[#1F2BF3] transition-all duration-300 px-5 py-4 text-sm font-bold min-h-[100px]"
-                                    placeholder="Any internal notes about this visit..."
+                                <DashboardInput
+                                    label="To (End Time)"
+                                    type="time"
+                                    icon={Clock}
+                                    value={data.end_time}
+                                    onChange={e => setData('end_time', e.target.value)}
                                 />
-                                <InputError message={errors.notes} />
+                                <InputError message={errors.end_date} />
+                            </div>
+
+                            {/* Classification Section */}
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <TagIcon className="w-4 h-4 text-[#1F2BF3]" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Classification</span>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 ml-2">
+                                        Appointment Type
+                                    </label>
+                                    <div className="relative group">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <TagIcon className="h-5 w-5 text-gray-400 group-focus-within:text-[#1F2BF3] transition-colors" />
+                                        </div>
+                                        <select
+                                            value={data.type}
+                                            onChange={e => setData('type', e.target.value)}
+                                            className="w-full bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 text-gray-900 dark:text-white rounded-[1.25rem] shadow-sm focus:ring-4 focus:ring-[#1F2BF3]/10 focus:border-[#1F2BF3] transition-all duration-300 pl-11 py-4 text-sm font-bold appearance-none"
+                                        >
+                                            {eventTypes.map(type => (
+                                                <option key={type.id} value={type.id}>{type.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <InputError message={errors.type} />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 ml-2">
+                                        Internal Notes
+                                    </label>
+                                    <textarea
+                                        value={data.notes}
+                                        onChange={e => setData('notes', e.target.value)}
+                                        className="w-full bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 text-gray-900 dark:text-white rounded-[1.25rem] shadow-sm focus:ring-4 focus:ring-[#1F2BF3]/10 focus:border-[#1F2BF3] transition-all duration-300 px-5 py-4 text-sm font-bold min-h-[120px]"
+                                        placeholder="Any internal notes about this visit..."
+                                    />
+                                    <InputError message={errors.notes} />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="mt-8 flex justify-end gap-3">
+                        <div className="p-8 bg-gray-50 dark:bg-white/5 border-t border-gray-100 dark:border-white/5 flex justify-end gap-4">
                             <DashboardButton 
                                 type="button" 
                                 variant="secondary" 
                                 onClick={() => setShowApproveModal(false)}
+                                className="!px-8 border-none shadow-none hover:bg-gray-200 dark:hover:bg-white/10"
                             >
                                 Cancel
                             </DashboardButton>
                             <DashboardButton 
                                 type="submit" 
                                 disabled={processing}
-                                className="!bg-[#1F2BF3] hover:!bg-[#00D8C0] text-white px-8"
+                                className="!bg-[#1F2BF3] hover:!bg-[#00D8C0] text-white !px-12 shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
                             >
                                 Confirm Approval
                             </DashboardButton>

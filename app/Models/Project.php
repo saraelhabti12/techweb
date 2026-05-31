@@ -24,6 +24,14 @@ class Project extends Model
         'client_address',
         'client_city',
         'client_logo',
+        'project_manager_id',
+        'commercial_type',
+        'commercial_id',
+        'commercial_name',
+        'commercial_phone',
+        'commercial_email',
+        'commercial_commission',
+        'commercial_notes',
     ];
 
     protected $appends = ['progress'];
@@ -53,8 +61,37 @@ class Project extends Model
     }
 
     public function members() {
-
         return $this->belongsToMany(User::class);
+    }
+
+    public function projectManager()
+    {
+        return $this->belongsTo(User::class, 'project_manager_id');
+    }
+
+    public function commercialInternal()
+    {
+        return $this->belongsTo(Commercial::class, 'commercial_id');
+    }
+
+    public function commercials()
+    {
+        return $this->belongsToMany(Commercial::class, 'commercial_project');
+    }
+
+    public function creators()
+    {
+        return $this->belongsToMany(Creator::class);
+    }
+
+    public function aiSuggestions()
+    {
+        return $this->hasMany(ProjectAiSuggestion::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
     }
 }
 

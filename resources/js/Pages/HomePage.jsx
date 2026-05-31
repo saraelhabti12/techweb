@@ -2,14 +2,13 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
+import SectionWithBackground from '@/Components/Shared/SectionWithBackground';
 import { 
     ArrowRight,
-    Mail,
-    Phone,
-    MapPin,
     Play,
     Plus
 } from "lucide-react";
+import ProjectRequestForm from '@/Components/ProjectRequestForm';
 
 const ClientMarquee = () => {
     const clients = ["STRIPE", "VERCEL", "ADOBE", "META", "GOOGLE", "AMAZON", "APPLE"];
@@ -17,8 +16,8 @@ const ClientMarquee = () => {
         <div className="relative py-20 overflow-hidden border-y border-gray-200 dark:border-white/5 bg-white dark:bg-[#050505]">
             <motion.div 
                 animate={{ x: [0, -1000] }}
-                transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-                className="flex gap-20 whitespace-nowrap px-10"
+                transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                className="flex gap-20 whitespace-nowrap px-10 will-change-transform"
             >
                 {[...clients, ...clients, ...clients].map((client, i) => (
                     <span key={i} className="text-4xl lg:text-7xl font-black text-gray-200 dark:text-white/5 hover:text-[#1F2BF3] transition-colors cursor-default uppercase tracking-tighter italic">
@@ -37,21 +36,21 @@ const ServiceItem = ({ title, description, index }) => {
         <motion.div 
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: index * 0.1 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.8, delay: index * 0.05 }}
             className="group relative border-b border-gray-200 dark:border-white/10 py-12 lg:py-20 cursor-pointer overflow-hidden"
         >
             <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8 px-6 lg:px-0">
                 <div className="flex items-start gap-8 lg:gap-16">
                     <span className="text-xl font-black text-[#1F2BF3] dark:text-[#00D8C0]">0{index + 1}</span>
-                    <h3 className="text-4xl lg:text-8xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none transition-transform duration-700 group-hover:translate-x-4">
+                    <h3 className="text-4xl lg:text-8xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none transition-transform duration-700 lg:group-hover:translate-x-4">
                         {title}
                     </h3>
                 </div>
                 <div className="max-w-md lg:text-right">
-                    <p className="text-lg lg:text-xl text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-500">
+                    <p className="text-lg lg:text-xl text-gray-500 lg:group-hover:text-gray-900 dark:lg:group-hover:text-white transition-colors duration-500">
                         {description}
                     </p>
                 </div>
@@ -66,10 +65,10 @@ const ServiceItem = ({ title, description, index }) => {
             <AnimatePresence>
                 {isHovered && (
                     <motion.div 
-                        initial={{ clipPath: "inset(100% 0 0 0)" }}
-                        animate={{ clipPath: "inset(0% 0 0 0)" }}
-                        exit={{ clipPath: "inset(100% 0 0 0)" }}
-                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.4 }}
                         className="absolute inset-0 bg-[#1F2BF3]/5 dark:bg-[#00D8C0]/5 -z-0"
                     />
                 )}
@@ -82,6 +81,22 @@ export default function HomePage({ blogs = [], templates = [] }) {
     const { data, setData, post, processing, reset } = useForm({
         full_name: '', email: '', services: [], message: '',
     });
+
+    // Scroll restoration logic
+    useEffect(() => {
+        const shouldRestore = sessionStorage.getItem('shouldRestoreScroll');
+        const lastScroll = sessionStorage.getItem('lastHomeScroll');
+        
+        if (shouldRestore === 'true' && lastScroll) {
+            sessionStorage.removeItem('shouldRestoreScroll');
+            setTimeout(() => {
+                window.scrollTo({
+                    top: parseInt(lastScroll),
+                    behavior: 'smooth'
+                });
+            }, 100);
+        }
+    }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -111,13 +126,17 @@ export default function HomePage({ blogs = [], templates = [] }) {
     ];
 
     return (
-        <MainLayout>
+        <MainLayout showParticles={false}>
             <Head title="TechWeb | Premium Digital Agency" />
 
             <div className="relative w-full bg-white dark:bg-[#050505] transition-colors duration-700 overflow-hidden font-sans">
                 
                 {/* 1. HERO SECTION (Simple & Centered Reference Style) */}
-                <section ref={heroRef} className="relative min-h-screen flex flex-col justify-center items-center px-6 pt-20 overflow-hidden">
+                <SectionWithBackground 
+                    ref={heroRef}
+                    variant="mesh"
+                    className="min-h-screen flex flex-col justify-center items-center px-6 pt-20 overflow-hidden"
+                >
                     <motion.div style={{ y: yHero, opacity: opacityHero }} className="relative z-10 w-full max-w-7xl mx-auto flex flex-col items-center text-center">
                         
                         {/* Elegant Pill Tag */}
@@ -198,13 +217,17 @@ export default function HomePage({ blogs = [], templates = [] }) {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full -z-10 pointer-events-none">
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-[#1F2BF3]/5 dark:bg-[#1F2BF3]/10 blur-[120px] rounded-full" />
                     </div>
-                </section>
+                </SectionWithBackground>
 
                 {/* 2. CLIENT MARQUEE */}
                 <ClientMarquee />
 
                 {/* 3. SERVICES SECTION */}
-                <section className="relative py-32 lg:py-60 px-6 sm:px-12 lg:px-24">
+                <SectionWithBackground 
+                    id="services"
+                    variant="orbs"
+                    className="py-32 lg:py-60 px-6 sm:px-12 lg:px-24 overflow-hidden"
+                >
                     <div className="max-w-[90rem] mx-auto text-center mb-24 lg:mb-40">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -229,10 +252,14 @@ export default function HomePage({ blogs = [], templates = [] }) {
                             />
                         ))}
                     </div>
-                </section>
+                </SectionWithBackground>
 
                 {/* 4. PROCESS SECTION */}
-                <section className="relative py-48 bg-gray-50 dark:bg-[#020202] px-6 sm:px-12 lg:px-24">
+                <SectionWithBackground 
+                    id="about"
+                    variant="mesh"
+                    className="py-48 bg-gray-50/50 dark:bg-[#020202]/50 px-6 sm:px-12 lg:px-24 overflow-hidden"
+                >
                     <div className="max-w-[90rem] mx-auto">
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
                             <div className="lg:col-span-4 lg:sticky lg:top-40 h-fit">
@@ -269,7 +296,7 @@ export default function HomePage({ blogs = [], templates = [] }) {
                             </div>
                         </div>
                     </div>
-                </section>
+                </SectionWithBackground>
 
                 {/* 5. FINAL CTA */}
                 <section className="relative h-screen flex flex-col justify-center items-center text-center px-6 overflow-hidden">

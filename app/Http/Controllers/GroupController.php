@@ -71,7 +71,9 @@ class GroupController extends Controller
     public function sendMessage(Request $request, Group $group)
     {
         $request->validate([
-            'message' => 'required|string'
+            'message' => 'nullable|string',
+            'file' => 'nullable|file|max:10240', // 10MB
+            'type' => 'required|in:text,image,file'
         ]);
 
         // Ensure user belongs to the group
@@ -79,10 +81,23 @@ class GroupController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $message = $group->messages()->create([
+        $data = [
             'user_id' => Auth::id(),
-            'message' => $request->message
-        ]);
+            'message' => $request->message,
+            'type' => $request->type,
+        ];
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store('group_chat_attachments', 'public');
+            $data['file_path'] = $path;
+            $data['file_name'] = $file->getClientOriginalName();
+            if (!$data['message']) {
+                $data['message'] = $data['file_name'];
+            }
+        }
+
+        $message = $group->messages()->create($data);
 
         return response()->json($message->load('user'));
     }

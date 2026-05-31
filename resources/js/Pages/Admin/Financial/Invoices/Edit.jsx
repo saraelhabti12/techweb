@@ -13,6 +13,7 @@ import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import Modal from '@/Components/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useConfirm } from '@/Contexts/ConfirmContext';
 
 export default function Edit({ auth, invoice, clients }) {
     const { data, setData, put, processing, errors } = useForm({
@@ -82,8 +83,15 @@ export default function Edit({ auth, invoice, clients }) {
         });
     };
 
-    const deletePayment = (id) => {
-        if (confirm('Delete this payment record?')) {
+    const deletePayment = async (id) => {
+        const isConfirmed = await confirm({
+            title: 'Delete Payment',
+            message: 'Are you sure you want to delete this payment record? This will update the invoice remaining balance.',
+            confirmText: 'Delete Payment',
+            variant: 'danger'
+        });
+
+        if (isConfirmed) {
             router.delete(route('admin.payments.destroy', id));
         }
     };
@@ -167,15 +175,15 @@ export default function Edit({ auth, invoice, clients }) {
                                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl space-y-2">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-500">Total Amount</span>
-                                        <span className="font-bold">{invoice.total}€</span>
+                                        <span className="font-bold">{invoice.total} DH</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-500">Paid Amount</span>
-                                        <span className="font-bold text-green-600">{invoice.amount_paid}€</span>
+                                        <span className="font-bold text-green-600">{invoice.amount_paid} DH</span>
                                     </div>
                                     <div className="pt-2 border-t border-gray-200 dark:border-gray-700 flex justify-between font-bold">
                                         <span>Remaining</span>
-                                        <span className="text-red-600">{(invoice.total - invoice.amount_paid).toFixed(2)}€</span>
+                                        <span className="text-red-600">{(invoice.total - invoice.amount_paid).toFixed(2)} DH</span>
                                     </div>
                                 </div>
                                 
@@ -195,7 +203,7 @@ export default function Edit({ auth, invoice, clients }) {
                                 {invoice.payments.length > 0 ? invoice.payments.map(payment => (
                                     <div key={payment.id} className="text-xs p-3 bg-gray-50 dark:bg-gray-800/30 rounded-lg flex justify-between items-center">
                                         <div>
-                                            <p className="font-bold">{payment.amount}€</p>
+                                            <p className="font-bold">{payment.amount} DH</p>
                                             <p className="text-gray-500">{new Date(payment.payment_date).toLocaleDateString()} - {payment.payment_method}</p>
                                         </div>
                                         <button onClick={() => deletePayment(payment.id)} className="text-red-400 hover:text-red-600">
@@ -216,7 +224,7 @@ export default function Edit({ auth, invoice, clients }) {
                         <h2 className="text-lg font-bold mb-4">Record New Payment</h2>
                         <div className="space-y-4">
                             <div>
-                                <InputLabel value="Amount (€)" />
+                                <InputLabel value="Amount (DH)" />
                                 <TextInput type="number" step="0.01" value={paymentForm.data.amount} onChange={e => paymentForm.setData('amount', e.target.value)} className="w-full" required />
                             </div>
                             <div>

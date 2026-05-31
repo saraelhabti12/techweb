@@ -9,7 +9,7 @@ import { XMarkIcon, PhotoIcon, DocumentIcon, TrashIcon, PlusIcon } from '@heroic
 
 export default function Edit({ auth, client }) {
     const isAdmin = auth.user.role === 'admin' || auth.user.role === 'project_manager';
-    const Layout = isAdmin ? AdminLayout : MemberLayout;
+    const PageLayout = isAdmin ? AdminLayout : MemberLayout;
     const updateRoute = isAdmin ? 'admin.clients.update' : 'member.clients.update';
 
     const { data, setData, post, processing, errors, transform } = useForm({
@@ -95,7 +95,7 @@ export default function Edit({ auth, client }) {
     };
 
     return (
-        <Layout auth={auth}>
+        <PageLayout auth={auth}>
             <Head title="Edit Professional Client" />
 
             <DashboardPage 
@@ -439,6 +439,6 @@ export default function Edit({ auth, client }) {
                     </form>
                 </DashboardCard>
             </DashboardPage>
-        </Layout>
+        </PageLayout>
     );
 }

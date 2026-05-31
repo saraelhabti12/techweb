@@ -10,8 +10,12 @@ import {
     UsersIcon, 
     ChevronLeftIcon,
     MagnifyingGlassIcon,
-    EllipsisVerticalIcon
+    EllipsisVerticalIcon,
+    ArrowDownTrayIcon,
+    PhotoIcon,
+    DocumentIcon
 } from '@heroicons/react/24/outline';
+import { CheckIcon } from '@heroicons/react/20/solid';
 
 import Avatar from '@/Components/UI/Avatar';
 import UserStatus from '@/Components/UI/UserStatus';
@@ -24,10 +28,14 @@ export default function Index({ auth, users }) {
     const [chatUsers, setChatUsers] = useState(users);
     const [searchQuery, setSearchQuery] = useState('');
     const [isMobileView, setIsMobileView] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const messagesEndRef = useRef(null);
+    const selectedUserRef = useRef(null);
 
     const scrollToBottom = (behavior = "smooth") => {
-        messagesEndRef.current?.scrollIntoView({ behavior });
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior, block: 'nearest' });
+        }
     };
 
     useEffect(() => {
@@ -45,19 +53,20 @@ export default function Index({ auth, users }) {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if (selectedUser) {
-                fetchMessages(selectedUser.id);
+            if (selectedUserRef.current) {
+                fetchMessages(selectedUserRef.current.id);
             }
             fetchChatUsers();
         }, 3000);
 
         return () => clearInterval(interval);
-    }, [selectedUser]);
+    }, []);
 
     const fetchMessages = async (userId) => {
         try {
             const response = await axios.get(route('chat.messages', userId));
-            if (response.data.length !== messages.length) {
+            // Only update if it's still the same user we intended to fetch for
+            if (selectedUserRef.current?.id === userId && JSON.stringify(response.data) !== JSON.stringify(messages)) {
                 setMessages(response.data);
             }
         } catch (error) {
@@ -69,9 +78,10 @@ export default function Index({ auth, users }) {
         try {
             const response = await axios.get(route('chat.users'));
             setChatUsers(response.data);
-            if (selectedUser) {
-                const updatedSelectedUser = response.data.find(u => u.id === selectedUser.id);
+            if (selectedUserRef.current) {
+                const updatedSelectedUser = response.data.find(u => u.id === selectedUserRef.current.id);
                 if (updatedSelectedUser) {
+                    selectedUserRef.current = updatedSelectedUser;
                     setSelectedUser(updatedSelectedUser);
                 }
             }
@@ -81,6 +91,7 @@ export default function Index({ auth, users }) {
     };
 
     const handleUserSelect = async (user) => {
+        selectedUserRef.current = user;
         setSelectedUser(user);
         setMessages([]);
         await fetchMessages(user.id);
@@ -89,15 +100,23 @@ export default function Index({ auth, users }) {
         setTimeout(() => scrollToBottom("auto"), 100);
     };
 
-    const sendMessage = async () => {
-        if (!newMessage.trim() || !selectedUser) return;
+    const sendMessage = async (file = null) => {
+        if (!newMessage.trim() && !file) return;
 
-        const messageText = newMessage;
+        const formData = new FormData();
+        formData.append('message', newMessage);
+        if (file) {
+            formData.append('file', file);
+            formData.append('type', file.type.startsWith('image/') ? 'image' : 'file');
+        } else {
+            formData.append('type', 'text');
+        }
+
         setNewMessage('');
 
         try {
-            const response = await axios.post(route('chat.store', selectedUser.id), {
-                message: messageText
+            const response = await axios.post(route('chat.store', selectedUserRef.current.id), formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
             setMessages(prev => [...prev, response.data]);
             fetchChatUsers();
@@ -106,16 +125,25 @@ export default function Index({ auth, users }) {
         }
     };
 
+    const handleTyping = async (isTyping) => {
+        if (!selectedUserRef.current) return;
+        try {
+            await axios.post(route('chat.setTyping', selectedUserRef.current.id), { is_typing: isTyping });
+        } catch (error) {
+            console.error("Error setting typing status", error);
+        }
+    };
+
     const filteredUsers = chatUsers.filter(user => 
         user.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const Layout = auth.user.role === 'admin' || auth.user.role === 'project_manager' 
+    const PageLayout = auth.user.role === 'admin' || auth.user.role === 'project_manager' 
         ? AdminLayout 
         : MemberLayout;
 
     return (
-        <Layout auth={auth}>
+        <PageLayout auth={auth} mainClassName="overflow-hidden" contentClassName="p-0">
             <Head title="Team Chat" />
 
             <div className="flex h-[calc(100vh-80px)] overflow-hidden bg-gray-50 dark:bg-black">
@@ -172,6 +200,7 @@ export default function Index({ auth, users }) {
                         ) : (
                             filteredUsers.map(user => (
                                 <motion.button
+                                    type="button"
                                     whileHover={{ x: 4 }}
                                     key={user.id}
                                     onClick={() => handleUserSelect(user)}
@@ -181,8 +210,8 @@ export default function Index({ auth, users }) {
                                             : 'hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300'
                                     }`}
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <div className="relative">
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className="relative shrink-0">
                                             <Avatar user={user} size="lg" className={`ring-2 ${selectedUser?.id === user.id ? 'ring-white/20' : 'ring-transparent'}`} />
                                             <div className="absolute -bottom-1 -right-1">
                                                 <UserStatus user={user} showText={false} className="border-2 border-white dark:border-gray-900 rounded-full bg-white dark:bg-gray-900" />
@@ -192,18 +221,38 @@ export default function Index({ auth, users }) {
                                             <div className={`font-black text-sm truncate ${selectedUser?.id === user.id ? 'text-white' : 'group-hover:text-[#1F2BF3]'}`}>
                                                 {user.name}
                                             </div>
-                                            <div className={`text-[10px] uppercase tracking-widest font-black mt-0.5 ${selectedUser?.id === user.id ? 'text-white/70' : 'text-gray-400'}`}>
-                                                {user.role.replace('_', ' ')}
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                {user.is_typing ? (
+                                                    <span className={`text-[10px] font-black uppercase tracking-widest animate-pulse ${selectedUser?.id === user.id ? 'text-white' : 'text-[#00D8C0]'}`}>Typing...</span>
+                                                ) : (
+                                                    <div className={`text-[10px] uppercase tracking-widest font-black truncate ${selectedUser?.id === user.id ? 'text-white/70' : 'text-gray-400'}`}>
+                                                        {user.latest_message ? (
+                                                            <span className="flex items-center gap-1">
+                                                                {user.latest_message.is_me && (
+                                                                    <CheckIcon className={`w-3 h-3 ${user.latest_message.is_read ? 'text-blue-400' : 'text-gray-400'}`} />
+                                                                )}
+                                                                {user.latest_message.type === 'image' ? '📷 Photo' : user.latest_message.type === 'file' ? '📁 File' : user.latest_message.content}
+                                                            </span>
+                                                        ) : user.role.replace('_', ' ')}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
-                                    {user.unread_count > 0 && (
-                                        <span className={`text-[10px] font-black w-6 h-6 flex items-center justify-center rounded-full ${
-                                            selectedUser?.id === user.id ? 'bg-white text-[#1F2BF3]' : 'bg-[#1F2BF3] text-white shadow-lg shadow-blue-500/20'
-                                        }`}>
-                                            {user.unread_count}
-                                        </span>
-                                    )}
+                                    <div className="flex flex-col items-end gap-1 shrink-0">
+                                        {user.latest_message && (
+                                            <span className={`text-[9px] font-bold ${selectedUser?.id === user.id ? 'text-white/60' : 'text-gray-400'}`}>
+                                                {new Date(user.latest_message.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        )}
+                                        {user.unread_count > 0 && (
+                                            <span className={`text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full ${
+                                                selectedUser?.id === user.id ? 'bg-white text-[#1F2BF3]' : 'bg-[#1F2BF3] text-white shadow-lg shadow-blue-500/20'
+                                            }`}>
+                                                {user.unread_count}
+                                            </span>
+                                        )}
+                                    </div>
                                 </motion.button>
                             ))
                         )}
@@ -219,7 +268,10 @@ export default function Index({ auth, users }) {
                                 <div className="flex items-center gap-4">
                                     {isMobileView && (
                                         <button 
-                                            onClick={() => setSelectedUser(null)}
+                                            onClick={() => {
+                                                setSelectedUser(null);
+                                                selectedUserRef.current = null;
+                                            }}
                                             className="p-2 -ml-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
                                         >
                                             <ChevronLeftIcon className="w-6 h-6" />
@@ -234,14 +286,57 @@ export default function Index({ auth, users }) {
                                     <div>
                                         <div className="font-black text-gray-900 dark:text-white tracking-tight">{selectedUser.name}</div>
                                         <div className="text-[10px] font-black uppercase tracking-widest text-[#1F2BF3]">
-                                            {selectedUser.is_online ? 'Active Now' : 'Offline'}
+                                            {selectedUser.is_typing ? (
+                                                <span className="text-[#00D8C0] animate-pulse">Typing...</span>
+                                            ) : selectedUser.is_online ? (
+                                                'Active Now'
+                                            ) : (
+                                                `Last seen: ${selectedUser.last_seen_formatted}`
+                                            )}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
-                                    <button className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 transition-colors">
+                                <div className="flex gap-2 relative">
+                                    <button 
+                                        onClick={() => setShowUserMenu(!showUserMenu)}
+                                        className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 transition-colors"
+                                    >
                                         <EllipsisVerticalIcon className="w-5 h-5" />
                                     </button>
+                                    <AnimatePresence>
+                                        {showUserMenu && (
+                                            <>
+                                                <div 
+                                                    className="fixed inset-0 z-40" 
+                                                    onClick={() => setShowUserMenu(false)}
+                                                ></div>
+                                                <motion.div 
+                                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                                    className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 py-2 z-50"
+                                                >
+                                                    <button 
+                                                        onClick={() => {
+                                                            setShowUserMenu(false);
+                                                            // Clear messages logic can go here if needed
+                                                        }}
+                                                        className="w-full px-4 py-2 text-left text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                                    >
+                                                        Clear Chat History
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
+                                                            setShowUserMenu(false);
+                                                        }}
+                                                        className="w-full px-4 py-2 text-left text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                                    >
+                                                        Block User
+                                                    </button>
+                                                </motion.div>
+                                            </>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
                             </div>
 
@@ -268,17 +363,61 @@ export default function Index({ auth, users }) {
                                                 >
                                                     <div className={`flex flex-col gap-1.5 max-w-[85%] md:max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
                                                         <div
-                                                            className={`px-6 py-4 rounded-3xl shadow-sm text-sm font-bold leading-relaxed ${
+                                                            className={`rounded-3xl shadow-sm text-sm font-bold leading-relaxed overflow-hidden ${
                                                                 isMe
                                                                     ? 'bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] text-white rounded-br-none shadow-blue-500/20'
                                                                     : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none border border-gray-100 dark:border-gray-800'
                                                             }`}
                                                         >
-                                                            {msg.message}
+                                                            {msg.type === 'image' && (
+                                                                <div className="relative group">
+                                                                    <img src={msg.file_url} alt="Shared" className="max-w-full h-auto max-h-80 object-cover cursor-pointer hover:opacity-90 transition-opacity" />
+                                                                    <a 
+                                                                        href={msg.file_url} 
+                                                                        download={msg.file_name}
+                                                                        className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                    >
+                                                                        <ArrowDownTrayIcon className="w-8 h-8 text-white" />
+                                                                    </a>
+                                                                </div>
+                                                            )}
+                                                            
+                                                            {msg.type === 'file' && (
+                                                                <div className={`p-4 flex items-center gap-3 ${isMe ? 'bg-black/10' : 'bg-gray-50 dark:bg-gray-900/50'}`}>
+                                                                    <div className="p-2 rounded-xl bg-white dark:bg-gray-800 text-[#1F2BF3]">
+                                                                        <DocumentIcon className="w-6 h-6" />
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="truncate text-sm font-bold">{msg.file_name}</p>
+                                                                        <p className={`text-[10px] font-black uppercase tracking-widest ${isMe ? 'text-white/70' : 'text-gray-400'}`}>File Attachment</p>
+                                                                    </div>
+                                                                    <a 
+                                                                        href={msg.file_url} 
+                                                                        download={msg.file_name}
+                                                                        className={`p-2 rounded-lg hover:bg-black/5 transition-colors ${isMe ? 'text-white' : 'text-gray-400'}`}
+                                                                    >
+                                                                        <ArrowDownTrayIcon className="w-5 h-5" />
+                                                                    </a>
+                                                                </div>
+                                                            )}
+
+                                                            {(msg.type === 'text' || (msg.type !== 'text' && msg.message !== msg.file_name)) && (
+                                                                <div className="px-6 py-4">
+                                                                    {msg.message}
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                        <span className="text-[9px] font-black uppercase tracking-tighter text-gray-400 px-1">
-                                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
+                                                        <div className="flex items-center gap-1.5 px-1">
+                                                            <span className="text-[9px] font-black uppercase tracking-tighter text-gray-400">
+                                                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </span>
+                                                            {isMe && (
+                                                                <div className="flex">
+                                                                    <CheckIcon className={`w-3 h-3 ${msg.is_read ? 'text-blue-500' : 'text-gray-400'}`} />
+                                                                    <CheckIcon className={`w-3 h-3 -ml-2 ${msg.is_read ? 'text-blue-500' : 'text-gray-400'}`} />
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </motion.div>
                                             );
@@ -294,6 +433,7 @@ export default function Index({ auth, users }) {
                                     value={newMessage}
                                     onChange={setNewMessage}
                                     onSend={sendMessage}
+                                    onTyping={handleTyping}
                                     placeholder={`Write your message to ${selectedUser.name.split(' ')[0]}...`}
                                 />
                             </div>
@@ -308,31 +448,10 @@ export default function Index({ auth, users }) {
                             <p className="text-gray-400 font-bold max-w-sm leading-relaxed uppercase tracking-widest text-[10px]">
                                 Choose a team member or client from the sidebar to start a secure real-time collaboration session.
                             </p>
-                            
-                            <div className="mt-12 grid grid-cols-3 gap-8">
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400">
-                                        <PaperAirplaneIcon className="w-6 h-6" />
-                                    </div>
-                                    <span className="text-[9px] font-black uppercase text-gray-400">Fast Delivery</span>
-                                </div>
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400">
-                                        <UsersIcon className="w-6 h-6" />
-                                    </div>
-                                    <span className="text-[9px] font-black uppercase text-gray-400">Secure Network</span>
-                                </div>
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400">
-                                        <ChatBubbleLeftRightIcon className="w-6 h-6" />
-                                    </div>
-                                    <span className="text-[9px] font-black uppercase text-gray-400">Real-time Sync</span>
-                                </div>
-                            </div>
                         </div>
                     )}
                 </div>
             </div>
-        </Layout>
+        </PageLayout>
     );
 }

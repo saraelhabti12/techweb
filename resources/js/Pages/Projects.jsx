@@ -3,6 +3,7 @@ import MainLayout from '@/Layouts/MainLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Zap, Layers, Globe, Filter } from "lucide-react";
+import PremiumBackground from "@/Components/UI/PremiumBackground";
 
 export default function Projects() {
     const { templates = [] } = usePage().props;
@@ -14,16 +15,12 @@ export default function Projects() {
         : templates.filter(t => t.category === selectedCategory);
 
     return (
-        <MainLayout>
+        <MainLayout showParticles={false}>
             <Head title="Our Projects | TechWeb Portfolio" />
 
             <div className="relative w-full bg-white dark:bg-[#050505] transition-colors duration-500 overflow-hidden">
                 
-                {/* Background Ambient Glows */}
-                <div className="absolute top-0 left-0 w-full h-screen overflow-hidden pointer-events-none z-0">
-                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#1F2BF3]/10 blur-[120px] rounded-full dark:opacity-40 opacity-20 animate-pulse" />
-                    <div className="absolute bottom-[10%] right-[-5%] w-[35%] h-[35%] bg-[#00D8C0]/10 blur-[120px] rounded-full dark:opacity-30 opacity-15" />
-                </div>
+                <PremiumBackground variant="projects" />
 
                 {/* HERO SECTION */}
                 <section className="relative pt-40 pb-20 px-6 sm:px-12 lg:px-24">

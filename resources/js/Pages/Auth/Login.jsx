@@ -16,8 +16,10 @@ import {
     CheckCircle2,
     Clock
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Login({ status, canResetPassword }) {
+    const { t } = useTranslation();
     const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
@@ -41,7 +43,7 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <div className="min-h-screen bg-white dark:bg-[#050505] flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-500 font-sans">
-            <Head title="Agency Login | TechWeb" />
+            <Head title={`Agency Login | TechWeb`} />
 
             {/* Background Ambient Glows */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
@@ -64,21 +66,19 @@ export default function Login({ status, canResetPassword }) {
                             <ApplicationLogo className="h-12 w-auto group-hover:scale-110 transition-transform duration-300" />
                         </Link>
                         
-                        <h1 className="text-6xl font-black text-gray-900 dark:text-white leading-[1.1] tracking-tight">
-                            Access Your <br />
-                            <span className="text-[#1F2BF3]">Digital Studio.</span>
+                        <h1 className="text-6xl font-black text-gray-900 dark:text-white leading-[1.1] tracking-tight" dangerouslySetInnerHTML={{ __html: t('access_digital_studio') }}>
                         </h1>
                         
                         <p className="text-xl text-gray-500 dark:text-gray-400 font-medium max-w-md leading-relaxed">
-                            Manage your projects, track attendance, and collaborate with your team in one unified environment.
+                            {t('unified_environment_desc')}
                         </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6 max-w-md">
-                        <FeatureItem icon={<ShieldCheck />} label="Secure Access" />
-                        <FeatureItem icon={<LayoutDashboard />} label="Unified Hub" />
-                        <FeatureItem icon={<Zap />} label="Real-time Updates" />
-                        <FeatureItem icon={<Clock />} label="Smart Attendance" />
+                        <FeatureItem icon={<ShieldCheck />} label={t('secure_access')} />
+                        <FeatureItem icon={<UnifiedIcon />} label={t('unified_hub')} />
+                        <FeatureItem icon={<Zap />} label={t('realtime_updates')} />
+                        <FeatureItem icon={<Clock />} label={t('smart_attendance')} />
                     </div>
 
                     {/* Clock/Status Widget */}
@@ -87,7 +87,7 @@ export default function Login({ status, canResetPassword }) {
                             <Clock className="w-5 h-5" />
                         </div>
                         <div>
-                            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Current System Time</div>
+                            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">{t('current_system_time')}</div>
                             <div className="text-lg font-black text-gray-900 dark:text-white leading-none">
                                 {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                             </div>
@@ -110,12 +110,12 @@ export default function Login({ status, canResetPassword }) {
                                 {/* Top Branding (Mobile only) */}
                                 <div className="lg:hidden flex flex-col items-center mb-10 text-center">
                                     <ApplicationLogo className="h-16 w-auto mb-4" />
-                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Sign In</h2>
+                                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">{t('sign_in')}</h2>
                                 </div>
 
                                 <div className="hidden lg:block mb-10">
-                                    <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Welcome Back</h2>
-                                    <p className="text-gray-500 font-bold mt-1 uppercase text-[10px] tracking-widest">Sign in to continue to TechWeb Hub</p>
+                                    <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">{t('welcome_back_title', { defaultValue: 'Welcome Back' })}</h2>
+                                    <p className="text-gray-500 font-bold mt-1 uppercase text-[10px] tracking-widest">{t('sign_in_continue')}</p>
                                 </div>
 
                                 {status && (
@@ -128,7 +128,7 @@ export default function Login({ status, canResetPassword }) {
                                 <form onSubmit={submit} className="space-y-6">
                                     {/* Email Field */}
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Email Address</label>
+                                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('email_address')}</label>
                                         <div className="relative group/field">
                                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within/field:text-[#1F2BF3] transition-colors">
                                                 <Mail className="w-5 h-5" />
@@ -140,7 +140,7 @@ export default function Login({ status, canResetPassword }) {
                                                 value={data.email}
                                                 autoComplete="username"
                                                 onChange={(e) => setData('email', e.target.value)}
-                                                placeholder="Enter your email"
+                                                placeholder={t('enter_email')}
                                                 className="w-full bg-gray-50/50 dark:bg-black/20 border-gray-100 dark:border-white/5 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-[#1F2BF3] focus:border-transparent transition-all outline-none"
                                             />
                                         </div>
@@ -150,13 +150,13 @@ export default function Login({ status, canResetPassword }) {
                                     {/* Password Field */}
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center pr-1">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Password</label>
+                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{t('password')}</label>
                                             {canResetPassword && (
                                                 <Link
                                                     href={route('password.request')}
                                                     className="text-[10px] font-black text-[#1F2BF3] hover:underline uppercase tracking-widest"
                                                 >
-                                                    Forgot?
+                                                    {t('forgot_password_q')}
                                                 </Link>
                                             )}
                                         </div>
@@ -197,7 +197,7 @@ export default function Login({ status, canResetPassword }) {
                                                 />
                                             </div>
                                             <span className="ms-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                                                Remember Device
+                                                {t('remember_device')}
                                             </span>
                                         </label>
                                     </div>
@@ -210,7 +210,7 @@ export default function Login({ status, canResetPassword }) {
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                         <span className="relative z-10 flex items-center">
-                                            {processing ? 'Authenticating...' : 'Sign In to Hub'} 
+                                            {processing ? t('authenticating') : t('sign_in_hub')} 
                                             <ArrowRight className="ml-3 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                         </span>
                                     </button>
@@ -218,7 +218,7 @@ export default function Login({ status, canResetPassword }) {
 
                                 <div className="mt-12 text-center">
                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                        Powered by <span className="text-[#1F2BF3]">TechWeb Engine</span> v2.0
+                                        {t('powered_by')} <span className="text-[#1F2BF3]">TechWeb Engine</span> v2.0
                                     </p>
                                 </div>
                             </div>
@@ -251,4 +251,8 @@ function FeatureItem({ icon, label }) {
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</span>
         </div>
     );
+}
+
+function UnifiedIcon() {
+    return <LayoutDashboard />;
 }

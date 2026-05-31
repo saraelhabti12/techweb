@@ -212,7 +212,6 @@ class AdminController extends Controller
         if ($availableYears->isEmpty()) $availableYears = collect([date('Y')]);
 
         return Inertia::render('Admin/Dashboard', [
-            'auth' => ['user' => Auth::user()],
             'recentTasks' => $recentTasks,
             'recentProjects' => $recentProjects,
             'stats' => $stats,

@@ -1,19 +1,17 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import React, { useState, useEffect } from "react";
+import { Head, Link } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import HeroSection from '@/Components/HeroSection';
+import ProjectRequestForm from '@/Components/ProjectRequestForm';
+import SectionWithBackground from '@/Components/Shared/SectionWithBackground';
+import { useTranslation } from 'react-i18next';
 import { 
-    ArrowRight,
     Zap,
     Shield,
     BarChart3,
     Rocket,
     CheckCircle2,
-    Star,
-    ChevronLeft,
-    ChevronRight,
-    Play,
     Mail,
     Phone,
     MapPin,
@@ -21,17 +19,19 @@ import {
     Layers,
     Globe,
     Code2,
-    Cpu
+    Cpu,
+    UserIcon
 } from "lucide-react";
 
 const ClientMarquee = () => {
-    const clients = ["STRIPE", "SARA", "ADOBE", "META", "GOOGLE", "AMAZON", "APPLE"];
+    const clients = ["WEB SITES", "DESIGN", "EDIT", "PHOTOGRAPH", "STUDIO", "DIGITAL"];
     return (
-        <div className="relative py-24 overflow-hidden border-y border-gray-200 dark:border-white/5 bg-white dark:bg-[#050505]">
+        <div className="relative py-24 overflow-hidden bg-white dark:bg-[#050505]">
+            <SectionWithBackground variant="default" className="absolute inset-0" />
             <motion.div 
                 animate={{ x: [0, -1000] }}
-                transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-                className="flex gap-24 whitespace-nowrap px-12"
+                transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                className="flex gap-24 whitespace-nowrap px-12 relative z-10 will-change-transform"
             >
                 {[...clients, ...clients, ...clients].map((client, i) => (
                     <span key={i} className="text-4xl lg:text-8xl font-black text-gray-200 dark:text-white/5 hover:text-[#1F2BF3] transition-colors cursor-default uppercase tracking-tighter italic">
@@ -43,180 +43,328 @@ const ClientMarquee = () => {
     );
 };
 
-export default function Welcome({ blogs = [], templates = [] }) {
+export default function Welcome({ blogs = [], templates = [], creators = [], team = [] }) {
+    const { t } = useTranslation();
     const [testimonialIndex, setTestimonialIndex] = useState(0);
-    const { data, setData, post, processing, reset } = useForm({
-        full_name: '', contact_number: '', company_name: '', email: '', services: [], message: '',
-    });
+
+    // Scroll restoration logic
+    useEffect(() => {
+        const shouldRestore = sessionStorage.getItem('shouldRestoreScroll');
+        const lastScroll = sessionStorage.getItem('lastHomeScroll');
+        
+        if (shouldRestore === 'true' && lastScroll) {
+            sessionStorage.removeItem('shouldRestoreScroll');
+            // Small delay to ensure content is rendered
+            setTimeout(() => {
+                window.scrollTo({
+                    top: parseInt(lastScroll),
+                    behavior: 'smooth'
+                });
+            }, 100);
+        }
+    }, []);
 
     const features = [
-        { icon: <Rocket className="w-6 h-6" />, title: "Fast Launch", description: "Get your digital presence up and running with our optimized deployment workflows." },
-        { icon: <Zap className="w-6 h-6" />, title: "High Performance", description: "Blazing fast load times and seamless user experiences across all devices." },
-        { icon: <Shield className="w-6 h-6" />, title: "Secure by Design", description: "Enterprise-grade security protocols to protect your brand and customer data." },
-        { icon: <BarChart3 className="w-6 h-6" />, title: "Data Driven", description: "Advanced analytics and insights to measure growth and optimize performance." },
-        { icon: <Layers className="w-6 h-6" />, title: "Scalable Solutions", description: "Architecture that grows with your business, from startup to enterprise." },
-        { icon: <Plus className="w-6 h-6" />, title: "Modern UI/UX", description: "Cutting-edge design trends that captivate and convert your target audience." }
-    ];
-
-    const team = [
-        { name: "Abdessalam Elamrani", role: "CEO & Founder", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anas" },
-        { name: "Sara ElHabti", role: "Full stuck Developer", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" },
-        { name: "Mohamed Elafia", role: "Photographer", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mehdi" },
-        { name: "Salah ", role: "Editor", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Yasmine" },
+        { icon: <Rocket className="w-6 h-6" />, title: t('fast_launch'), description: t('fast_launch_desc') },
+        { icon: <Zap className="w-6 h-6" />, title: t('high_performance'), description: t('high_performance_desc') },
+        { icon: <Shield className="w-6 h-6" />, title: t('secure_design'), description: t('secure_design_desc') },
+        { icon: <BarChart3 className="w-6 h-6" />, title: t('data_driven'), description: t('data_driven_desc') },
+        { icon: <Layers className="w-6 h-6" />, title: t('scalable_solutions'), description: t('scalable_solutions_desc') },
+        { icon: <Plus className="w-6 h-6" />, title: t('modern_ui_ux'), description: t('modern_ui_ux_desc') }
     ];
 
     const roadmap = [
-        { step: "01", title: "Discovery", description: "Deep dive into your brand, goals, and target audience.", icon: <Globe /> },
-        { step: "02", title: "Strategy", description: "Crafting a tailored digital roadmap for your success.", icon: <Cpu /> },
-        { step: "03", title: "Design", description: "High-fidelity prototypes with focus on UX and aesthetics.", icon: <Layers /> },
-        { step: "04", title: "Development", description: "Building with the latest tech stack for performance.", icon: <Code2 /> },
-        { step: "05", title: "Launch", description: "Seamless deployment and initial performance tracking.", icon: <Rocket /> }
+        { step: "01", title: t('step_discovery'), description: t('step_discovery_desc'), icon: <Globe /> },
+        { step: "02", title: t('step_strategy'), description: t('step_strategy_desc'), icon: <Cpu /> },
+        { step: "03", title: t('step_design'), description: t('step_design_desc'), icon: <Layers /> },
+        { step: "04", title: t('step_development'), description: t('step_development_desc'), icon: <Code2 /> },
+        { step: "05", title: t('step_launch'), description: t('step_launch_desc'), icon: <Rocket /> }
     ];
 
     const testimonials = [
-        { quote: "TechWeb a transformé notre présence en ligne avec un site moderne et performant.", author: "Ahmed BenKacem", role: "Marketing Manager" },
-        { quote: "Grâce à leur expertise en SEO, notre trafic a considérablement augmenté.", author: "Sofia El Amrani", role: "SEO Expert" },
-        { quote: "Un service impeccable et un support technique toujours disponible.", author: "Yassine Mourad", role: "Business Owner" }
+        { quote: t('testimonial_1'), author: "Ahmed BenKacem", role: t('testimonial_role_1') },
+        { quote: t('testimonial_2'), author: "Sofia El Amrani", role: t('testimonial_role_2') },
+        { quote: t('testimonial_3'), author: "Yassine Mourad", role: t('testimonial_role_3') }
     ];
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        post(route('contact.store'), { onSuccess: () => reset() });
-    };
-
     return (
-        <MainLayout>
-            <Head title="TechWeb | Premium Digital Agency" />
+        <MainLayout showParticles={false}>
+            <Head title={`TechWeb | ${t('premium_digital_agency', { defaultValue: 'Premium Digital Agency' })}`} />
 
-            <div className="relative w-full bg-white dark:bg-[#050505] transition-colors duration-700 overflow-hidden">
-                
+            <div className="relative w-full transition-colors duration-700 overflow-hidden">
                 {/* 1. HERO SECTION */}
-                <HeroSection 
-                    title="Crafting Digital Masterpieces"
-                    subtitle="We blend artistic intuition with technical precision to build immersive digital experiences that redefine your brand's future."
-                    ctaText="Start Your Journey"
-                />
+                <SectionWithBackground variant="default">
+                    <HeroSection 
+                        title={t('hero_title')}
+                        subtitle={t('hero_subtitle')}
+                        ctaText={t('hero_cta')}
+                    />
+                </SectionWithBackground>
 
                 {/* 2. CLIENT MARQUEE */}
                 <ClientMarquee />
 
-                {/* 3. FEATURES SECTION (Rich Details) */}
-                <section className="relative py-40 px-6 sm:px-12 lg:px-24">
-                    <div className="max-w-[90rem] mx-auto">
-                        <div className="flex flex-col lg:flex-row items-end justify-between gap-12 mb-32">
-                            <div className="max-w-2xl">
-                                <motion.span initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="text-[11px] font-black uppercase tracking-[0.4em] text-[#1F2BF3] mb-8 block">Our Capabilities</motion.span>
-                                <motion.h2 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} className="text-5xl lg:text-7xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none">
-                                    Engineering The Frontiers.
+                {/* 3. FEATURES SECTION (Compact & Refined) */}
+                <SectionWithBackground id="services" variant="projects" className="py-24 px-6 sm:px-12 lg:px-24 overflow-hidden">
+                    <div className="max-w-7xl mx-auto relative z-10">
+                        {/* Section Header */}
+                        <div className="flex flex-col lg:flex-row items-end justify-between gap-10 mb-20">
+                            <div className="max-w-xl">
+                                <motion.div 
+                                    initial={{ opacity: 0, x: -20 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    className="flex items-center gap-3 mb-4"
+                                >
+                                    <div className="w-8 h-[1px] bg-[#1F2BF3]" />
+                                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-[#1F2BF3]">{t('our_capabilities')}</span>
+                                </motion.div>
+                                <motion.h2 
+                                    initial={{ opacity: 0, y: 30 }} 
+                                    whileInView={{ opacity: 1, y: 0 }} 
+                                    className="text-4xl lg:text-6xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-[0.95] mb-2"
+                                >
+                                    {t('engineering_frontiers').split(' ').slice(0, -1).join(' ')} <br/>
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0]">{t('engineering_frontiers').split(' ').slice(-1)}</span>
                                 </motion.h2>
                             </div>
-                            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="text-xl text-gray-500 max-w-sm font-medium">
-                                We combine avant-garde design with robust engineering to deliver unparalleled digital impact.
+                            <motion.p 
+                                initial={{ opacity: 0 }} 
+                                whileInView={{ opacity: 1 }} 
+                                className="text-base text-gray-500 dark:text-gray-400 max-w-xs font-medium leading-relaxed italic border-l-2 border-[#00D8C0] pl-5"
+                            >
+                                {t('capabilities_desc')}
                             </motion.p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                        {/* Staggered Feature Grid - Centered & Tight */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {features.map((feature, i) => (
                                 <motion.div 
                                     key={i}
-                                    initial={{ opacity: 0, y: 30 }}
+                                    initial={{ opacity: 0, y: 40 }}
                                     whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: i * 0.1 }}
-                                    className="group p-12 rounded-[3rem] bg-gray-50 dark:bg-white/[0.02] border border-transparent hover:border-[#1F2BF3]/20 dark:hover:border-[#00D8C0]/20 hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-500 shadow-sm hover:shadow-2xl"
+                                    viewport={{ once: true, margin: "-50px" }}
+                                    transition={{ delay: i * 0.08, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                                    whileHover={{ 
+                                        y: i % 2 === 1 ? 14 : -10,
+                                        scale: 1.03,
+                                        transition: { duration: 0.3, ease: "easeOut" }
+                                    }}
+                                    className={`group relative p-8 rounded-[2.5rem] bg-white/40 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 hover:border-[#1F2BF3]/30 transition-all duration-700 shadow-sm hover:shadow-[0_20px_50px_rgba(31,43,243,0.08)] backdrop-blur-md overflow-hidden ${
+                                        i % 2 === 1 ? 'lg:translate-y-6' : ''
+                                    }`}
                                 >
-                                    <div className="w-16 h-16 rounded-2xl bg-[#1F2BF3] text-white flex items-center justify-center mb-10 group-hover:scale-110 group-hover:rotate-6 transition-transform">
-                                        {feature.icon}
+                                    {/* Abstract Background Decoration */}
+                                    <div className="absolute -top-8 -right-8 w-24 h-24 bg-[#1F2BF3]/5 rounded-full blur-2xl group-hover:bg-[#1F2BF3]/10 transition-colors duration-700" />
+                                    
+                                    {/* Icon Container (Compact) */}
+                                    <div className="relative z-10 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1F2BF3] to-[#00D8C0] text-white flex items-center justify-center mb-8 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                                        {React.cloneElement(feature.icon, { size: 24, strokeWidth: 2 })}
                                     </div>
-                                    <h4 className="text-3xl font-black text-gray-900 dark:text-white uppercase mb-6 tracking-tight group-hover:text-[#1F2BF3] transition-colors">{feature.title}</h4>
-                                    <p className="text-gray-500 text-lg leading-relaxed">{feature.description}</p>
+
+                                    {/* Text Content */}
+                                    <div className="relative z-10">
+                                        <h4 className="text-xl font-black text-gray-900 dark:text-white uppercase mb-3 tracking-tight flex items-center gap-2">
+                                            {feature.title}
+                                            <div className="w-1 h-1 rounded-full bg-[#00D8C0] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </h4>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors duration-500">
+                                            {feature.description}
+                                        </p>
+                                    </div>
+
+                                    {/* Hover "Scanner" Line */}
+                                    <motion.div 
+                                        className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#1F2BF3] to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+                                    />
                                 </motion.div>
                             ))}
                         </div>
                     </div>
-                </section>
+                </SectionWithBackground>
 
                 {/* 4. VALUE SECTION (System Overview) */}
-                <section className="relative py-48 bg-gray-50 dark:bg-[#020202] px-6 sm:px-12 lg:px-24 overflow-hidden">
-                    <div className="max-w-[90rem] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-                        <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} className="relative">
-                            <div className="rounded-[4rem] overflow-hidden shadow-2xl">
-                                <img src="/images/service1.jpg" alt="Agency" className="w-full h-auto" />
+                <SectionWithBackground id="about" variant="projects" className="py-48 px-6 sm:px-12 lg:px-24 overflow-hidden">
+                    <div className="max-w-[90rem] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.92, y: 30 }} 
+                            whileInView={{ opacity: 1, scale: 1, y: 0 }} 
+                            viewport={{ once: true }}
+                            transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+                            className="relative group/about-img"
+                        >
+                            <div className="rounded-[4rem] overflow-hidden shadow-2xl border border-white/10 [perspective:1000px]">
+                                <motion.img 
+                                    src="/images/service1.jpg" 
+                                    alt="Agency" 
+                                    className="w-full h-auto object-cover" 
+                                    whileHover={{ scale: 1.03 }}
+                                    transition={{ duration: 0.8, ease: "easeOut" }}
+                                />
                             </div>
-                            <div className="absolute -bottom-10 -right-10 p-10 bg-white dark:bg-gray-900 rounded-[3rem] shadow-2xl border border-gray-100 dark:border-white/5">
-                                <Shield className="w-12 h-12 text-[#1F2BF3] mb-4" />
+                            
+                            {/* Floating shield badge with continuous physics loop */}
+                            <motion.div 
+                                animate={{
+                                    y: [0, -8, 0],
+                                }}
+                                transition={{
+                                    duration: 5,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                                className="absolute -bottom-10 -right-10 p-10 bg-white dark:bg-gray-900 rounded-[3rem] shadow-2xl border border-gray-100 dark:border-white/5 z-20 group"
+                            >
+                                <Shield className="w-12 h-12 text-[#1F2BF3] mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300" />
                                 <div className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">99.8%</div>
-                                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Quality Index</div>
-                            </div>
+                                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('quality_index', { defaultValue: 'Quality Index' })}</div>
+                            </motion.div>
                         </motion.div>
                         
-                        <div>
-                            <span className="text-[11px] font-black uppercase tracking-[0.4em] text-[#1F2BF3] mb-8 block">Elite Standards</span>
-                            <h2 className="text-5xl lg:text-7xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none mb-12">Beyond The Boundless Digital.</h2>
-                            <p className="text-xl text-gray-500 mb-12 leading-relaxed font-medium">We specialize in the alchemy of art and technology. Transforming conventional goals into extraordinary digital ecosystems that breathe and grow.</p>
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                            <span className="text-[11px] font-black uppercase tracking-[0.4em] text-[#1F2BF3] mb-8 block">{t('elite_standards')}</span>
+                            <h2 className="text-5xl lg:text-7xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none mb-12">{t('beyond_boundless')}</h2>
+                            <p className="text-xl text-gray-500 mb-12 leading-relaxed font-medium">{t('beyond_boundless_desc')}</p>
+                            
+                            {/* Staggered checklist items */}
                             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                {["Personalized Strategy", "Agile Implementation", "Conversion-First", "24/7 Premium Support"].map((item, i) => (
-                                    <li key={i} className="flex items-center gap-4 text-gray-900 dark:text-white font-black uppercase tracking-widest text-xs">
-                                        <CheckCircle2 className="w-5 h-5 text-[#1F2BF3]" /> {item}
-                                    </li>
+                                {[t('personalized_strategy'), t('agile_implementation'), t('conversion_first'), t('premium_support_247')].map((item, i) => (
+                                    <motion.li 
+                                        key={i} 
+                                        initial={{ opacity: 0, x: 20 }}
+                                        whileInView={{ opacity: 1, x: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: 0.2 + i * 0.1, duration: 0.6, ease: "easeOut" }}
+                                        whileHover={{ x: 6, transition: { duration: 0.2 } }}
+                                        className="flex items-center gap-4 text-gray-900 dark:text-white font-black uppercase tracking-widest text-xs cursor-default"
+                                    >
+                                        <CheckCircle2 className="w-5 h-5 text-[#1F2BF3] flex-shrink-0" /> {item}
+                                    </motion.li>
                                 ))}
                             </ul>
-                        </div>
+                        </motion.div>
                     </div>
-                </section>
+                </SectionWithBackground>
 
                 {/* 5. TEAM SECTION */}
-                <section className="relative py-48 px-6 sm:px-12 lg:px-24">
-                    <div className="max-w-[90rem] mx-auto">
-                        <div className="flex flex-col items-center text-center mb-32">
-                            <span className="text-[11px] font-black uppercase tracking-[0.4em] text-[#1F2BF3] mb-8">Visionaries</span>
-                            <h2 className="text-5xl lg:text-7xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none">Meet The Masterminds.</h2>
+                {team.length > 0 && (
+                    <SectionWithBackground variant="projects" className="py-48 px-6 sm:px-12 lg:px-24 overflow-hidden">
+                        <div className="max-w-[90rem] mx-auto relative z-10">
+                            <div className="flex flex-col items-center text-center mb-32">
+                                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-[#1F2BF3] mb-8">{t('visionaries')}</span>
+                                <h2 className="text-5xl lg:text-7xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none">{t('meet_masterminds')}</h2>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+                                {team.map((member, i) => (
+                                    <motion.div 
+                                        key={i} 
+                                        initial={{ opacity: 0, y: 30 }} 
+                                        whileInView={{ opacity: 1, y: 0 }} 
+                                        transition={{ delay: i * 0.1 }}
+                                        className="group"
+                                    >
+                                        <div className="relative aspect-[3/4] rounded-[3rem] overflow-hidden mb-8 bg-gray-100 dark:bg-white/5 grayscale group-hover:grayscale-0 transition-all duration-700">
+                                            <img 
+                                                src={member.avatar ? `/storage/${member.avatar}` : `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.name}`} 
+                                                alt={member.name} 
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                                            />
+                                        </div>
+                                        <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2">{member.name}</h4>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{member.job_title || member.role}</p>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </SectionWithBackground>
+                )}
+
+                {/* 6. ROADMAP SECTION (Redesigned - Compact Version) */}
+                <SectionWithBackground id="projects" variant="projects" className="py-32 text-gray-900 dark:text-white px-6 sm:px-12 lg:px-24 overflow-hidden">
+                    <div className="max-w-[90rem] mx-auto relative z-10">
+                        {/* Header with refined typography */}
+                        <div className="text-center mb-24">
+                            <motion.span 
+                                initial={{ opacity: 0, tracking: '0.1em' }}
+                                whileInView={{ opacity: 1, tracking: '0.4em' }}
+                                className="text-[10px] font-black uppercase text-[#1F2BF3] mb-6 block"
+                            >
+                                {t('methodology', { defaultValue: 'Our Methodology' })}
+                            </motion.span>
+                            <h2 className="text-5xl lg:text-7xl font-black uppercase tracking-tighter mb-6 italic leading-none">
+                                {t('innovation_workflow').split(' ').slice(0, -1).join(' ')}<br/>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0]">{t('innovation_workflow').split(' ').slice(-1)}</span>.
+                            </h2>
+                            <p className="text-gray-500 dark:text-white/40 max-w-xl mx-auto text-lg font-medium leading-relaxed">
+                                {t('workflow_desc')}
+                            </p>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
-                            {team.map((member, i) => (
+                        {/* Timeline / Roadmap Steps */}
+                        <div className="relative">
+                            {/* Connecting Line (Desktop) */}
+                            <div className="hidden lg:block absolute top-[50px] left-0 w-full h-[2px] bg-gray-200 dark:bg-white/10">
                                 <motion.div 
-                                    key={i} 
-                                    initial={{ opacity: 0, y: 30 }} 
-                                    whileInView={{ opacity: 1, y: 0 }} 
-                                    transition={{ delay: i * 0.1 }}
-                                    className="group"
-                                >
-                                    <div className="relative aspect-[3/4] rounded-[3rem] overflow-hidden mb-8 bg-gray-100 dark:bg-white/5 grayscale group-hover:grayscale-0 transition-all duration-700">
-                                        <img src={member.image} alt={member.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                    </div>
-                                    <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2">{member.name}</h4>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{member.role}</p>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
+                                    animate={{ x: ['-100%', '100%'] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                    className="w-1/3 h-full bg-gradient-to-r from-transparent via-[#1F2BF3] to-transparent opacity-50"
+                                />
+                            </div>
 
-                {/* 6. ROADMAP SECTION */}
-                <section className="relative py-48 bg-gray-900 text-white px-6 sm:px-12 lg:px-24">
-                    <div className="max-w-[90rem] mx-auto">
-                        <div className="text-center mb-32">
-                            <h2 className="text-5xl lg:text-8xl font-black uppercase tracking-tighter mb-8 italic">THE INNOVATION<br/>WORKFLOW.</h2>
-                            <p className="text-white/40 max-w-2xl mx-auto text-xl font-medium">Predictability, speed, and uncompromising quality at every phase.</p>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
-                            {roadmap.map((step, i) => (
-                                <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-                                    <div className="w-20 h-20 rounded-[2rem] bg-white text-gray-900 flex items-center justify-center mb-10 text-3xl font-black shadow-2xl group-hover:bg-[#1F2BF3] transition-colors">
-                                        {step.step}
-                                    </div>
-                                    <h4 className="text-2xl font-black uppercase mb-6">{step.title}</h4>
-                                    <p className="text-white/50 text-lg leading-relaxed">{step.description}</p>
-                                </motion.div>
-                            ))}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                                {roadmap.map((step, i) => (
+                                    <motion.div 
+                                        key={i} 
+                                        initial={{ opacity: 0, y: 30 }} 
+                                        whileInView={{ opacity: 1, y: 0 }} 
+                                        transition={{ delay: i * 0.1, duration: 0.6 }}
+                                        viewport={{ once: true }}
+                                        className="group relative"
+                                    >
+                                        {/* Step Number Bubble (Smaller) */}
+                                        <div className="relative z-20 mb-8 flex justify-center lg:justify-start">
+                                            <div className="w-20 h-20 rounded-[2rem] bg-gray-50 dark:bg-black/40 backdrop-blur-2xl border border-gray-200 dark:border-white/10 flex items-center justify-center text-3xl font-black transition-all duration-500 group-hover:scale-110 group-hover:bg-[#1F2BF3] group-hover:border-[#1F2BF3] group-hover:shadow-[0_0_40px_rgba(31,43,243,0.3)] group-hover:text-white">
+                                                <span className="group-hover:hidden transition-all">{step.step}</span>
+                                                <div className="hidden group-hover:block transition-all text-white scale-110">
+                                                    {React.cloneElement(step.icon, { size: 28, strokeWidth: 2.5 })}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                         {/* Step Content Card (More Compact) */}
+                                        <motion.div 
+                                            whileHover={{ y: -10, scale: 1.02 }}
+                                            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                                            className="p-6 rounded-[2.5rem] bg-white/50 dark:bg-white/[0.03] backdrop-blur-xl border border-gray-100 dark:border-white/10 transition-all duration-500 group-hover:bg-white dark:group-hover:bg-white/[0.08] group-hover:border-[#1F2BF3]/30 h-full shadow-sm hover:shadow-xl cursor-default"
+                                        >
+                                            <div className="mb-4 flex items-center gap-3">
+                                                <div className="w-6 h-1 bg-[#1F2BF3] rounded-full group-hover:w-12 transition-all duration-500" />
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-[#1F2BF3]">Phase {step.step}</span>
+                                            </div>
+                                            <h4 className="text-xl font-black uppercase mb-4 tracking-tight group-hover:text-[#1F2BF3] transition-colors">{step.title}</h4>
+                                            <p className="text-gray-500 dark:text-white/50 text-base leading-relaxed font-medium group-hover:text-gray-900 dark:group-hover:text-white/80 transition-colors">
+                                                {step.description}
+                                            </p>
+                                        </motion.div>
+                                        
+                                        {/* Background Pulse (Desktop only) */}
+                                        <div className="hidden lg:block absolute top-[50px] left-1/2 -translate-x-1/2 w-3 h-3 bg-[#1F2BF3] rounded-full blur-md animate-ping opacity-10 group-hover:opacity-100" />
+                                    </motion.div>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </section>
+                </SectionWithBackground>
 
                 {/* 7. TESTIMONIALS SECTION */}
-                <section className="relative py-48 px-6 sm:px-12 lg:px-24">
-                    <div className="max-w-[70rem] mx-auto text-center relative">
+                <SectionWithBackground variant="orbs" className="relative py-48 px-6 sm:px-12 lg:px-24 overflow-hidden">
+                    <div className="max-w-[70rem] mx-auto text-center relative z-10">
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20rem] font-black text-gray-100 dark:text-white/5 -z-10 select-none opacity-50">"</div>
                         <AnimatePresence mode="wait">
                             <motion.div key={testimonialIndex} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} transition={{ duration: 0.5 }}>
@@ -233,14 +381,67 @@ export default function Welcome({ blogs = [], templates = [] }) {
                             ))}
                         </div>
                     </div>
-                </section>
+                </SectionWithBackground>
+
+                {/* Creators Section */}
+                {creators.length > 0 && (
+                    <SectionWithBackground variant="projects" className="relative py-48 px-6 sm:px-12 lg:px-24 overflow-hidden">
+                        <div className="max-w-[90rem] mx-auto relative z-10">
+                            <div className="flex flex-col lg:flex-row items-end justify-between gap-12 mb-32">
+                                <div className="max-w-2xl">
+                                    <motion.span initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="text-[11px] font-black uppercase tracking-[0.4em] text-[#1F2BF3] mb-8 block">{t('talent_portfolio')}</motion.span>
+                                    <motion.h2 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} className="text-5xl lg:text-7xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none">
+                                        {t('professional_creators').split('.').slice(0, -1).join('.')}. <span className="text-[#1F2BF3]">{t('creators')}</span>
+                                    </motion.h2>
+                                </div>
+                                <Link href={route('creators.index')} className="text-sm font-black uppercase tracking-[0.2em] text-[#1F2BF3] border-b-2 border-[#1F2BF3] pb-2">{t('view_all_talent')}</Link>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+                                {creators.slice(0, 4).map((creator, i) => (
+                                    <motion.div 
+                                        key={i} 
+                                        initial={{ opacity: 0, y: 30 }} 
+                                        whileInView={{ opacity: 1, y: 0 }} 
+                                        transition={{ delay: i * 0.1 }}
+                                        className="group"
+                                    >
+                                        <Link href={route('creators.show', creator.id)}>
+                                            <div className="relative aspect-[3/4] rounded-[3rem] overflow-hidden mb-8 bg-gray-100 dark:bg-white/5 shadow-2xl transition-transform duration-700 group-hover:-translate-y-4">
+                                                {creator.profile_photo ? (
+                                                    <img src={`/storage/${creator.profile_photo}`} alt={creator.display_name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                                        <UserIcon className="w-20 h-20" />
+                                                    </div>
+                                                )}
+                                                <div className="absolute top-6 left-6">
+                                                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md shadow-lg ${
+                                                        creator.availability_status === 'available' ? 'bg-green-500/80 text-white' : 'bg-gray-500/80 text-white'
+                                                    }`}>
+                                                        {t(creator.availability_status, { defaultValue: creator.availability_status.replace('_', ' ') })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2 group-hover:text-[#1F2BF3] transition-colors">{creator.display_name}</h4>
+                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                                <MapPin className="w-3 h-3" />
+                                                {creator.city}
+                                            </div>
+                                        </Link>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </SectionWithBackground>
+                )}
 
                 {/* 8. BLOG SECTION */}
-                <section className="relative py-48 bg-gray-50 dark:bg-[#020202] px-6 sm:px-12 lg:px-24">
-                    <div className="max-w-[90rem] mx-auto">
+                <SectionWithBackground variant="orbs" className="relative py-48 px-6 sm:px-12 lg:px-24 overflow-hidden">
+                    <div className="max-w-[90rem] mx-auto relative z-10">
                         <div className="flex justify-between items-end mb-24">
-                            <h2 className="text-5xl lg:text-7xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Insights.</h2>
-                            <Link href="/blogs" className="text-sm font-black uppercase tracking-[0.2em] text-[#1F2BF3] border-b-2 border-[#1F2BF3] pb-2">See All</Link>
+                            <h2 className="text-5xl lg:text-7xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">{t('insights')}</h2>
+                            <Link href="/blogs" className="text-sm font-black uppercase tracking-[0.2em] text-[#1F2BF3] border-b-2 border-[#1F2BF3] pb-2">{t('view_all')}</Link>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
                             {blogs.slice(0, 3).map((blog, i) => (
@@ -250,36 +451,43 @@ export default function Welcome({ blogs = [], templates = [] }) {
                                     </div>
                                     <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-4 group-hover:text-[#1F2BF3] transition-colors line-clamp-2">{blog.title}</h4>
                                     <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                                        <span>5 MIN READ</span>
+                                        <span>{t('min_read')}</span>
                                         <span className="w-6 h-[1px] bg-gray-400" />
-                                        <span>STUDIO INSIGHT</span>
+                                        <span>{t('studio_insight')}</span>
                                     </div>
                                 </Link>
                             ))}
                         </div>
                     </div>
-                </section>
+                </SectionWithBackground>
 
-                {/* 9. CONTACT SECTION (Restored to original style) */}
-                <section className="relative py-32 px-6 sm:px-12 lg:px-24">
+
+                {/* 9. CONTACT SECTION */}
+                <SectionWithBackground variant="projects" className="relative py-32 px-6 sm:px-12 lg:px-24 overflow-hidden">
                     <div className="max-w-7xl mx-auto">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                             
                             {/* Contact Text */}
-                            <div className="flex flex-col gap-10">
+                            <motion.div 
+                                initial={{ opacity: 0, x: -50 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true, margin: "-100px" }}
+                                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                                className="flex flex-col gap-10"
+                            >
                                 <div>
-                                    <h2 className="text-xs font-black uppercase tracking-[0.4em] text-[#1F2BF3] mb-4">Connect With Us</h2>
-                                    <h3 className="text-4xl lg:text-6xl font-black text-gray-900 dark:text-white mb-8">Ready to Start Your Digital Evolution?</h3>
+                                    <h2 className="text-xs font-black uppercase tracking-[0.4em] text-[#1F2BF3] mb-4">{t('connect_with_us')}</h2>
+                                    <h3 className="text-4xl lg:text-6xl font-black text-gray-900 dark:text-white mb-8">{t('ready_evolution')}</h3>
                                     <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed max-w-lg">
-                                        Tell us about your project, and let's craft something exceptional together.
+                                        {t('contact_desc')}
                                     </p>
                                 </div>
 
                                 <div className="space-y-8">
                                     {[
-                                        { icon: <Mail className="w-6 h-6" />, label: "Email Us", val: "contact@techweb.ma" },
-                                        { icon: <Phone className="w-6 h-6" />, label: "Call Experts", val: "+212 600 000 000" },
-                                        { icon: <MapPin className="w-6 h-6" />, label: "Visit Studios", val: "Tangier, Morocco" }
+                                        { icon: <Mail className="w-6 h-6" />, label: t('email_us'), val: "contact@techweb.ma" },
+                                        { icon: <Phone className="w-6 h-6" />, label: t('call_experts'), val: "+212 607 060 769" },
+                                        { icon: <MapPin className="w-6 h-6" />, label: t('visit_studios'), val: "Tangier, Morocco" }
                                     ].map((info, i) => (
                                         <div key={i} className="flex items-center gap-6 group">
                                             <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-[#1F2BF3] transition-colors group-hover:bg-[#1F2BF3] group-hover:text-white">
@@ -292,75 +500,24 @@ export default function Welcome({ blogs = [], templates = [] }) {
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            </motion.div>
 
                             {/* Contact Form */}
-                            <div className="relative group">
+                            <motion.div 
+                                initial={{ opacity: 0, y: 50 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: "-100px" }}
+                                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+                                className="relative group"
+                            >
                                 <div className="absolute inset-0 bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] rounded-[3rem] blur-3xl opacity-10 group-hover:opacity-20 transition-opacity" />
                                 <div className="relative glass-morphism rounded-[3rem] p-10 border border-white/20 dark:border-white/5 shadow-2xl backdrop-blur-2xl bg-white/40 dark:bg-black/40">
-                                    <form onSubmit={handleSubmit} className="space-y-6">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Full Name</label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={data.full_name}
-                                                    onChange={(e) => setData('full_name', e.target.value)}
-                                                    className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none"
-                                                    placeholder="Enter your name"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Email Address</label>
-                                                <input
-                                                    type="email"
-                                                    required
-                                                    value={data.email}
-                                                    onChange={(e) => setData('email', e.target.value)}
-                                                    className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none"
-                                                    placeholder="hello@example.com"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Choose Service</label>
-                                            <select 
-                                                className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none appearance-none"
-                                                onChange={(e) => setData('services', [e.target.value])}
-                                            >
-                                                <option>Website Creation</option>
-                                                <option>E-commerce Solutions</option>
-                                                <option>Digital Marketing</option>
-                                                <option>Brand Design</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 ml-2">Project Brief</label>
-                                            <textarea
-                                                rows="4"
-                                                value={data.message}
-                                                onChange={(e) => setData('message', e.target.value)}
-                                                className="w-full bg-white dark:bg-[#111] border border-gray-100 dark:border-white/5 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#1F2BF3] transition-all dark:text-white outline-none resize-none"
-                                                placeholder="Tell us about your project..."
-                                            />
-                                        </div>
-
-                                        <button
-                                            type="submit"
-                                            disabled={processing}
-                                            className="w-full py-5 bg-gradient-to-r from-[#1F2BF3] to-[#00D8C0] text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
-                                        >
-                                            {processing ? 'Transmitting...' : 'Send Message'}
-                                        </button>
-                                    </form>
+                                    <ProjectRequestForm creators={creators} />
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
                     </div>
-                </section>
+                </SectionWithBackground>
             </div>
             
             <style dangerouslySetInnerHTML={{ __html: `
