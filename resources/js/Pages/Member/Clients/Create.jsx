@@ -215,6 +215,9 @@ export default function Create({ auth }) {
                                                                 <option value="twitter">X (Twitter)</option>
                                                                 <option value="other">Other</option>
                                                             </select>
+                                                            {errors[`social_links.${index}.platform`] && (
+                                                                <p className="mt-1 text-[10px] text-red-500 font-bold">{errors[`social_links.${index}.platform`]}</p>
+                                                            )}
                                                         </div>
                                                         <div className="flex-1">
                                                             <input
@@ -335,6 +338,7 @@ export default function Create({ auth }) {
                                         <option value="not_interested">Not Interested</option>
                                         <option value="pending">Pending</option>
                                     </select>
+                                    {errors.status && <p className="mt-1 text-sm text-red-500 font-bold">{errors.status}</p>}
                                 </div>
 
                                 <div>
@@ -348,6 +352,7 @@ export default function Create({ auth }) {
                                         <option value="call">Phone Call</option>
                                         <option value="meeting">Meeting</option>
                                     </select>
+                                    {errors.contact_method && <p className="mt-1 text-sm text-red-500 font-bold">{errors.contact_method}</p>}
                                 </div>
 
                                 <div>
@@ -358,6 +363,7 @@ export default function Create({ auth }) {
                                         onChange={e => setData('contact_date', e.target.value)}
                                         className="w-full bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#1F2BF3] px-4 py-3 shadow-sm transition-all"
                                     />
+                                    {errors.contact_date && <p className="mt-1 text-sm text-red-500 font-bold">{errors.contact_date}</p>}
                                 </div>
                             </div>
 

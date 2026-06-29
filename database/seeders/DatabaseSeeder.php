@@ -13,20 +13,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call(RolesAndPermissionsSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@techweb.ma',
-            'password' => 'password123',
-            'role' => 'admin',
-        ]);
-
-        User::factory()->create([
-            'name' => 'Test Member',
-            'email' => 'member@techweb.ma',
-            'password' => 'password123',
-            'role' => 'member',
-        ]);
+        $this->call(DemoDataSeeder::class);
     }
 }

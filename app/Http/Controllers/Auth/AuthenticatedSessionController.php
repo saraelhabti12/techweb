@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -33,7 +34,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $role = Auth::user()->role;
+        $user = Auth::user();
+
+        $allowedRoles = ['admin', 'project_manager', 'member', 'commercials'];
+        if (in_array($user->role, $allowedRoles) && !$user->hasRole($user->role)) {
+            $user->assignRole($user->role);
+        }
+
+        $role = $user->role;
 
         if ($role === 'admin' || $role === 'project_manager') {
             return redirect()->route('admin.dashboard'); // Admins & PMs go to admin dashboard

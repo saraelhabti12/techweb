@@ -203,11 +203,12 @@ export default function CreateProject({ categories, clients, users, creators = [
                                                 {categories.map((category) => (
                                                     <option key={category.id} value={category.id}>{category.name}</option>
                                                 ))}
-                                            </select>
-                                        </div>
+                                        </select>
+                                        {errors.category_id && <p className="mt-1 text-sm text-red-500 font-bold">{errors.category_id}</p>}
+                                    </div>
 
-                                        <div>
-                                            <label htmlFor="status" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Initial Status</label>
+                                    <div>
+                                        <label htmlFor="status" className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Initial Status</label>
                                             <select
                                                 id="status"
                                                 value={data.status}

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class RegisteredUserController extends Controller
 {
@@ -46,7 +47,13 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        if (Auth::user()->role === 'admin') {
+        $user = Auth::user();
+        $allowedRoles = ['admin', 'project_manager', 'member', 'commercials'];
+        if (in_array($user->role, $allowedRoles) && !$user->hasRole($user->role)) {
+            $user->assignRole($user->role);
+        }
+
+        if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard'); // Redirect to Admin Dashboard
         } else {
             return redirect()->route('member.dashboard'); // Redirect to Member Dashboard

@@ -93,5 +93,20 @@ class RolesAndPermissionsSeeder extends Seeder
         foreach ($pms as $pm) {
             $pm->assignRole($projectManagerRole);
         }
+
+        $commercialsRole = Role::firstOrCreate(['name' => 'commercials']);
+        $commercialsRole->givePermissionTo([
+            'view dashboard',
+            'view projects',
+            'view clients',
+            'view appointments',
+            'view chat',
+            'view calendar',
+        ]);
+
+        $commercials = User::where('role', 'commercials')->get();
+        foreach ($commercials as $commercial) {
+            $commercial->assignRole($commercialsRole);
+        }
     }
 }
